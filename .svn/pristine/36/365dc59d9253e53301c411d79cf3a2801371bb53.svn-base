@@ -1,0 +1,1623 @@
+package com.ut.scf.service.project.impl;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.util.json.JSONArray;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.ddf.EscherSerializationListener;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.UnitValue;
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.core.util.MoneyUtil;
+import com.ut.scf.core.util.PDFUtil2;
+import com.ut.scf.dao.auto.CarFileInfoMapper;
+import com.ut.scf.dao.auto.CarInfoMapper;
+import com.ut.scf.dao.auto.CorpInfoMapper;
+import com.ut.scf.dao.auto.FinanceInfoMapper;
+import com.ut.scf.dao.auto.GuaranteeInfoMapper;
+import com.ut.scf.dao.auto.LimitInfoMapper;
+import com.ut.scf.dao.auto.WarningInfoMapper;
+import com.ut.scf.dao.project.ICarInfoDao;
+import com.ut.scf.dao.project.IMainContractInfoDao;
+import com.ut.scf.dao.project.IPayCommitmentDao;
+import com.ut.scf.dao.pub.IContractInfoDao;
+import com.ut.scf.pojo.auto.CarFileInfo;
+import com.ut.scf.pojo.auto.CarInfo;
+import com.ut.scf.pojo.auto.CarInfoExample;
+import com.ut.scf.pojo.auto.CarInfoExample.Criteria;
+import com.ut.scf.pojo.auto.FinanceInfo;
+import com.ut.scf.pojo.auto.GuaranteeInfo;
+import com.ut.scf.pojo.auto.LimitInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.reqbean.project.PayCommitProcessReqBean;
+import com.ut.scf.reqbean.project.PayCommitmentListReqBean;
+import com.ut.scf.reqbean.pub.TaskInfoReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.ListRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.respbean.StringRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.ICommonService;
+import com.ut.scf.service.project.IPayCommitmentService;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.sys.ISequenceService;
+
+@Service("payCommitmentService")
+public class PayCommitmentServiceImpl implements IPayCommitmentService {
+
+	private static final Logger log = LoggerFactory.getLogger(PayCommitmentServiceImpl.class);
+
+	private static SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd");
+
+	@Resource
+	private CorpInfoMapper corpInfoMapper;
+
+	@Resource
+	private FinanceInfoMapper financeInfoMapper;
+
+	@Resource
+	private GuaranteeInfoMapper guaranteeInfoMapper;
+
+	@Resource
+	private WarningInfoMapper warningInfoMapper;
+
+	@Resource
+	private IPayCommitmentDao iPayCommitmentDao;
+
+	@Resource
+	private CarInfoMapper carInfoMapper;
+	@Resource
+	private IMainContractInfoDao iMainContractInfoDao;
+	@Resource
+	private CarFileInfoMapper carFileInfoMapper;
+	@Resource
+	private IContractInfoDao  contractInfoDao ;
+	@Resource
+	private ProcessEngine processEngine;
+
+	@Resource
+	private RuntimeService runtimeService;
+
+	@Resource
+	private TaskService taskService;
+
+	@Resource
+	private RepositoryService repositoryService;
+
+	@Resource
+	private ISequenceService sequenceService;
+
+	@Resource
+	private IProcessRepeatChkService processRepeatChkService;
+
+	@Resource
+	private ICommonService commonService;
+
+	@Resource
+	private LimitInfoMapper limitInfoMapper;
+
+	@Resource
+	private IActivitiService activitiService;
+	@Resource
+	private ICarInfoDao iCarInfoDao;
+	
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getPayInfoList(PayCommitmentListReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+
+		List<Map<String, Object>> list = iPayCommitmentDao.getPayInfoList(paramMap, page);
+
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean agencyFinanceList(PayCommitmentListReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+
+		List<Map<String, Object>> list = iPayCommitmentDao.getAgencyFinanceList(paramMap, page);
+
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getCarFileInfo(PayCommitmentListReqBean reqBean) {
+		List<CarFileInfo> list = new ArrayList<CarFileInfo>();
+		CarFileInfo carFileInfo = carFileInfoMapper.selectByPrimaryKey(reqBean.getFinanceId());
+		if (carFileInfo != null) {
+			list.add(carFileInfo);
+		}
+
+		ListRespBean respBean = new ListRespBean();
+		respBean.setDataList(list);
+		return respBean;
+	}
+	
+
+
+	
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean startProcess(JSONObject jsonObject, HttpSession httpSession) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 车辆情报校验
+		String carInfo = (String) jsonObject.get("carListInfo");
+		String financeId = (String) jsonObject.get("financeId");
+		List<CarInfo> carInfoList = new ArrayList<CarInfo>();
+
+		try {
+			carInfoList = checkCarInfo(carInfo, httpSession);
+		} catch (DataIntegrityViolationException e) {
+			log.error("CarDetailExcel exception", e);
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			return respBean;
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			respBean.setResult(ErrorCodeEnum.FAILED);
+			respBean.setResultNote(e.getMessage());
+			return respBean;
+		}
+
+		// 流程重复发起验证
+		List<ProcessRepeatCheck> checks = new ArrayList<ProcessRepeatCheck>();
+		respBean = checkFinanceAndCar(financeId, carInfoList, checks);
+		if (respBean.getResult() != 0) {
+			return respBean;
+		}
+
+		String userName = (String) jsonObject.get("userId");
+		String launchRoleId = (String) jsonObject.get("launchRoleId");
+		String agencyCorpId = (String) jsonObject.get("corpId");
+		String key = (String) jsonObject.get("activitiKey");
+		String guaranteeAmt = (String) jsonObject.get("guaranteeAmt"); // 保证金金额
+		String payActGuarantee = (String) jsonObject.get("payActGuarantee"); // 实缴保证金金额
+
+		ProcessInstance pi = processEngine.getRuntimeService()// 管理流程实例和执行对象，也就是表示正在执行的操作
+				.startProcessInstanceByKey(key);
+		String procInstId = pi.getProcessInstanceId();
+		Task task = taskService.createTaskQuery().processInstanceId(pi.getId()).singleResult();
+
+		// 拾取用户
+		taskService.claim(task.getId(), userName);
+		// 设置变量
+		taskService.setVariable(task.getId(), "launchUser", userName);
+		taskService.setVariable(task.getId(), "launchRoleId", launchRoleId);
+		taskService.setVariable(task.getId(), "agencyCorpId", agencyCorpId);
+		taskService.setVariable(task.getId(), "payApplyJson", jsonObject.toString());
+		taskService.setVariableLocal(task.getId(), "agencyJson", jsonObject.toString());
+		taskService.setVariable(task.getId(), "payM", Double.parseDouble(guaranteeAmt));
+		taskService.setVariable(task.getId(), "financeAmount", Double.parseDouble(payActGuarantee));
+		// 完成节点
+		taskService.complete(task.getId());
+		updateLimitInfo(jsonObject);
+		for (ProcessRepeatCheck check : checks) {
+			check.setProcInstId(procInstId);
+			int result = processRepeatChkService.insert(check);
+			if (result < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		}
+
+		return respBean;
+	}
+
+	/**
+	 * 付款承诺函管理更新额度
+	 * 
+	 * @param jsonObject
+	 * @return
+	 */
+	private BaseRespBean updateLimitInfo(JSONObject jsonObject) {
+		BaseRespBean respBean = new BaseRespBean();
+		String corpId = jsonObject.getString("corpId");
+		LimitInfo limitInfo = limitInfoMapper.selectByPrimaryKey(corpId);
+		BigDecimal preOccupancyAmt = nullBigDecimalToZERO(limitInfo.getPreOccupancyAmt());
+		BigDecimal useAbleCreditAmt = nullBigDecimalToZERO(limitInfo.getUseAbleCreditAmt());
+		BigDecimal maxCreditAmount = nullBigDecimalToZERO(limitInfo.getMaxCreditAmount());
+		BigDecimal occupiedAmt = nullBigDecimalToZERO(limitInfo.getOccupiedAmt());
+		BigDecimal financeAmount = nullStringToZERO(jsonObject.getString("financeAmount"));
+		BigDecimal payM = nullStringToZERO(jsonObject.getString("payM"));
+		if (payM.compareTo(useAbleCreditAmt.add(financeAmount)) == 1) {
+			throw new BizException(ErrorCodeEnum.PAYM_IS_TOO_BIG);
+		}
+		// 预占用额度 = 预占用额度 - 融资金额 + 付款金额
+		BigDecimal newPreOccupancyAmt = preOccupancyAmt.subtract(financeAmount).add(payM);
+		BigDecimal newUseAbleCreditAmt = maxCreditAmount.subtract(occupiedAmt).subtract(newPreOccupancyAmt);
+		LimitInfo limitInfoPojo = new LimitInfo();
+		limitInfoPojo.setCorpId(corpId);
+		limitInfoPojo.setPreOccupancyAmt(newPreOccupancyAmt);
+		limitInfoPojo.setUseAbleCreditAmt(newUseAbleCreditAmt);
+		int updateByPrimaryKeySelective = limitInfoMapper.updateByPrimaryKeySelective(limitInfoPojo);
+		if (updateByPrimaryKeySelective < 1) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		return respBean;
+	}
+
+	public BigDecimal nullBigDecimalToZERO(BigDecimal value) {
+		BigDecimal result = value == null ? BigDecimal.ZERO : value;
+		return result;
+	}
+
+	public BigDecimal nullStringToZERO(String value) {
+		BigDecimal result = value == null ? BigDecimal.ZERO : new BigDecimal(value);
+		return result;
+	}
+
+	@Override
+	public BaseRespBean getDataByTaskId(TaskInfoReqBean reqBean) {
+		// 根据taskId获取流程数据
+		String values = (String) taskService.getVariable(reqBean.getTaskId(), reqBean.getVarName());
+		StringRespBean respBean = new StringRespBean();
+		respBean.setStr(values);
+		return respBean;
+	}
+
+	@Override
+	public void fillGuarantee(PayCommitProcessReqBean reqBean) {
+		String taskId = reqBean.getTaskId();
+		String userName = reqBean.getUserId();
+		String values = (String) taskService.getVariable(taskId, "payApplyJson");
+		JSONObject jsonObject = new JSONObject(values);
+		jsonObject.put("remark", reqBean.getRemark());
+		jsonObject.put("agree", "");
+
+		// 拾取用户
+		taskService.claim(taskId, userName);
+		// 设置变量
+		taskService.setVariable(taskId, "jxsUser", userName);
+		taskService.setVariable(taskId, "payApplyJson", jsonObject.toString());
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+		// 完成节点
+		taskService.complete(taskId);
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean doAgree(PayCommitProcessReqBean reqBean, HttpSession httpSession) {
+		BaseRespBean respBean = new BaseRespBean();
+
+		// 1.获取taskId和当前用户
+		String procInstId = reqBean.getProcInstId();
+		String taskId = reqBean.getTaskId();
+		String userId = reqBean.getUserId();
+		String agree = reqBean.getAgree();
+		String backTarget = reqBean.getBackTarget();
+		String advice = reqBean.getAdvice();
+
+		String launchRoleId = (String) taskService.getVariable(taskId, "launchRoleId");
+		String values = (String) taskService.getVariable(taskId, "payApplyJson");
+		JSONObject jsonObject = new JSONObject(values);
+		jsonObject.put("agree", agree);
+		jsonObject.put("backTarget", backTarget);
+		jsonObject.put("advice", advice);
+		jsonObject.put("payId", reqBean.getPayId());
+		jsonObject.put("fkTemplate", reqBean.getFkTemplate());
+		jsonObject.put("templateUrl", reqBean.getFkTemplateUrl());
+
+		// 2.拾取用户
+		taskService.claim(taskId, userId);
+		// 3.设置变量
+		String reviewUser = (String) taskService.getVariable(taskId, "reviewUser");
+		if (StringUtils.isEmpty(reviewUser)) {
+			taskService.setVariable(taskId, "reviewUser", userId);
+		}
+		taskService.setVariable(taskId, "payApplyJson", jsonObject.toString());
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+		// 4.流程走向
+		if ("1".equals(agree)) {
+			if ("1".equals(backTarget)) {
+				agree = "1";
+			} else if ("0".equals(backTarget)) {
+				agree = "2";
+			}
+		}
+		taskService.setVariable(taskId, "agree", agree);
+		// 5.完成流程
+		taskService.complete(taskId);
+		// 6.查看流程状态
+		ProcessInstance pi = runtimeService.createProcessInstanceQuery().processInstanceId(procInstId).singleResult();
+		if (pi == null) { // 流程已结束
+			respBean = updateFinance(reqBean, httpSession, launchRoleId);
+		}
+
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean reApply(PayCommitProcessReqBean reqBean, HttpSession httpSession) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 车辆情报校验
+		String carInfo = reqBean.getCarListInfo();
+		List<CarInfo> carInfoList = new ArrayList<CarInfo>();
+		String procInstId = reqBean.getProcInstId();
+		try {
+			carInfoList = checkCarInfo(carInfo, httpSession);
+		} catch (DataIntegrityViolationException e) {
+			log.error("CarDetailExcel exception", e);
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			return respBean;
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			respBean.setResult(ErrorCodeEnum.FAILED);
+			respBean.setResultNote(e.getMessage());
+			return respBean;
+		}
+
+		int result = processRepeatChkService.deleteByProcInstId(procInstId);
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+
+		// 融资编号和车架号重复发起验证
+		List<ProcessRepeatCheck> checks = new ArrayList<ProcessRepeatCheck>();
+		respBean = checkFinanceAndCar(reqBean.getFinanceId(), carInfoList, checks);
+		if (respBean.getResult() == ErrorCodeEnum.FINANCE_ID_EXIST.getValue()) {
+			throw new BizException(ErrorCodeEnum.FINANCE_ID_EXIST);
+		} else if (respBean.getResult() == ErrorCodeEnum.ADD_FAILED.getValue()) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED, respBean.getResultNote());
+		}
+
+		String userName = reqBean.getUserId();
+		String taskId = reqBean.getTaskId();
+		String guaranteeAmt = reqBean.getGuaranteeAmt(); // 保证金金额
+		String payActGuarantee = reqBean.getPayActGuarantee(); // 实缴保证金金额
+		JSONObject jsonObject = new JSONObject(reqBean);
+		Object value = taskService.getVariable(taskId, "payApplyJson");
+		JSONObject payApplyJson = new JSONObject(value.toString());
+		BigDecimal orginPayM = nullStringToZERO(payApplyJson.getString("payM"));
+		// 拾取用户
+		taskService.claim(taskId, userName);
+		// 设置变量
+		taskService.setVariable(taskId, "payApplyJson", jsonObject.toString());
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+		taskService.setVariable(taskId, "payM", Double.parseDouble(guaranteeAmt));
+		taskService.setVariable(taskId, "financeAmount", Double.parseDouble(payActGuarantee));
+		// 完成节点
+		taskService.complete(taskId);
+		BaseRespBean reApplyUpdateLimitReturn = reApplyUpdateLimitInfo(reqBean,new BigDecimal(0));
+		if (reApplyUpdateLimitReturn.getResult() == ErrorCodeEnum.PAYM_IS_TOO_BIG.getValue()) {
+			throw new BizException(ErrorCodeEnum.PAYM_IS_TOO_BIG);
+		} else if (reApplyUpdateLimitReturn.getResult() == ErrorCodeEnum.UPDATE_FAILED.getValue()) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		for (ProcessRepeatCheck check : checks) {
+			check.setProcInstId(procInstId);
+			int proc = processRepeatChkService.insert(check);
+			if (proc < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		}
+
+		return respBean;
+	}
+
+	public BaseRespBean reApplyUpdateLimitInfo(PayCommitProcessReqBean reqBean,BigDecimal financeOldAmt) {
+		BaseRespBean respBean = new BaseRespBean();
+		String corpId = reqBean.getCorpId();
+		LimitInfo limitInfo = limitInfoMapper.selectByPrimaryKey(corpId);
+		//BigDecimal preOccupancyAmt = nullBigDecimalToZERO(limitInfo.getPreOccupancyAmt());
+		BigDecimal useAbleCreditAmt = nullBigDecimalToZERO(limitInfo.getUseAbleCreditAmt());
+		//BigDecimal maxCreditAmount = nullBigDecimalToZERO(limitInfo.getMaxCreditAmount());
+		
+		BigDecimal useAbleLscreditAmt = nullBigDecimalToZERO(limitInfo.getUseAbleLscreditAmt());
+		//BigDecimal maxlscreditAmount = nullBigDecimalToZERO(limitInfo.getMaxLscreditAmount());
+		
+		//BigDecimal occupiedAmt = nullBigDecimalToZERO(limitInfo.getOccupiedAmt());
+		// BigDecimal financeAmount = nullStringToZERO(reqBean.getFinanceAmount());
+		BigDecimal payM = nullStringToZERO(reqBean.getPayM());
+	/*	if (payM.compareTo(useAbleCreditAmt.add(orginPayM)) == 1) {
+			respBean.setResult(ErrorCodeEnum.PAYM_IS_TOO_BIG);
+			return respBean;
+		}*/
+		// 预占用额度 = 预占用额度 - 付款金额(旧) + 付款金额（新）
+		//BigDecimal newPreOccupancyAmt = preOccupancyAmt.subtract(orginPayM).add(payM);
+		
+		BigDecimal newUseAbleCreditAmt = new BigDecimal(0.00);
+		BigDecimal newUseAbleLscreditAmt = new BigDecimal(0.00);
+		LimitInfo limitInfoPojo = new LimitInfo();
+		limitInfoPojo.setCorpId(corpId);
+		if(reqBean.getYwlxId().equals("1"))
+		{
+			
+			 newUseAbleLscreditAmt = useAbleLscreditAmt.add(financeOldAmt).subtract(payM);
+				limitInfoPojo.setUseAbleLscreditAmt(newUseAbleLscreditAmt);
+		}
+		else if(reqBean.getYwlxId().equals("2"))
+		{
+			newUseAbleCreditAmt = useAbleCreditAmt.add(financeOldAmt).subtract(payM);
+
+			limitInfoPojo.setUseAbleCreditAmt(newUseAbleCreditAmt);
+		
+		}
+		else
+		{
+			respBean.setResult(ErrorCodeEnum.UPDATE_FAILED);
+			respBean.setResultNote("业务类型错误");
+			return respBean;
+		}
+
+		
+		
+
+	
+		
+		int updateByPrimaryKeySelective = limitInfoMapper.updateByPrimaryKeySelective(limitInfoPojo);
+		if (updateByPrimaryKeySelective < 1) {
+			respBean.setResult(ErrorCodeEnum.UPDATE_FAILED);
+			return respBean;
+			// throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		return respBean;
+	}
+	@Override
+	public BaseRespBean getRecommend(String cropId,String ywlxId) {
+		// 根据taskId获取流程数据
+		String payId = sequenceService.getNextSequence(cropId, ywlxId,"fk");
+		StringRespBean respBean = new StringRespBean();
+		respBean.setStr(payId);
+		return respBean;
+	}
+	@Override
+	public BaseRespBean getRecommendAdd(String cropId,String ywlxId) {
+		// 根据taskId获取流程数据
+		String payId = sequenceService.getNextAddSequence(cropId, ywlxId,"fk");
+		StringRespBean respBean = new StringRespBean();
+		respBean.setStr(payId);
+		return respBean;
+	}
+	@Override
+	public BaseRespBean updateFinance(PayCommitProcessReqBean reqBean, HttpSession httpSession, String launchRoleId) {
+		BaseRespBean respBean = new BaseRespBean();
+
+		// 更新融资情报
+		FinanceInfo financeInfo = new FinanceInfo();
+		String financeId = reqBean.getFinanceId();
+		String payId = reqBean.getPayId();
+		if ("".equals(payId)) {
+			//payId = sequenceService.getNextSequence(reqBean.getCorpId(), "fk");
+			log.error("付款承诺函为空");
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		 sequenceService.getNextAddSequence(reqBean.getCorpId(),reqBean.getYwlxId(), "fk");
+		try {
+			financeInfo.setFinanceId(financeId);
+			financeInfo.setPayId(payId);
+			financeInfo.setPayDate(SDF.parse(reqBean.getPayDate()));
+			financeInfo.setPayAmt(new BigDecimal(reqBean.getPayM()));
+			financeInfo.setFinanceStartDate(SDF.parse(reqBean.getFinanceStartDate()));
+			financeInfo.setFinanceEndDate(SDF.parse(reqBean.getFinanceEndDate()));
+			financeInfo.setFinanceBalance(new BigDecimal(reqBean.getPayM()));
+			financeInfo.setFinanceStatus("2");
+			financeInfo.setFkTemplateUrl(reqBean.getFkTemplateUrl());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		int recFinance = financeInfoMapper.updateByPrimaryKeySelective(financeInfo);
+		if (recFinance < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		BaseRespBean reApplyUpdateLimitReturn = reApplyUpdateLimitInfo(reqBean,new BigDecimal(0));
+		if (reApplyUpdateLimitReturn.getResult() == ErrorCodeEnum.UPDATE_FAILED.getValue()) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		
+		// 更新保证金情报
+		GuaranteeInfo guaranteeInfo = new GuaranteeInfo();
+
+		try {
+			guaranteeInfo.setFinanceId(financeId);
+			guaranteeInfo.setPayAbleGuarantee(new BigDecimal(reqBean.getGuaranteeAmt()));
+
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+
+		int recGuarantee = guaranteeInfoMapper.updateByPrimaryKeySelective(guaranteeInfo);
+		if (recGuarantee < 1) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+
+		// 车辆情报校验
+		List<CarInfo> carListinfo = new ArrayList<CarInfo>();
+		try {
+			carListinfo = checkCarInfo(reqBean.getCarListInfo(), httpSession);
+		} catch (DataIntegrityViolationException e) {
+			log.error("CarDetailExcel exception", e);
+			// respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			// return respBean;
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error(e.getMessage());
+			// respBean.setResult(ErrorCodeEnum.FAILED);
+			// respBean.setResultNote(e.getMessage());
+			// return respBean;
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		// 登入车辆文件信息
+		JSONArray carArray = new JSONArray(reqBean.getCarListInfo());
+		JSONObject carObj = carArray.getJSONObject(0);
+		CarFileInfo carFileInfo = new CarFileInfo();
+		carFileInfo.setFinanceId(financeId);
+		carFileInfo.setCarFileName(carObj.getString("fileName"));
+		carFileInfo.setCarFileUrl(carObj.getString("fileUrl"));
+		carFileInfo.setCarFileType(carObj.getString("fileType"));
+		carFileInfo.setCarFileSize(Integer.parseInt(carObj.getString("fileSize")));
+		int carFile = carFileInfoMapper.insert(carFileInfo);
+		if (carFile < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		// 登入车辆明细信息
+		for (CarInfo info : carListinfo) {
+			info.setFinanceId(financeId);
+			info.setSaleStatus((byte) 0);// 未售
+			int carInfo = carInfoMapper.insert(info);
+			if (carInfo < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		}
+
+		/*// 付款承诺函
+		String templetPath = httpSession.getServletContext().getRealPath(reqBean.getFkTemplateUrl());
+
+		String uploadFilePath = "uploadFile/common/";// 文件服务器存储目录
+		String toPath = httpSession.getServletContext().getRealPath(uploadFilePath);
+		String pdfName = ScfUUID.generate() + ".pdf";
+		File dir = new File(toPath);
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
+		String pdfName = reqBean.getFinanceId() + ".pdf";
+		File dir = new File(toPath);
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
+		toPath = toPath + "/" + pdfName;
+		File file2 = new File(toPath);
+		if (file2.exists()) {
+			file2.delete();
+		}
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("payId", payId);// 付款编号
+		paramMap.put("agencyName", reqBean.getAgencyName());// 经销商名称
+		BigDecimal payAmt = new BigDecimal(reqBean.getPayM());
+		payAmt = payAmt.divide(BigDecimal.ONE, 0, RoundingMode.HALF_UP);
+		DecimalFormat df = new DecimalFormat("#,##0");
+		paramMap.put("payAmt", df.format(payAmt));// 付款金额
+		String payAmtStr = MoneyUtil.toChinese(payAmt.toString());// 付款金额小写转大写
+		paramMap.put("payAmtBig", payAmtStr.substring(0, payAmtStr.length() - 1));
+		paramMap.put("contractNo", reqBean.getContractNo());// 合同编号
+		try {
+			Date date = SDF.parse(reqBean.getFinanceEndDate());
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(date);
+			paramMap.put("year", String.valueOf(calendar.get(Calendar.YEAR))); // 融资到期日 年
+			paramMap.put("month", String.valueOf(calendar.get(Calendar.MONTH) + 1)); // 月
+			paramMap.put("day", String.valueOf(calendar.get(Calendar.DAY_OF_MONTH))); // 日
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		try {
+			// 生成付款承诺函
+			PDFUtil2.exportToPDF(templetPath, toPath, paramMap);
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}*/
+
+		return respBean;
+	}
+	@SuppressWarnings("deprecation")
+	@Override
+	public BaseRespBean updateCarInfo(PayCommitProcessReqBean reqBean, HttpSession httpSession, String launchRoleId) {
+		BaseRespBean respBean = new BaseRespBean();
+	
+
+		// 更新融资情报
+		FinanceInfo financeInfo = new FinanceInfo();
+		String financeId = reqBean.getFinanceId();
+		String payId=reqBean.getPayId();
+		
+		FinanceInfo financeInfoOld =financeInfoMapper.selectByPrimaryKey(financeId);
+
+		
+		try {
+			financeInfo.setFinanceId(financeId);
+		
+			financeInfo.setPayDate(SDF.parse(reqBean.getPayDate()));
+			financeInfo.setPayAmt(new BigDecimal(reqBean.getPayM()));
+			financeInfo.setFinanceStartDate(SDF.parse(reqBean.getFinanceStartDate()));
+			financeInfo.setFinanceEndDate(SDF.parse(reqBean.getFinanceEndDate()));
+			financeInfo.setFinanceBalance(new BigDecimal(reqBean.getPayM()));
+			financeInfo.setFinanceStatus("2");
+			financeInfo.setFkTemplateUrl(reqBean.getFkTemplateUrl());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		int recFinance = financeInfoMapper.updateByPrimaryKeySelective(financeInfo);
+		if (recFinance < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		
+		BaseRespBean reApplyUpdateLimitReturn = reApplyUpdateLimitInfo(reqBean,financeInfoOld.getPayAmt());
+		if (reApplyUpdateLimitReturn.getResult() == ErrorCodeEnum.UPDATE_FAILED.getValue()) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		
+		/*// 更新保证金情报
+		GuaranteeInfo guaranteeInfo = guaranteeInfoMapper.selectByPrimaryKey(financeId);
+		if (guaranteeInfo == null) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+
+		try {
+			guaranteeInfo.setPayAbleGuarantee(new BigDecimal(reqBean.getGuaranteeAmt()));
+			// 应缴保证金金额 > 实缴保证金金额
+			if ((new BigDecimal(reqBean.getGuaranteeAmt()))
+					.compareTo(new BigDecimal(reqBean.getPayActGuarantee())) > 0) {
+				guaranteeInfo.setPayActGuarantee(
+						guaranteeInfo.getPayActGuarantee().add(new BigDecimal(reqBean.getGuaranteeDiff())));
+				guaranteeInfo.setGuaranteeBalance(
+						guaranteeInfo.getGuaranteeBalance().add(new BigDecimal(reqBean.getGuaranteeDiff())));
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+
+		int recGuarantee = guaranteeInfoMapper.updateByPrimaryKeySelective(guaranteeInfo);
+		if (recGuarantee < 1) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}*/
+
+		// 车辆情报校验
+	//	List<CarInfo> carListinfo = new ArrayList<CarInfo>();
+/*		try {
+			carListinfo = checkCarInfo(reqBean.getCarListInfo(), httpSession);
+		} catch (DataIntegrityViolationException e) {
+			log.error("CarDetailExcel exception", e);
+			// respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			// return respBean;
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error(e.getMessage());
+			// respBean.setResult(ErrorCodeEnum.FAILED);
+			// respBean.setResultNote(e.getMessage());
+			// return respBean;
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+*/	
+		try
+		{List<CarInfo> carListinfo = new ArrayList<CarInfo>();
+		JSONArray carArray = new JSONArray(reqBean.getCarListInfo());
+		CarInfo car=new CarInfo();
+		JSONObject carObj=new JSONObject();
+		for(int i=0;i<carArray.length();i++)
+		{
+			carObj=new JSONObject();
+			car=new CarInfo();
+			 carObj = carArray.getJSONObject(i);
+			
+		
+			 car.setStoreName(carObj.getString("storeName"));
+			
+			 
+			 car.setPayDate(SDF.parse(SDF.format(new Date(carObj.getLong("payDate")))));
+			 car.setCarFrameNum(carObj.getString("carFrameNum"));
+			 car.setCarActualPrice(new BigDecimal((new DecimalFormat("#0.00")).format(carObj.getDouble("carActualPrice"))));
+			 car.setCarColor(carObj.getString("carColor"));
+			 car.setEngineNum(carObj.getString("engineNum"));
+			 car.setOperate(carObj.getString("operate"));
+			 carListinfo.add(car);
+		}
+		// 登入车辆明细信息
+		for (CarInfo info : carListinfo) {
+			info.setFinanceId(financeId);
+			if(info.getOperate().equals("新增"))
+			{
+				info.setSaleStatus((byte) 0);// 未售
+				int upd = carInfoMapper.insert(info);
+				if (upd < 1) {
+					throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+				}
+			}
+			else if(info.getOperate().equals("更新"))
+			{
+				info.setSaleStatus((byte) 0);
+				int upd = carInfoMapper.updateByPrimaryKey(info);
+				if (upd < 1) {
+					throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+				}
+			}
+			else if(info.getOperate().equals("退库"))
+			{
+				info.setSaleStatus((byte) 99);
+				int upd = carInfoMapper.updateByPrimaryKey(info);
+				if (upd < 1) {
+					throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+				}
+			}
+		}
+		}
+		catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		
+
+		// 付款承诺函
+		String templetPath = httpSession.getServletContext().getRealPath(reqBean.getFkTemplateUrl());
+
+		String uploadFilePath = "uploadFile/common/";// 文件服务器存储目录
+		String toPath = httpSession.getServletContext().getRealPath(uploadFilePath);
+	/*	String pdfName = ScfUUID.generate() + ".pdf";
+		File dir = new File(toPath);
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}*/
+		String pdfName = reqBean.getFinanceId() + ".pdf";
+		File dir = new File(toPath);
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
+		toPath = toPath + "/" + pdfName;
+		File file2 = new File(toPath);
+		if (file2.exists()) {
+			file2.delete();
+		}
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("payId", payId);// 付款编号
+		paramMap.put("agencyName", reqBean.getAgencyName());// 经销商名称
+		BigDecimal payAmt = new BigDecimal(reqBean.getPayM());
+		payAmt = payAmt.divide(BigDecimal.ONE, 0, RoundingMode.HALF_UP);
+		DecimalFormat df = new DecimalFormat("#,##0");
+		paramMap.put("payAmt", df.format(payAmt));// 付款金额
+		String payAmtStr = MoneyUtil.toChinese(payAmt.toString());// 付款金额小写转大写
+		paramMap.put("payAmtBig", payAmtStr.substring(0, payAmtStr.length() - 1));
+		paramMap.put("contractNo", reqBean.getContractNo());// 合同编号
+		try {
+			Date date = SDF.parse(reqBean.getFinanceEndDate());
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(date);
+			paramMap.put("year", String.valueOf(calendar.get(Calendar.YEAR))); // 融资到期日 年
+			paramMap.put("month", String.valueOf(calendar.get(Calendar.MONTH) + 1)); // 月
+			paramMap.put("day", String.valueOf(calendar.get(Calendar.DAY_OF_MONTH))); // 日
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		try {
+			// 生成付款承诺函
+			PDFUtil2.exportToPDF(templetPath, toPath, paramMap);
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		/*// 发送付款承诺函
+		Map<String, Object> warnParamMap = new HashMap<String, Object>();
+		warnParamMap.put("roleList", Arrays.asList(launchRoleId));
+		warnParamMap.put("warnType", 5);// 通知类型:5.付款承诺函
+		warnParamMap.put("warnMsg", "经销商[" + reqBean.getAgencyName() + "]的付款承诺函已发送，请查收！");
+		warnParamMap.put("filePath", httpSession.getServletContext().getContextPath() + "/" + uploadFilePath + pdfName);
+		commonService.insertWarningInfo(warnParamMap);
+*/
+		
+	/*	// 申请流程删除
+		int result = processRepeatChkService.deleteByProcInstId(reqBean.getProcInstId());
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}*/
+
+		return respBean;
+	}
+	@SuppressWarnings("deprecation")
+	private List<CarInfo> parseExcel(String fileName, File file) throws Exception {
+		InputStream strexc = null;
+		List<CarInfo> list = new ArrayList<CarInfo>();// 存放excel中的所有数据
+		List<String> carFrameNumList = new ArrayList<String>();
+		Pattern pattern = Pattern.compile("[0-9]*");
+		DecimalFormat df = new DecimalFormat("#0.00");
+		int x = 0;
+		int y = 0;
+		try {
+			int pos = fileName.lastIndexOf(".");
+			// 解析excel上传文件数据
+			strexc = new FileInputStream(file);
+			Workbook workbook = null;
+			if (".xls".equals(fileName.substring(pos))) {
+				workbook = new HSSFWorkbook(strexc); // 2003版
+			} else if (".xlsx".equals(fileName.substring(pos))) {
+				workbook = new XSSFWorkbook(strexc); // 2007版
+			}
+			Sheet worksheet = workbook.getSheetAt(0);
+			// 获取excel的行数
+			int rowMaxNum = worksheet.getLastRowNum();
+			int colMaxNum = worksheet.getRow(0).getLastCellNum();
+			int colNum = 0;
+			int rowNum = 0;
+			if (rowMaxNum <= 1 || colMaxNum <= 1) {
+				throw new Exception("没有足够的信息，请检查！");
+			}
+
+			for (rowNum = 2; rowNum <= rowMaxNum; rowNum++) {
+				CarInfo carInfo = new CarInfo();
+				x = rowNum + 1;
+				Row row = worksheet.getRow(rowNum);
+				if (row == null) {
+					throw new Exception("存在空行, 错误位置：第 " + x + " 行");
+				}
+				for (colNum = 0; colNum < colMaxNum; colNum++) {
+					y = colNum + 1;
+					Cell cell = row.getCell(colNum);
+					if (cell == null) {
+						throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+					}
+					String ceStr = "";
+					BigDecimal ceVal = null;
+					switch (cell.getCellType()) {
+					case Cell.CELL_TYPE_STRING:
+						ceStr = cell.getRichStringCellValue().getString();
+						if (y == 3) {
+							Matcher isNum = pattern.matcher(ceStr);
+							if (!isNum.matches()) {
+								throw new Exception("请输入正确的日期格式yyyy/mm/dd, 错误位置：第 " + x + " 行,第 " + y + " 列");
+							}
+						} else if (y == 5) {
+							Matcher isNum = pattern.matcher(ceStr);
+							if (!isNum.matches()) {
+								throw new Exception("请检查数据类型, 错误位置：第 " + x + " 行,第 " + y + " 列");
+							}
+						}
+
+						break;
+					case Cell.CELL_TYPE_NUMERIC:
+						if (y == 3) {// 日期格式
+							if (!DateUtil.isCellDateFormatted(cell)) {
+								throw new Exception("请输入正确的日期格式yyyy/mm/dd, 错误位置：第 " + x + " 行,第 " + y + " 列");
+							} else {
+								SimpleDateFormat yyyy = new SimpleDateFormat("yyyy");
+								int year = Integer.parseInt(yyyy.format(cell.getDateCellValue()));
+								if (year > 9999) {
+									throw new Exception("请输入正确的日期格式yyyy/mm/dd, 错误位置：第 " + x + " 行,第 " + y + " 列");
+								}
+								ceStr = SDF.format(cell.getDateCellValue());
+							}
+						} else {// 金额格式
+							ceStr = df.format(cell.getNumericCellValue());
+							if (ceStr.contains(".")) {
+								String[] numArr = ceStr.split("\\.");
+								String numStr = numArr[0];
+								if (Float.parseFloat(numStr) > 1000000000 || Float.parseFloat(numStr) < -1000000000) {
+									throw new Exception(
+											"请检查数据长度,在-1000000000~1000000000之间, 错误位置：第 " + x + " 行,第 " + y + " 列");
+								}
+							} else {
+								if (Float.parseFloat(ceStr) > 1000000000 || Float.parseFloat(ceStr) < -1000000000) {
+									throw new Exception(
+											"请检查数据长度,在-1000000000~1000000000之间, 错误位置：第 " + x + " 行,第 " + y + " 列");
+								}
+							}
+							if (!DateUtil.isCellDateFormatted(cell)) {
+								ceVal = new BigDecimal(df.format(cell.getNumericCellValue()));
+							}
+							if (null == ceVal) {
+								throw new Exception("请检查数据类型, 错误位置：第 " + x + " 行,第 " + y + " 列");
+							}
+						}
+						break;
+					}
+
+					switch (y) {
+					case 1:
+						if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						carInfo.setCarNo(ceStr);
+						break;
+					case 2:
+						if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						carInfo.setStoreName(ceStr);
+						break;
+					case 3:
+						if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						carInfo.setPayDate(SDF.parse(ceStr));
+						break;
+					case 4:
+						if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						// 车架号存在验证
+						CarInfoExample carInfoExample = new CarInfoExample();
+						com.ut.scf.pojo.auto.CarInfoExample.Criteria criteria = carInfoExample.createCriteria();
+						criteria.andSaleStatusNotEqualTo((byte)99);
+						criteria.andCarFrameNumEqualTo(ceStr);
+						if (carInfoMapper.countByExample(carInfoExample) > 0) {
+							throw new Exception("该车架号已经付款申请过, 不能再次申请, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						if (carFrameNumList.contains(ceStr)) {
+							throw new Exception("车架号不能重复, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						carInfo.setCarFrameNum(ceStr);
+						break;
+					case 5:
+						if (ceVal == null) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						carInfo.setCarActualPrice(ceVal);
+						break;
+					case 6:
+					/*	if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}*/
+						carInfo.setCarColor(ceStr);
+						break;
+					case 7:
+						/*if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}*/
+						carInfo.setEngineNum(ceStr);
+						break;
+					}
+				}
+				carFrameNumList.add(carInfo.getCarFrameNum());
+				list.add(carInfo);
+			}
+		} catch (Exception e) {
+			throw new Exception(e.getMessage());
+		} finally {
+			if (strexc != null) {
+				strexc.close();
+				strexc = null;
+			}
+		}
+		return list;
+	}
+	@SuppressWarnings("deprecation")
+	private List<CarInfo> parseCompareExcel(String financeId,String fileName, File file) throws Exception {
+		InputStream strexc = null;
+		List<CarInfo> list = new ArrayList<CarInfo>();// 存放excel中的所有数据
+		List<String> carFrameNumList = new ArrayList<String>();
+		Pattern pattern = Pattern.compile("[0-9]*");
+		DecimalFormat df = new DecimalFormat("#0.00");
+		int x = 0;
+		int y = 0;
+		try {
+			int pos = fileName.lastIndexOf(".");
+			// 解析excel上传文件数据
+			strexc = new FileInputStream(file);
+			Workbook workbook = null;
+			if (".xls".equals(fileName.substring(pos))) {
+				workbook = new HSSFWorkbook(strexc); // 2003版
+			} else if (".xlsx".equals(fileName.substring(pos))) {
+				workbook = new XSSFWorkbook(strexc); // 2007版
+			}
+			Sheet worksheet = workbook.getSheetAt(0);
+			// 获取excel的行数
+			int rowMaxNum = worksheet.getLastRowNum();
+			int colMaxNum = worksheet.getRow(0).getLastCellNum();
+			int colNum = 0;
+			int rowNum = 0;
+			if (rowMaxNum <= 1 || colMaxNum <= 1) {
+				throw new Exception("没有足够的信息，请检查！");
+			}
+
+			for (rowNum = 2; rowNum <= rowMaxNum; rowNum++) {
+				CarInfo carInfo = new CarInfo();
+				x = rowNum + 1;
+				Row row = worksheet.getRow(rowNum);
+				if (row == null) {
+					throw new Exception("存在空行, 错误位置：第 " + x + " 行");
+				}
+				for (colNum = 0; colNum < colMaxNum; colNum++) {
+					y = colNum + 1;
+					Cell cell = row.getCell(colNum);
+					if (cell == null) {
+						throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+					}
+					String ceStr = "";
+					BigDecimal ceVal = null;
+					switch (cell.getCellType()) {
+					case Cell.CELL_TYPE_STRING:
+						ceStr = cell.getRichStringCellValue().getString();
+						if (y == 3) {
+							Matcher isNum = pattern.matcher(ceStr);
+							if (!isNum.matches()) {
+								throw new Exception("请输入正确的日期格式yyyy/mm/dd, 错误位置：第 " + x + " 行,第 " + y + " 列");
+							}
+						} else if (y == 5) {
+							Matcher isNum = pattern.matcher(ceStr);
+							if (!isNum.matches()) {
+								throw new Exception("请检查数据类型, 错误位置：第 " + x + " 行,第 " + y + " 列");
+							}
+						}
+
+						break;
+					case Cell.CELL_TYPE_NUMERIC:
+						if (y == 3) {// 日期格式
+							if (!DateUtil.isCellDateFormatted(cell)) {
+								throw new Exception("请输入正确的日期格式yyyy/mm/dd, 错误位置：第 " + x + " 行,第 " + y + " 列");
+							} else {
+								SimpleDateFormat yyyy = new SimpleDateFormat("yyyy");
+								int year = Integer.parseInt(yyyy.format(cell.getDateCellValue()));
+								if (year > 9999) {
+									throw new Exception("请输入正确的日期格式yyyy/mm/dd, 错误位置：第 " + x + " 行,第 " + y + " 列");
+								}
+								ceStr = SDF.format(cell.getDateCellValue());
+							}
+						} else {// 金额格式
+							ceStr = df.format(cell.getNumericCellValue());
+							if (ceStr.contains(".")) {
+								String[] numArr = ceStr.split("\\.");
+								String numStr = numArr[0];
+								if (Float.parseFloat(numStr) > 1000000000 || Float.parseFloat(numStr) < -1000000000) {
+									throw new Exception(
+											"请检查数据长度,在-1000000000~1000000000之间, 错误位置：第 " + x + " 行,第 " + y + " 列");
+								}
+							} else {
+								if (Float.parseFloat(ceStr) > 1000000000 || Float.parseFloat(ceStr) < -1000000000) {
+									throw new Exception(
+											"请检查数据长度,在-1000000000~1000000000之间, 错误位置：第 " + x + " 行,第 " + y + " 列");
+								}
+							}
+							if (!DateUtil.isCellDateFormatted(cell)) {
+								ceVal = new BigDecimal(df.format(cell.getNumericCellValue()));
+							}
+							if (null == ceVal) {
+								throw new Exception("请检查数据类型, 错误位置：第 " + x + " 行,第 " + y + " 列");
+							}
+						}
+						break;
+					}
+
+					switch (y) {
+					case 1:
+						if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						carInfo.setCarNo(ceStr);
+						break;
+					case 2:
+						if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						carInfo.setStoreName(ceStr);
+						break;
+					case 3:
+						if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						carInfo.setPayDate(SDF.parse(ceStr));
+						break;
+					case 4:
+						if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						ProcessRepeatCheck checkInfo = new ProcessRepeatCheck();
+						// 验证车辆车架号
+					
+							checkInfo = new ProcessRepeatCheck();
+							checkInfo.setProcessKey("payCommitment");
+							checkInfo.setItemKey("CAR_FRAME_NUM");
+							checkInfo.setItemValue(ceStr);
+						
+							if (processRepeatChkService.isProcessExist(checkInfo)) {
+								throw new Exception("该车架号已经存在于还款流程，请确认, 错误位置：第 " + x + " 行,第 " + y + " 列");
+							}
+						
+
+						/*CarInfoExample carInfoExample = new CarInfoExample();
+						com.ut.scf.pojo.auto.CarInfoExample.Criteria criteria = carInfoExample.createCriteria();
+						criteria.andSaleStatusEqualTo((byte)1);
+						criteria.andCarFrameNumEqualTo(ceStr);
+						if (carInfoMapper.countByExample(carInfoExample) > 0) {
+							throw new Exception("该车架号已经赎证，请确认, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}*/
+						
+						// 车架号存在验证					
+						if (iCarInfoDao.getcountByExcepFinanceId(ceStr,financeId) > 0) {
+							throw new Exception("该车架号已经已经存在于其他付款, 不能再次申请, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						if (carFrameNumList.contains(ceStr)) {
+							throw new Exception("车架号不能重复, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						carInfo.setCarFrameNum(ceStr);
+						break;
+					case 5:
+						if (ceVal == null) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}
+						carInfo.setCarActualPrice(ceVal);
+						break;
+					case 6:
+					/*	if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}*/
+						carInfo.setCarColor(ceStr);
+						break;
+					case 7:
+					/*	if (StringUtils.isEmpty(ceStr)) {
+							throw new Exception("数据不能为空, 错误位置：第 " + x + " 行,第 " + y + " 列");
+						}*/
+						carInfo.setEngineNum(ceStr);
+						break;
+					}
+				}
+				carFrameNumList.add(carInfo.getCarFrameNum());
+				list.add(carInfo);
+			}
+		} catch (Exception e) {
+			throw new Exception(e.getMessage());
+		} finally {
+			if (strexc != null) {
+				strexc.close();
+				strexc = null;
+			}
+		}
+		return list;
+	}
+	private List<CarInfo> checkCarInfo(String carInfo, HttpSession httpSession) throws Exception {
+		JSONArray carArray = new JSONArray(carInfo);
+		JSONObject carObj = carArray.getJSONObject(0);
+		String fileUrl = carObj.getString("fileUrl");
+		int index = fileUrl.lastIndexOf("/");
+		String fileName = fileUrl.substring(index + 1);
+		String path = httpSession.getServletContext().getRealPath("uploadFile/common/");
+		File targetFile = new File(path, fileName);
+		List<CarInfo> carListinfo = parseExcel(fileName, targetFile);
+
+		return carListinfo;
+	}
+
+	private BaseRespBean checkFinanceAndCar(String financeId, List<CarInfo> carInfoList,
+			List<ProcessRepeatCheck> checks) {
+		BaseRespBean respBean = new BaseRespBean();
+
+		// 验证融资编号
+		ProcessRepeatCheck checkInfo = new ProcessRepeatCheck();
+		checkInfo.setProcessKey("payCommitment");
+		checkInfo.setItemKey("FINANCE_ID");
+		checkInfo.setItemValue(financeId);
+		checks.add(checkInfo);
+		if (processRepeatChkService.isProcessExist(checkInfo)) {
+			respBean.setResult(ErrorCodeEnum.FINANCE_ID_EXIST);
+			return respBean;
+		}
+
+		// 验证车辆车架号
+		for (CarInfo info : carInfoList) {
+			checkInfo = new ProcessRepeatCheck();
+			checkInfo.setProcessKey("payCommitment");
+			checkInfo.setItemKey("CAR_FRAME_NUM");
+			checkInfo.setItemValue(info.getCarFrameNum());
+			checks.add(checkInfo);
+			if (processRepeatChkService.isProcessExist(checkInfo)) {
+				respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+				respBean.setResultNote("车辆【" + info.getCarFrameNum() + "】已在付款申请中，不能再次申请");
+				return respBean;
+			}
+		}
+
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean deleteProcess(String procInstId) {
+		BaseRespBean respBean = new BaseRespBean();
+		activitiService.deleteProcessById(procInstId);
+		// 根据procInstId获取发起时存入的流程变量,还原预占用额度和可用授信额度
+		Object value = processEngine.getHistoryService().createHistoricVariableInstanceQuery()
+				.processInstanceId(procInstId).variableName("payApplyJson").singleResult().getValue();
+		JSONObject payApplyJson = new JSONObject(value.toString());
+		String corpId = payApplyJson.getString("corpId");
+		LimitInfo limitInfo = limitInfoMapper.selectByPrimaryKey(corpId);
+		BigDecimal preOccupancyAmt = nullBigDecimalToZERO(limitInfo.getPreOccupancyAmt());
+		BigDecimal maxCreditAmount = nullBigDecimalToZERO(limitInfo.getMaxCreditAmount());
+		BigDecimal occupiedAmt = nullBigDecimalToZERO(limitInfo.getOccupiedAmt());
+		BigDecimal orginFinanceAmount = nullStringToZERO(payApplyJson.getString("financeAmount"));
+		BigDecimal orginPayM = nullStringToZERO(payApplyJson.getString("payM"));
+		// 预占用额度 = 预占用额度 + 融资金额 - 付款金额
+		BigDecimal newPreOccupancyAmt = preOccupancyAmt.add(orginFinanceAmount).subtract(orginPayM);
+		BigDecimal newUseAbleCreditAmt = maxCreditAmount.subtract(occupiedAmt).subtract(newPreOccupancyAmt);
+		LimitInfo limitInfoBean = new LimitInfo();
+		limitInfoBean.setPreOccupancyAmt(newPreOccupancyAmt);
+		limitInfoBean.setUseAbleCreditAmt(newUseAbleCreditAmt);
+		limitInfoBean.setCorpId(corpId);
+		int updateByPrimaryKeySelective = limitInfoMapper.updateByPrimaryKeySelective(limitInfoBean);
+		if (updateByPrimaryKeySelective < 1) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean calPayAmt(String fileUrl, HttpSession httpSession) {
+		StringRespBean respBean = new StringRespBean();
+
+		int index = fileUrl.lastIndexOf("/");
+		String fileName = fileUrl.substring(index + 1);
+		String path = httpSession.getServletContext().getRealPath("uploadFile/common/");
+		File targetFile = new File(path, fileName);
+
+		try {
+			List<CarInfo> carListinfo = parseExcel(fileName, targetFile);
+			BigDecimal payAmt = BigDecimal.ZERO;
+			for (CarInfo carInfo : carListinfo) {
+				payAmt = payAmt.add(carInfo.getCarActualPrice());
+			}
+			respBean.setStr(payAmt.toString());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			respBean.setResult(ErrorCodeEnum.FAILED);
+			respBean.setResultNote(e.getMessage());
+			return respBean;
+		}
+
+		return respBean;
+	}
+	
+	@Override
+	public BaseRespBean calCarCompare(String financeId, String fileUrl, HttpSession httpSession) {
+		ListRespBean respBean = new ListRespBean();
+
+		int index = fileUrl.lastIndexOf("/");
+		String fileName = fileUrl.substring(index + 1);
+		String path = httpSession.getServletContext().getRealPath("uploadFile/common/");
+		File targetFile = new File(path, fileName);
+
+		try {
+			List<CarInfo> carListinfo = parseCompareExcel(financeId,fileName, targetFile);
+			
+			List<CarInfo> carListAlerdy= carInfoMapper.selectByFinanceId(financeId);
+			
+			List<CarInfo> carListinfoRet=new ArrayList<CarInfo>();
+			
+			
+			
+			Boolean alerdyExit=false;
+			for(CarInfo carInfo:carListinfo)
+			{
+				alerdyExit=false;
+				for(CarInfo carInfoAlerdy:carListAlerdy)
+				{
+					if(carInfo.getCarFrameNum().equals(carInfoAlerdy.getCarFrameNum()))
+					{
+						alerdyExit=true;
+						carInfoAlerdy.setOperate("存在");
+						if(carInfoAlerdy.getSaleStatus().equals((byte)1))
+						{
+							carInfo.setOperate("已售");
+							carListinfoRet.add(carInfo);
+							break;
+						}
+						else
+						{
+							carInfo.setOperate("更新");
+							carListinfoRet.add(carInfo);
+							break;
+						}
+					}
+				}
+				if(!alerdyExit)
+				{
+					carInfo.setOperate("新增");
+					carListinfoRet.add(carInfo);					
+				}
+			}
+			for(CarInfo carInfoAlerdy:carListAlerdy)
+			{
+				if((carInfoAlerdy.getOperate()==""||carInfoAlerdy.getOperate()==null)&& carInfoAlerdy.getSaleStatus().equals((byte)0))
+				{
+					carInfoAlerdy.setOperate("退库");
+					carListinfoRet.add(carInfoAlerdy);
+				
+				}else if ((carInfoAlerdy.getOperate()==""||carInfoAlerdy.getOperate()==null)&& carInfoAlerdy.getSaleStatus().equals((byte)1)) {
+					throw(new Exception(carInfoAlerdy.getCarFrameNum()+"已经赎证，不能退库！"));
+				}
+			}
+			
+			BigDecimal payAmt = BigDecimal.ZERO;
+			for (CarInfo carInfo : carListinfoRet) {
+				if(carInfo.getOperate().equals("新增")||carInfo.getOperate().equals("更新"))
+					payAmt = payAmt.add(carInfo.getCarActualPrice());
+			}
+			respBean.setDataList(carListinfoRet);
+			respBean.setResultNote(payAmt.toString());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			respBean.setResult(ErrorCodeEnum.FAILED);
+			respBean.setResultNote(e.getMessage());
+			return respBean;
+		}
+
+		return respBean;
+	}
+	
+	public BaseRespBean download(PayCommitProcessReqBean reqBean, HttpSession httpSession){
+		BaseRespBean respBean = new BaseRespBean();
+		// 付款承诺函
+				String templetPath = httpSession.getServletContext().getRealPath(reqBean.getFkTemplateUrl());
+
+				String uploadFilePath = "uploadFile/common/";// 文件服务器存储目录
+				String toPath = httpSession.getServletContext().getRealPath(uploadFilePath);
+				String toPathFinal = httpSession.getServletContext().getRealPath(uploadFilePath);
+			/*	String pdfName = ScfUUID.generate() + ".pdf";
+				File dir = new File(toPath);
+				if (!dir.exists()) {
+					dir.mkdirs();
+				}*/
+				String pdfNameCash = "付款函件.pdf";
+				String pdfName = reqBean.getPayId() + ".pdf";
+				File dir = new File(toPath);
+				if (!dir.exists()) {
+					dir.mkdirs();
+				}
+				toPathFinal = toPath + "/" + pdfName;
+				toPath = toPath + "/" + pdfNameCash;
+				File file2 = new File(toPathFinal);
+				if (true) {
+					if(file2.exists())
+						file2.delete();
+					String tablePath = "/sign/付款承诺函附件.pdf";
+					tablePath = httpSession.getServletContext().getRealPath(tablePath);
+					File dir2 = new File(tablePath);
+					if(!dir2.getParentFile().exists()){
+						dir2.getParentFile().mkdirs();
+					}
+						
+					try {
+						List<String> columnsTitle = setColumnsTitle();
+						UnitValue[] unitValue = new UnitValue[] {
+								UnitValue.createPercentValue((float) 10),
+								UnitValue.createPercentValue((float) 13), UnitValue.createPercentValue((float) 13),
+								UnitValue.createPercentValue((float) 16), UnitValue.createPercentValue((float) 16),
+								UnitValue.createPercentValue((float) 16), UnitValue.createPercentValue((float) 16)
+						};
+						List<Byte> bytes= new ArrayList<Byte>();
+						bytes.add((byte)0);
+						bytes.add((byte)1);
+						//报错
+						Document document = PDFUtil2.writeTableToPDF(tablePath);
+						Table table = PDFUtil2.getPdfPTable(unitValue).setWidthPercent(100);
+						PdfFont font = PDFUtil2.chineseFont();
+						document.add(table);
+						PDFUtil2.setTitleCell(table, columnsTitle.size(), "付款承诺函附件");	
+						PDFUtil2.setFields(table, columnsTitle);
+				
+						List<Map<String, Object>> param = new ArrayList<Map<String, Object>>();
+						CarInfoExample example=new CarInfoExample();
+						Criteria criteria=example.createCriteria();
+						criteria.andFinanceIdEqualTo(reqBean.getFinanceId());	
+						criteria.andSaleStatusIn(bytes);
+						List<CarInfo> resList = carInfoMapper.selectByExample(example);
+					
+						BigDecimal sum=BigDecimal.ZERO;
+						for (int j = 0; j < resList.size(); j++) {	
+						
+							sum=sum.add(resList.get(j).getCarActualPrice());
+							System.out.println(resList.get(j).getCarActualPrice());
+							System.out.println(sum);
+						}
+						CarInfo carInfo=new CarInfo();
+						carInfo.setCarFrameNum("合计：");
+						carInfo.setCarActualPrice(sum);
+						resList.add(carInfo);
+		
+						for (int j = 0; j < resList.size(); j++) {	
+							Map<String, Object> map=BeanUtil.beanToMap(resList.get(j));
+							if(j < resList.size()-1){
+								map.put("carNumber", j+1);
+								map.put("cprYear", reqBean.getCprYear());
+								map.put("cprMonth", reqBean.getCprMonth());
+								map.put("cprName", reqBean.getAgencyName());
+								map.put("cprNum", reqBean.getAgencyNum());
+							}else{
+								map.put("carNumber", "");
+								map.put("cprYear", "");
+								map.put("cprMonth", "");
+								map.put("cprName", "");
+								map.put("cprNum", "");
+							}
+							param.add(map);				
+						}
+					
+						
+						PDFUtil2.setTable(table, setColumnsField(), param, null, font);
+						
+						param.clear();
+			
+						table.flush();
+						table.complete();
+						document.close();
+
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+					
+					Map<String, String> paramMap = new HashMap<String, String>();
+					paramMap.put("payId", reqBean.getPayId());// 付款编号
+					paramMap.put("agencyName", reqBean.getAgencyName());// 经销商名称
+					BigDecimal payAmt = new BigDecimal(reqBean.getPayAmt());
+					payAmt = payAmt.divide(BigDecimal.ONE, 0, RoundingMode.HALF_UP);
+					DecimalFormat df = new DecimalFormat("#,##0");
+					paramMap.put("payAmt", df.format(payAmt));// 付款金额
+					String payAmtStr = MoneyUtil.toChinese(payAmt.toString());// 付款金额小写转大写
+					paramMap.put("payAmtBig", payAmtStr+"整");
+					paramMap.put("agencyNum", reqBean.getAgencyNum());
+					
+					Date now= new Date();
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					String time=sdf.format(now);
+					paramMap.put("yyyy", time.substring(0, 4));// 年
+					paramMap.put("mm", time.substring(5, 7));// 年
+					paramMap.put("dd", time.substring(8, 10));// 年
+					
+					
+					Map<String, Object> paramMap2 =new HashMap<String, Object>();		
+					paramMap2.put("typeid", reqBean.getYwlxId());
+					
+				
+					if(reqBean.getYwlxId().equals("1")) //零售字段
+					{
+						String contractNo1=contractInfoDao.selectByCorpIdAndYwxlAndName(reqBean.getCorpId(),"汽车销售金融服务三方协议");
+						paramMap.put("contractNoSFXY", contractNo1);// 三方协议
+					}
+					else if(reqBean.getYwlxId().equals("2"))//大宗字段
+					{
+						List<Map<String, Object>>  rzSS=iMainContractInfoDao.getContractList(paramMap2);
+						if(rzSS!=null&&rzSS.size()>0)
+						{
+							
+							paramMap.put("contractNo", rzSS.get(0).get("contractNum").toString());// 合同编号
+						}
+						
+						String contractNo1=contractInfoDao.selectByCorpIdAndYwxlAndName(reqBean.getCorpId(),"汽 车 大 宗 销 售 应 收 账 款 管 理 保 理 服 务 三 方 协 议 ");
+						paramMap.put("contractNoSFXY", contractNo1);// 三方协议
+					}
+			
+				
+					try {
+						Date date = SDF.parse(reqBean.getFinanceEndDate());
+						Calendar calendar = Calendar.getInstance();
+						calendar.setTime(date);
+						paramMap.put("year", String.valueOf(calendar.get(Calendar.YEAR))); // 融资到期日 年
+						paramMap.put("month", String.valueOf(calendar.get(Calendar.MONTH) + 1)); // 月
+						paramMap.put("day", String.valueOf(calendar.get(Calendar.DAY_OF_MONTH))); // 日
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+					try {
+						// 生成付款承诺函
+						PDFUtil2.exportToPDF(templetPath, toPath, paramMap);
+						PDFUtil2.mergePDF(toPath, tablePath, toPathFinal);
+					} catch (Exception e) {
+						log.error(e.getMessage());
+						throw new BizException(ErrorCodeEnum.ADD_FAILED);
+					}
+				}
+				respBean.setResultNote(uploadFilePath + "/" + pdfName);
+ 				return respBean;
+				
+				
+	}
+	
+	private List<String> setColumnsTitle() {
+		List<String> list = new ArrayList<String>();
+		list.add("序号");
+		list.add("合作年份");
+		list.add("合作月份");
+		list.add("经销商名称");
+		list.add("经销商代码");
+		list.add("车架号");
+		list.add("价格");
+
+		return list;
+	}
+
+	private List<String> setColumnsField() {
+		List<String> fieldName = new ArrayList<String>();
+		fieldName.add("carNumber");
+		fieldName.add("cprYear");
+		fieldName.add("cprMonth");
+		fieldName.add("cprName");
+		fieldName.add("cprNum");
+		fieldName.add("carFrameNum");
+		fieldName.add("carActualPrice");
+		return fieldName;
+	}
+	
+	public void creatCarList(HttpServletRequest request){}
+	
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void updateCommitmentModel(PayCommitProcessReqBean reqBean, HttpSession httpSession, String launchRoleId) {
+	
+	
+		String financeId = reqBean.getFinanceId();
+		String payId = reqBean.getPayId();
+		String newTemplate= reqBean.getFkTemplateUrlNew();
+	
+		int recFinance = iPayCommitmentDao.updateCommintmentModel(newTemplate,financeId,payId);
+		if (recFinance < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+	}
+}

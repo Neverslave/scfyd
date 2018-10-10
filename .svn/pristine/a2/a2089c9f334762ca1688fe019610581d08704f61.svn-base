@@ -1,0 +1,105 @@
+<form class="form-horizontal" role="form" id="detailForm" data-toggle="validator">
+                    <input type="hidden" id="projectId" name="projectId" />
+                    <input type="hidden" id="num" name="num" >
+	                <div class="form-group" style="margin-top: 20px;">
+                        <label class="col-sm-2 control-label" for="buyName">买方名称</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="buyName" class="form-control" id="buyName" readonly>
+                        </div>
+                        <label class="col-sm-2 control-label" for="saleName">卖方名称</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="saleName" class="form-control" id="saleName" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="creditMain">授信主体</label>
+                        <div class="col-sm-3 valid_group">
+                            <select id="creditMain" name="creditMain" class="form-control" disabled>
+                                <option value="0">买方</option>
+                                <option value="1">卖方</option>
+                            </select>
+                        </div>
+                        <label class="col-sm-2 control-label" for="creditAmount">授信金额</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="creditAmount" class="form-control" id="creditAmount" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="creditTerm">授信期限(月)</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="creditTerm" class="form-control" id="creditTerm" readonly>
+                        </div>
+                        <label class="col-sm-2 control-label" for="factoringType">保理类型</label>
+                        <div class="col-sm-3 valid_group">
+                            <select id="factoringType" name="factoringType" class="form-control" disabled>
+									<option value="0">有追索权保理</option>
+									<option value="1">无追索权保理</option>
+									<option value="2">明保理</option>
+									<option value="3">暗保理</option>
+									<option value="4">正向保理</option>
+									<option value="5">反向保理</option>
+									<option value="6">联合保理</option>
+									<option value="7">再保理</option>
+                            </select>
+                        </div>
+                    </div>
+	                <div class="form-group" style="margin-top: 20px;">
+                        <label class="col-sm-2 control-label" for="creditContractNo">授信合同编号</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="creditContractNo" class="form-control" id="creditContractNo" readonly>
+                        </div>
+                        <label class="col-sm-2 control-label" for="creditContractName">授信合同名称</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="creditContractName" class="form-control" id="creditContractName" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="col-sm-2 control-label" for="creditContractTerm">授信合同期限(年)</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="creditContractTerm" class="form-control" id="creditContractTerm" readonly>
+                        </div>
+                        <label class="col-sm-2 control-label" for="creditContractNote">授信合同说明</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="creditContractNote" class="form-control" id="creditContractNote" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="col-sm-2 control-label" for="factoringContractNo">保理合同编号</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="factoringContractNo" class="form-control" id="factoringContractNo" readonly>
+                        </div>
+                        <label class="col-sm-2 control-label" for="factoringContractName">保理合同名称</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="factoringContractName" class="form-control" id="factoringContractName" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="col-sm-2 control-label" for="factoringContractTerm">保理合同期限(年)</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="factoringContractTerm" class="form-control" id="factoringContractTerm" readonly>
+                        </div>
+                        <label class="col-sm-2 control-label" for="factoringContractNote">保理合同说明</label>
+                        <div class="col-sm-3 valid_group">
+                            <input type="text" name="factoringContractNote" class="form-control" id="factoringContractNote" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="financingMain">融资主体</label>
+                        <div class="col-sm-3 valid_group">
+                            <select id="financingMain" name="financingMain" class="form-control" disabled>
+                                <option value="0">买方</option>
+                                <option value="1">卖方</option>
+                            </select>
+                        </div>
+                    </div>
+                    </form>
+       			    
+		            <div class="nav">
+	                    <ol class="breadcrumb" style="border: 1px solid #dddddd;border-bottom: 0px;">
+	                        <li class="active">签约文件</li>
+	                    </ol>
+	                </div>
+	                <table id="signDetailFiles" class="table" cellspacing="0" width="100%"></table>
+	                
+            
+            

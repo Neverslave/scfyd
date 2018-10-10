@@ -1,0 +1,130 @@
+package com.ut.scf.service.test.pub;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.ContextLoaderListener;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.project.AgencyFlowReqBean;
+import com.ut.scf.reqbean.pub.CorpInfoReqBean;
+import com.ut.scf.reqbean.pub.CustAgreeInfoReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.pub.ICustManagerService;
+
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = {
+        "classpath:spring-mybatis-test.xml" })
+public class CustManagerServiceTest {
+	
+	private static final Logger log = LoggerFactory.getLogger(CustManagerServiceTest.class);
+	
+	@Autowired
+	private ICustManagerService custManagerService;
+	
+	@Test
+	public void getcorpListTest(){
+		log.info("**********************************getcorpListTest start*********************************");
+		Map<String, Object> paramMap = new HashMap<>();
+		PageInfoBean page = new PageInfoBean();
+		paramMap.put("corpId", "corp00002");
+		page.setPageNumber(1);
+		page.setPageSize(10);
+		BaseRespBean respBean = custManagerService.getcorpList(paramMap, page);
+		log.info("getcorpList : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************getcorpListTest end*********************************");
+	}
+	
+	@Test
+	public void addCorpTest(){
+		log.info("**********************************addCorpTest start*********************************");
+		CorpInfoReqBean corpInfoReqBean = new CorpInfoReqBean();
+		corpInfoReqBean.setCorpName("我来进行一个测试");
+		corpInfoReqBean.setSysType((short)3);
+		corpInfoReqBean.setFixedPhone("18654353589");
+		corpInfoReqBean.setOrgnNum("77668877");
+		corpInfoReqBean.setCorpType("国有企业");
+		corpInfoReqBean.setContactInfo("18654353589");
+		corpInfoReqBean.setRegCap(new BigDecimal(888888));
+		corpInfoReqBean.setLegalPerson("利艾");
+		corpInfoReqBean.setOfficeAddress("南京");
+//		corpInfoReqBean.setMaxCreditAmount(BigDecimal.valueOf(2333333));
+//		corpInfoReqBean.setUseAbleCreditAmt(BigDecimal.valueOf(22222));
+		List<Map<String,Object>> shareInfoList = new ArrayList<Map<String, Object>>();
+		corpInfoReqBean.setShareInfoList(shareInfoList);
+		List<Map<String,Object>> attachInfoList = new ArrayList<Map<String, Object>>();
+		corpInfoReqBean.setAttachInfoList(attachInfoList);
+		custManagerService.addCorp(corpInfoReqBean);
+		log.info("**********************************addCorpTest end*********************************");
+	}
+	
+	@Test
+	public void updateCorpTest(){
+		log.info("**********************************updateCorpTest start*********************************");
+		CorpInfoReqBean corpInfoReqBean = new CorpInfoReqBean();
+		corpInfoReqBean.setCorpId("2c9984b35d0c3ff603a40c3ff6660000");
+		corpInfoReqBean.setSysType((short)3);
+		corpInfoReqBean.setCorpName("我来进行一个测试1234556");
+		List<Map<String,Object>> shareInfoList = new ArrayList<Map<String, Object>>();
+		corpInfoReqBean.setShareInfoList(shareInfoList);
+		 List<Map<String,Object>> attachInfoList = new ArrayList<Map<String, Object>>();
+		corpInfoReqBean.setAttachInfoList(attachInfoList);
+		custManagerService.updateCorp(corpInfoReqBean);
+		log.info("**********************************updateCorpTest end*********************************");
+	}
+	
+	@Before
+	public void getContext(){
+		MockServletContext sc = new MockServletContext("");
+		sc.addInitParameter(ContextLoader.CONFIG_LOCATION_PARAM, "/spring-mybatis-test.xml");
+		ServletContextListener listener = new ContextLoaderListener();
+		ServletContextEvent event = new ServletContextEvent(sc);
+		listener.contextInitialized(event);
+	}
+	
+	@Test
+	public void startProcessTest(){
+		log.info("**********************************startProcessTest start*********************************");
+//		BaseRespBean respBean = new BaseRespBean();
+		CustAgreeInfoReqBean corpInfoReqBean = new CustAgreeInfoReqBean();
+		corpInfoReqBean.setUserId("jiangl");
+		corpInfoReqBean.setRoleId("ROLE000016");
+		corpInfoReqBean.setActivitiKey("custManage");
+		corpInfoReqBean.setCorpName("故事开始在最初的那个梦中");
+		corpInfoReqBean.setSysType((short)4);
+		corpInfoReqBean.setAgencyNum("942765");
+		corpInfoReqBean.setFixedPhone("18765476876");
+		corpInfoReqBean.setOrgnNum("46578");
+		corpInfoReqBean.setCorpType("国有企业");
+		corpInfoReqBean.setContactInfo("18765476876");
+		corpInfoReqBean.setRegCap(new BigDecimal(4765));
+		corpInfoReqBean.setLegalPerson("嘿嘿");
+		corpInfoReqBean.setOfficeAddress("湖南");
+		corpInfoReqBean.setMaxCreditAmount(BigDecimal.valueOf(345));
+		corpInfoReqBean.setShareInfoList(new ArrayList<Map<String, Object>>());
+		corpInfoReqBean.setAttachInfoList(new ArrayList<Map<String, Object>>());
+		JSONObject jsonObject = new JSONObject(corpInfoReqBean);
+		custManagerService.startProcess(jsonObject);
+		log.info("**********************************startProcessTest end*********************************");
+	}
+}

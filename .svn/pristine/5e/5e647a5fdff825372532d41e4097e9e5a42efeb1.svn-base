@@ -1,0 +1,861 @@
+package com.ut.scf.web.controller.project;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.UnitValue;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.core.util.PDFUtil;
+import com.ut.scf.core.util.PDFUtil2;
+import com.ut.scf.core.util.ScfDateUtil;
+import com.ut.scf.pojo.auto.ChaorenContract;
+import com.ut.scf.pojo.auto.OrderBatchInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.reqbean.project.OrderManagerReqBean;
+import com.ut.scf.reqbean.project.SignContractReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.ListRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IContractManagerService;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.project.ISignContractService;
+import com.ut.scf.service.sys.ISequenceService;
+import com.ut.scf.web.controller.BaseJsonController;
+
+/**
+ * 合同
+ * 
+ * @author liwd
+ *
+ */
+@Controller
+@RequestMapping("/sign")
+public class SignContractController extends BaseJsonController {
+	private static final Logger log = LoggerFactory.getLogger(SignContractController.class);
+	@Resource
+	private IContractManagerService iContractMagagerService;
+	@Resource
+	private ISignContractService iSignContractService;
+	@Resource
+	private IActivitiService activitiService;
+	@Resource
+	private IProcessRepeatChkService iProcessRepeatChkService;
+	@Resource
+	private ISequenceService iSequenceService;
+
+	// 1.签署合同 并 发起流程
+	@RequestMapping(value = "/startProcess")
+	@ResponseBody
+	public BaseRespBean startProcess(HttpSession httpSession, @RequestBody SignContractReqBean reqBean)
+			throws Exception {
+
+		// 签署合同
+		iSignContractService.autoSignFopp(reqBean.getSignId());
+		// 发起流程
+		BaseRespBean respBean = new BaseRespBean();
+		// 获取当前用户
+		String userName = (String) httpSession.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		reqBean.setActivitiKey("contractSign");
+		JSONObject contactInfo = new JSONObject(reqBean);
+		log.debug("corpInfoStr: {}", contactInfo);
+		iSignContractService.startProcess(contactInfo);
+		return respBean;
+	}
+
+	// 添加合同
+	@RequestMapping(value = "/endProcess")
+	@ResponseBody
+	public BaseRespBean endProcess(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+		try {
+
+			Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+			String userName = (String) httpSession.getAttribute(ScfConsts.SESSION_USERNAME);
+			reqBean.setUserId(userName);
+			JSONObject jsonObject = new JSONObject(reqBean);
+			respBean = iSignContractService.endProcess(jsonObject, paramMap);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("订单合同签约 法务同意异常", e);
+			respBean.setResult(-1);
+			respBean.setResultNote("操作失败");
+		}
+		return respBean;
+	}
+
+	// 签合同 并 审核是否同意
+	@RequestMapping(value = "/reApply")
+	@ResponseBody
+	public BaseRespBean doAgreeAndSign(HttpSession httpSession, @RequestBody SignContractReqBean reqBean)
+			throws Exception {
+		// 签合同
+		iSignContractService.autoSignFopp(reqBean.getSignId());
+		// 审核
+		BaseRespBean respBean = new BaseRespBean();
+		// 获取当前用户
+		String userName = (String) httpSession.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		JSONObject jsonObject = new JSONObject(reqBean);
+		respBean = iSignContractService.reApply(jsonObject);
+		return respBean;
+	}
+
+	// 5.审核是否同意
+	@RequestMapping(value = "/doAgree")
+	@ResponseBody
+	public BaseRespBean doAgree(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 获取当前用户
+		String userName = (String) httpSession.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		JSONObject jsonObject = new JSONObject(reqBean);
+		respBean = activitiService.doAgree(jsonObject);
+		// if ("1".equals(reqBean.getAgree())) {
+		// // 拒绝删除判重记录 以供重新发起
+		// ProcessRepeatCheck processRepeatCheck = new ProcessRepeatCheck();
+		// processRepeatCheck.setItemKey("ORDER_BATCH_ID");
+		// processRepeatCheck.setItemValue(reqBean.getOrderBatchId());
+		// processRepeatCheck.setProcessKey("contractSign");
+		// iProcessRepeatChkService.delete(processRepeatCheck);
+		// }
+		return respBean;
+	}
+
+	// 获取批次信息
+	@RequestMapping(value = "/batchList")
+	@ResponseBody
+	public BaseRespBean batchInfoList(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		Map<String, Object> map = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		return iSignContractService.batchInfoList(map, page);
+
+	}
+	// 获取批次信息
+	@RequestMapping(value = "/batchListAll")
+	@ResponseBody
+	public BaseRespBean batchInfoListAll(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		Map<String, Object> map = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		return iSignContractService.batchInfoListAll(map, page);
+
+	}
+	
+	// 获取批次信息
+	@RequestMapping(value = "/batchListAllSigned")
+	@ResponseBody
+	public BaseRespBean batchInfoListAllSigned(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		Map<String, Object> map = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		return iSignContractService.batchInfoListAllSigned(map, page);
+
+	}
+	// 获取批次信息
+	@RequestMapping(value = "/BlSigned")
+	@ResponseBody
+	public BaseRespBean BlSigned(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		Map<String, Object> map = BeanUtil.beanToMap(reqBean);
+		BaseRespBean baseRespBean=new BaseRespBean();
+		try {
+			baseRespBean= iSignContractService.SignedContract(map);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return baseRespBean;
+
+	}
+	@RequestMapping(value = "/batchInfo")
+	@ResponseBody
+	public OrderBatchInfo batchInfoById(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		return iSignContractService.batchInfoById(reqBean.getBatchId());
+
+	}
+
+	// 获取订单信息
+	@RequestMapping(value = "/orderList")
+	@ResponseBody
+	public BaseRespBean orderInfoList(HttpSession httpSession, @RequestBody OrderManagerReqBean reqBean) {
+	
+		String orderByNameSql="";
+		if(StringUtils.isNotBlank(reqBean.getOrderByName()))
+		{
+			char[] orderByNameBytes=reqBean.getOrderByName().toCharArray();
+			for(int i = 0;i<orderByNameBytes.length; i++)
+			{
+				if(orderByNameBytes[i]>='A'&&orderByNameBytes[i]<='Z'){
+					
+					orderByNameSql=orderByNameSql+'_'+Character.toLowerCase(orderByNameBytes[i]);
+				}
+				else{
+					orderByNameSql=orderByNameSql+orderByNameBytes[i];
+				}
+				
+			}
+			reqBean.setOrderByName(orderByNameSql);
+		}
+		else{
+			reqBean.setOrderBy("desc");
+			reqBean.setOrderByName("batch_id");
+		}
+	
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		
+		if(StringUtils.isNotBlank(reqBean.getOrderId()))
+		{
+			paramMap.remove("orderId");
+		    String [] idList =StringUtils.split(reqBean.getOrderId(),",");
+		    paramMap.put("orderId", idList);
+		}
+
+	    
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		return iSignContractService.orderInfoByBatchId(paramMap, page);
+
+	}
+
+	// 获取订单信息
+	@RequestMapping(value = "/stuFileInfo")
+	@ResponseBody
+	public BaseRespBean stuFileInfo(HttpSession httpSession, @RequestBody OrderManagerReqBean reqBean) {
+		return iSignContractService.findStuFileInfo(reqBean.getOrderId());
+
+	}
+
+	// 获取超人所需费用 getCrReqAmtByBatchId
+	@RequestMapping(value = "/crReqAmt")
+	@ResponseBody
+	public String crReqAmtByBatchId(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return iSignContractService.getCrReqAmtByBatchId(paramMap);
+	}
+
+	// 获取超人保证金比例
+	@RequestMapping(value = "/rate")
+	@ResponseBody
+	public String getGuaranteeRate(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		return iSignContractService.getGuaranteeRate(reqBean.getProductId()) + "";
+	}
+
+	// 获取还款信息
+	@RequestMapping(value = "/repayList")
+	@ResponseBody
+	public BaseRespBean repayInfoList(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return iSignContractService.repaymentInfoList(paramMap);
+	}
+
+	@RequestMapping(value = "/repayListPage")
+	@ResponseBody
+	public BaseRespBean repayInfoListPage(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		if(StringUtils.isEmpty(reqBean.getOrderBy()))
+		{
+			reqBean.setOrderBy("desc");
+			reqBean.setOrderByName("order_batch_id");
+		}
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		return iSignContractService.repaymentInfoBean(paramMap, page);
+	}
+
+	@RequestMapping(value = "/repayListOrder")
+	@ResponseBody
+	public BaseRespBean repayInfoListOrder(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return iSignContractService.repaymentInfoBeanByOrder(paramMap);
+	}
+	@RequestMapping(value = "/repayListOrder2")
+	@ResponseBody
+	public BaseRespBean repayInfoListOrder2(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return iSignContractService.repaymentInfoBeanByOrderSuper(paramMap);
+	}
+
+	// 返回超人合同视图
+	@RequestMapping(value = "/view")
+	@ResponseBody
+	public String viewContract(@RequestBody SignContractReqBean reqBean) throws Exception {
+		return iSignContractService.viewContract(reqBean.getSignId(), reqBean.getFileId());
+
+	}
+	
+	
+	@RequestMapping(value = "/recomend")
+	@ResponseBody
+	public String recomend(@RequestBody SignContractReqBean reqBean) throws Exception {
+		
+		return iSignContractService.recomend(reqBean.getPeopleType());
+
+	}
+
+	// 根据模板 生成订单合同
+	@RequestMapping(value = "/send")
+	@ResponseBody
+	public BaseRespBean sendContract(HttpServletRequest request, @RequestBody SignContractReqBean reqBean) {
+		ListRespBean respBean = new ListRespBean();
+
+	/*	if ("".equals(iSignContractService.getSSMContactNo())) {
+			respBean.setResultNote("操作失败，不存在分期超人的保理合同");
+			respBean.setResult(-1);
+			return respBean;
+		}*/
+		String peopleTyle = reqBean.getPeopleType();
+		String procInstId = reqBean.getProcInstId();
+		if (procInstId != null && !"".equals(procInstId)) {
+			iProcessRepeatChkService.deleteByProcInstId(procInstId);
+		}
+
+		// 验证 判重
+		ProcessRepeatCheck processRepeatCheck = new ProcessRepeatCheck();
+		processRepeatCheck.setItemKey("ORDER_BATCH_ID");
+		processRepeatCheck.setItemValue(reqBean.getBatchId());
+		processRepeatCheck.setProcessKey("contractSign");
+		if (iProcessRepeatChkService.isProcessExist(processRepeatCheck)) {
+			respBean.setResultNote("批次[" + reqBean.getBatchId() + "]已经发起过订单合同签约不能重复发起");
+			respBean.setResult(-1);
+			return respBean;
+		}
+		String signPath = request.getSession().getServletContext().getRealPath(reqBean.getOrderContentFile());
+		File file2 = new File(signPath);
+		if (!file2.exists()) {
+			file2.delete();
+			respBean.setResult(-1);
+			respBean.setResultNote("协议不存在或者没有生成，请确认");
+			return respBean;
+		}
+		
+		try {
+			List<Map<String, String>> resultList = new ArrayList<Map<String, String>>();
+			String no = reqBean.getContractNo();
+		
+			Map<String, String> resultMap;
+			
+			//如果不是翼支付就上传到上上签  如果是翼支付，就直接存数据库
+			if(!peopleTyle.equals("3")){
+				resultMap = iSignContractService.sendContract(signPath);
+				reqBean.setSignId(resultMap.get("signId"));
+				reqBean.setFileId(resultMap.get("fileId"));
+				
+			}else {
+				reqBean.setFileId(reqBean.getOrderContentFile());
+			}
+				
+			Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+			BaseRespBean bean=new BaseRespBean();
+			bean = iSignContractService.insertContract(paramMap);
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return respBean;
+	
+	}
+	// 根据模板 生成订单合同
+		@RequestMapping(value = "/setContent")
+		@ResponseBody
+		public BaseRespBean SetContract(HttpServletRequest request, @RequestBody SignContractReqBean reqBean) {
+			ListRespBean respBean = new ListRespBean();
+
+		/*	if ("".equals(iSignContractService.getSSMContactNo())) {
+				respBean.setResultNote("操作失败，不存在分期超人的保理合同");
+				respBean.setResult(-1);
+				return respBean;
+			}*/
+
+	
+			String no = reqBean.getContractNo();
+			String peopleType =reqBean.getPeopleType().toString(); 
+			String signPath = "/sign/contract-" + no + ".pdf";
+			String path = request.getSession().getServletContext().getRealPath(signPath);
+			
+			Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+			List<Map<String, Object>> countsGroupList = iSignContractService.findCountsByGroup(paramMap);
+			
+			if(peopleType.equals("3")){//翼支付
+				
+				String filePath = "/importTemp/翼支付订单合同模板.pdf";
+				filePath = request.getSession().getServletContext().getRealPath(filePath);
+				String toPath = "/sign/翼支付订单合同.pdf";
+				toPath = request.getSession().getServletContext().getRealPath(toPath);
+				String tablePath = "/sign/翼支付订单合同附件.pdf";
+				tablePath = request.getSession().getServletContext().getRealPath(tablePath);
+				try {
+					List<String> columnsTitle = setYZFColumnsTitle();
+					UnitValue[] unitValue = new UnitValue[] { 
+							
+							UnitValue.createPercentValue((float) 6), UnitValue.createPercentValue((float) 6),
+							UnitValue.createPercentValue((float) 5), UnitValue.createPercentValue((float) 6),
+							UnitValue.createPercentValue((float) 6), UnitValue.createPercentValue((float) 6),
+							UnitValue.createPercentValue((float) 6), UnitValue.createPercentValue((float) 6),
+							UnitValue.createPercentValue((float) 5), UnitValue.createPercentValue((float) 5),
+							UnitValue.createPercentValue((float) 6), UnitValue.createPercentValue((float) 6),
+							UnitValue.createPercentValue((float) 6), UnitValue.createPercentValue((float) 5),
+							UnitValue.createPercentValue((float) 5), UnitValue.createPercentValue((float) 5),
+							UnitValue.createPercentValue((float) 5), UnitValue.createPercentValue((float) 5)
+
+					};
+					Document document = PDFUtil2.writeTableToPDF(tablePath);
+					Table table = PDFUtil2.getPdfPTable(unitValue).setWidthPercent(100);
+					PdfFont font = PDFUtil2.chineseFont();
+					document.add(table);
+					PDFUtil2.setTitleCell(table, columnsTitle.size(), "应收账款转让管理同意协议附件");
+					
+					PDFUtil2.setContractNoCell(table, columnsTitle.size(), "编号："+no.substring(no.length()-10));
+					
+					PDFUtil2.setFields(table, columnsTitle);
+					
+					int  countOrderId=0;
+					BigDecimal totalPriceSum=new BigDecimal("0.00");
+					BigDecimal needmoneySum=new BigDecimal("0.00");
+					BigDecimal sumMarketingFeeYiSum=new BigDecimal("0.00");
+					
+					BigDecimal periodBlRepayAmtSum=	 new BigDecimal("0.00");
+					BigDecimal periodYhPayAmtSum=	 new BigDecimal("0.00");
+					
+					BigDecimal currentMoneySum=	 new BigDecimal("0.00");
+					BigDecimal marketingFeeYiSum=	 new BigDecimal("0.00");
+					BigDecimal interestSum=	 new BigDecimal("0.00");
+					BigDecimal lcMoneySum=	 new BigDecimal("0.00");
+					BigDecimal serviceChargeYiSum=	 new BigDecimal("0.00");
+					List<String> idsSum = new ArrayList<String>();
+					
+					
+					List<String> ids = new ArrayList<String>();
+					List<Map<String, Object>> param = new ArrayList<Map<String, Object>>();
+					for (int i = 0; i < countsGroupList.size(); i++) {
+						ids.add(countsGroupList.get(i).get("orderId").toString());
+						if ((i + 1) % 30 == 0) {
+							Map<String, Object> map = new HashMap<String, Object>();
+							map.put("orderId", ids);
+							List<Map<String, Object>> resList = iSignContractService.repaymentInfoListByOrders(map);
+							for (int j = 0; j < resList.size(); j++) {
+
+								if(resList.get(j).get("orderId")!=null&&(!idsSum.contains(resList.get(j).get("orderId").toString())))
+								{
+									idsSum.add(resList.get(j).get("orderId").toString());
+									totalPriceSum=totalPriceSum.add(new BigDecimal(resList.get(j).get("totalPrice")==null?"0.00":resList.get(j).get("totalPrice").toString())) ; 
+									needmoneySum=needmoneySum.add(new BigDecimal(resList.get(j).get("needmoney")==null?"0.00":resList.get(j).get("needmoney").toString())) ; 
+									sumMarketingFeeYiSum=sumMarketingFeeYiSum.add(new BigDecimal(resList.get(j).get("sumMarketingFeeYi")==null?"0.00":resList.get(j).get("sumMarketingFeeYi").toString())) ; 
+									countOrderId=countOrderId+1;
+								}
+								
+								periodBlRepayAmtSum=periodBlRepayAmtSum.add(new BigDecimal(resList.get(j).get("periodBlRepayAmt")==null?"0.00":resList.get(j).get("periodBlRepayAmt").toString())) ; 
+								periodYhPayAmtSum=periodYhPayAmtSum.add(new BigDecimal(resList.get(j).get("periodYhPayAmt")==null?"0.00":resList.get(j).get("periodYhPayAmt").toString())) ; 
+								currentMoneySum=currentMoneySum.add(new BigDecimal(resList.get(j).get("currentMoney")==null?"0.00":resList.get(j).get("currentMoney").toString())) ; 
+								marketingFeeYiSum=marketingFeeYiSum.add(new BigDecimal(resList.get(j).get("marketingFeeYi")==null?"0.00":resList.get(j).get("marketingFeeYi").toString())) ; 
+								interestSum=interestSum.add(new BigDecimal(resList.get(j).get("interest")==null?"0.00":resList.get(j).get("interest").toString())) ; 
+								lcMoneySum=lcMoneySum.add(new BigDecimal(resList.get(j).get("lcMoney")==null?"0.00":resList.get(j).get("lcMoney").toString())) ; 
+								serviceChargeYiSum=serviceChargeYiSum.add(new BigDecimal(resList.get(j).get("serviceChargeYi")==null?"0.00":resList.get(j).get("serviceChargeYi").toString())) ; 
+								
+								Map<String, Object> map2 = resList.get(j);
+								if ((int) map2.get("period") == 1) {
+									if (param.size() > 0) {
+										PDFUtil2.setTable(table, setYZFColumnsField(), param, setYZFRowSpan(), font);
+
+									}
+									param.clear();
+									param.add(map2);
+								} else if (j == resList.size() - 1) {
+									param.add(map2);
+									PDFUtil2.setTable(table, setYZFColumnsField(), param, setYZFRowSpan(), font);
+									param.clear();
+								} else {
+									param.add(map2);
+								}
+							}
+							ids.clear();
+							table.flush();
+						} else if (i == countsGroupList.size() - 1) {
+							Map<String, Object> map = new HashMap<String, Object>();
+							map.put("orderId", ids);
+							List<Map<String, Object>> resList = iSignContractService.repaymentInfoListByOrders(map);
+							for (int j = 0; j < resList.size(); j++) {
+								Map<String, Object> map2 = resList.get(j);
+								if ((int) map2.get("period") == 1) {
+									if (param.size() > 0) {
+										PDFUtil2.setTable(table, setYZFColumnsField(), param, setYZFRowSpan(), font);
+									}
+
+									param.clear();
+									param.add(map2);
+								} else if (j == resList.size() - 1) {
+									param.add(map2);
+									PDFUtil2.setTable(table, setYZFColumnsField(), param, setYZFRowSpan(), font);
+									param.clear();
+								} else {
+									param.add(map2);
+								}
+							}
+							ids.clear();
+							table.flush();
+						}
+					}
+					table.complete();
+					
+					UnitValue[] unitValuefooter = new UnitValue[] {							
+							UnitValue.createPercentValue((float) 12), 
+							UnitValue.createPercentValue((float) 17),  UnitValue.createPercentValue((float) 6),
+							UnitValue.createPercentValue((float) 6), UnitValue.createPercentValue((float) 6),
+							UnitValue.createPercentValue((float) 5), UnitValue.createPercentValue((float) 5),
+							UnitValue.createPercentValue((float) 6), UnitValue.createPercentValue((float) 6),
+							UnitValue.createPercentValue((float) 6), UnitValue.createPercentValue((float) 5),
+							UnitValue.createPercentValue((float) 5), UnitValue.createPercentValue((float) 5),
+							UnitValue.createPercentValue((float) 5), UnitValue.createPercentValue((float) 5)
+					};
+					Table table2 = PDFUtil2.getPdfPTable(unitValuefooter).setWidthPercent(100);
+			
+					document.add(table2);
+					PDFUtil2.setFooterFields(table2, countOrderId,totalPriceSum,needmoneySum,sumMarketingFeeYiSum,periodBlRepayAmtSum,periodYhPayAmtSum
+							,currentMoneySum,marketingFeeYiSum,interestSum,lcMoneySum,serviceChargeYiSum);
+					table2.complete();
+					
+					
+					document.close();
+					
+					
+					
+					ChaorenContract chaorenContract = iSignContractService.getChaorenContract(peopleType);
+					Map<String, String> map = new HashMap<String, String>();
+					map.put("contractNo", no.substring(no.length()-10));
+					map.put("payAmt", needmoneySum.setScale(2,BigDecimal.ROUND_HALF_UP).toString());
+					PDFUtil2.exportToPDF(filePath, toPath, map);
+
+					PDFUtil2.mergePDF(toPath, tablePath, path);
+					
+					
+					
+					
+					respBean.setResult(0);
+					respBean.setResultNote(signPath);
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+				
+			}else{//分期超人
+				double rate = iSignContractService.getGuaranteeRate(reqBean.getProductId());
+				BigDecimal bigRate = new BigDecimal(rate).divide(new BigDecimal(100), 10, BigDecimal.ROUND_HALF_UP);
+				String filePath = "/importTemp/订单合同模板.pdf";
+				filePath = request.getSession().getServletContext().getRealPath(filePath);
+				String toPath = "/sign/订单合同.pdf";
+				toPath = request.getSession().getServletContext().getRealPath(toPath);
+				String tablePath = "/sign/订单合同附件.pdf";
+				tablePath = request.getSession().getServletContext().getRealPath(tablePath);
+
+				File tempFile = new File(toPath);
+				File fileParent = tempFile.getParentFile();
+				if (!fileParent.exists()) {
+					fileParent.mkdirs();
+				}
+
+				try {
+				/*	if (no == null || "".equals(no)) {
+						no = iSequenceService.getNextSequence("SSMSEQUENCE", "","ht");
+					}*/
+					
+					String date = ScfDateUtil.format(new Date(), "yyyy-MM-dd");
+
+					List<String> columnsTitle = setColumnsTitle();
+					UnitValue[] unitValue = new UnitValue[] {							
+							UnitValue.createPercentValue((float) 8), UnitValue.createPercentValue((float) 10),
+							UnitValue.createPercentValue((float) 9), UnitValue.createPercentValue((float) 8),
+							UnitValue.createPercentValue((float) 8), UnitValue.createPercentValue((float) 8),
+							UnitValue.createPercentValue((float) 8), UnitValue.createPercentValue((float) 8),
+							UnitValue.createPercentValue((float) 8), UnitValue.createPercentValue((float) 8),
+							UnitValue.createPercentValue((float) 8), UnitValue.createPercentValue((float) 9)
+					};
+				
+					Document document = PDFUtil2.writeTableToPDF(tablePath);
+					Table table = PDFUtil2.getPdfPTable(unitValue).setWidthPercent(100);
+					PdfFont font = PDFUtil2.chineseFont();
+					document.add(table);
+					PDFUtil2.setTitleCell(table, columnsTitle.size(), "应收账款转让管理同意协议附件");
+					
+					PDFUtil2.setContractNoCell(table, columnsTitle.size(), "编号："+no.substring(no.length()-10));
+					
+					PDFUtil2.setFields(table, columnsTitle);
+				
+					int  countOrderId=0;
+					BigDecimal totalPriceSum=new BigDecimal("0.00");
+					BigDecimal needmoneySum=new BigDecimal("0.00");
+					BigDecimal periodBlRepayAmtSum=	 new BigDecimal("0.00");
+					BigDecimal currentMoneySum=	 new BigDecimal("0.00");
+					BigDecimal interestSum=	 new BigDecimal("0.00");
+					List<String> idsSum = new ArrayList<String>();
+					List<String> ids = new ArrayList<String>();
+					List<Map<String, Object>> param = new ArrayList<Map<String, Object>>();
+					for (int i = 0; i < countsGroupList.size(); i++) {
+					
+						ids.add(countsGroupList.get(i).get("orderId").toString());
+						if ((i + 1) % 30 == 0) {
+							Map<String, Object> map = new HashMap<String, Object>();
+							map.put("orderId", ids);
+							List<Map<String, Object>> resList = iSignContractService.repaymentInfoListByOrders(map);
+							for (int j = 0; j < resList.size(); j++) {
+								//汇总表
+								if(resList.get(j).get("orderId")!=null&&(!idsSum.contains(resList.get(j).get("orderId").toString())))
+								{
+									idsSum.add(resList.get(j).get("orderId").toString());
+									totalPriceSum=totalPriceSum.add(new BigDecimal(resList.get(j).get("totalPrice")==null?"0.00":resList.get(j).get("totalPrice").toString())) ; 
+									needmoneySum=needmoneySum.add(new BigDecimal(resList.get(j).get("needmoney")==null?"0.00":resList.get(j).get("needmoney").toString())) ; 
+									countOrderId=countOrderId+1;
+								}
+								
+								periodBlRepayAmtSum=periodBlRepayAmtSum.add(new BigDecimal(resList.get(j).get("periodBlRepayAmt")==null?"0.00":resList.get(j).get("periodBlRepayAmt").toString())) ; 
+								currentMoneySum=currentMoneySum.add(new BigDecimal(resList.get(j).get("currentMoney")==null?"0.00":resList.get(j).get("currentMoney").toString())) ; 
+								interestSum=interestSum.add(new BigDecimal(resList.get(j).get("interest")==null?"0.00":resList.get(j).get("interest").toString())) ; 
+								
+								Map<String, Object> map2 = resList.get(j);
+								if ((int) map2.get("period") == 1) {
+									if (param.size() > 0) {
+										PDFUtil2.setTable(table, setColumnsField(), param, setRowSpan(), font);
+
+									}
+									param.clear();
+									param.add(map2);
+								} else if (j == resList.size() - 1) {
+									param.add(map2);
+									PDFUtil2.setTable(table, setColumnsField(), param, setRowSpan(), font);
+									param.clear();
+								} else {
+									param.add(map2);
+								}
+							}
+							ids.clear();
+							table.flush();
+						} else if (i == countsGroupList.size() - 1) {
+							Map<String, Object> map = new HashMap<String, Object>();
+							map.put("orderId", ids);
+							List<Map<String, Object>> resList = iSignContractService.repaymentInfoListByOrders(map);
+							for (int j = 0; j < resList.size(); j++) {
+								
+								//汇总表
+								if(resList.get(j).get("orderId")!=null&&(!idsSum.contains(resList.get(j).get("orderId").toString())))
+								{
+									idsSum.add(resList.get(j).get("orderId").toString());
+									totalPriceSum=totalPriceSum.add(new BigDecimal(resList.get(j).get("totalPrice")==null?"0.00":resList.get(j).get("totalPrice").toString())) ; 
+									needmoneySum=needmoneySum.add(new BigDecimal(resList.get(j).get("needmoney")==null?"0.00":resList.get(j).get("needmoney").toString())) ; 
+									countOrderId=countOrderId+1;
+								}
+								
+								periodBlRepayAmtSum=periodBlRepayAmtSum.add(new BigDecimal(resList.get(j).get("periodBlRepayAmt")==null?"0.00":resList.get(j).get("periodBlRepayAmt").toString())) ; 
+								currentMoneySum=currentMoneySum.add(new BigDecimal(resList.get(j).get("currentMoney")==null?"0.00":resList.get(j).get("currentMoney").toString())) ; 
+								interestSum=interestSum.add(new BigDecimal(resList.get(j).get("interest")==null?"0.00":resList.get(j).get("interest").toString())) ; 
+								
+								
+								
+								Map<String, Object> map2 = resList.get(j);
+								if ((int) map2.get("period") == 1) {
+									if (param.size() > 0) {
+										PDFUtil2.setTable(table, setColumnsField(), param, setRowSpan(), font);
+									}
+
+									param.clear();
+									param.add(map2);
+								} else if (j == resList.size() - 1) {
+									param.add(map2);
+									PDFUtil2.setTable(table, setColumnsField(), param, setRowSpan(), font);
+									param.clear();
+								} else {
+									param.add(map2);
+								}
+							}
+							ids.clear();
+							table.flush();
+						}
+					}
+					
+	
+					
+					table.complete();
+					
+					UnitValue[] unitValuefooter = new UnitValue[] {							
+							UnitValue.createPercentValue((float) 8), UnitValue.createPercentValue((float) 27),
+							
+							UnitValue.createPercentValue((float) 8), UnitValue.createPercentValue((float) 8),
+							UnitValue.createPercentValue((float) 8), UnitValue.createPercentValue((float) 8),
+							UnitValue.createPercentValue((float) 8), UnitValue.createPercentValue((float) 8),
+							UnitValue.createPercentValue((float) 8), UnitValue.createPercentValue((float) 9)
+					};
+					Table table2 = PDFUtil2.getPdfPTable(unitValuefooter).setWidthPercent(100);
+			
+					document.add(table2);
+					PDFUtil2.setFooterFields(table2, countOrderId,totalPriceSum,needmoneySum,periodBlRepayAmtSum,currentMoneySum,interestSum);
+					table2.complete();
+					
+					document.close();
+					ChaorenContract chaorenContract = iSignContractService.getChaorenContract(peopleType);
+					Map<String, String> map = new HashMap<String, String>();
+					map.put("contractNo", no);
+					map.put("contractMoney", needmoneySum.setScale(2,BigDecimal.ROUND_HALF_UP).toString());
+				
+					BigDecimal ensureMoney = needmoneySum.multiply(bigRate);
+					map.put("ensureMoney", ensureMoney.setScale(2,BigDecimal.ROUND_HALF_UP).toString());
+					String dateString = chaorenContract.getSignDate();
+					dateString = dateString.replaceFirst("-", " 年 ");
+					dateString = dateString.replaceFirst("-", " 月 ");
+					dateString = dateString + " 日 ";
+					map.put("date", dateString);
+					map.put("contractNum", chaorenContract.getContractNo());
+					PDFUtil2.exportToPDF(filePath, toPath, map);
+
+					PDFUtil2.mergePDF(toPath, tablePath, path);
+			
+					respBean.setResult(0);
+					respBean.setResultNote(signPath);
+				
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			return respBean;
+		}
+	private List<String> setColumnsTitle() {
+		List<String> list = new ArrayList<String>();
+		list.add("订单号（合同编号）");
+		list.add("学生");
+		list.add("身份证号");
+		list.add("联系方式");
+		list.add("应收账款总额");
+		list.add("保理融资投放金额");
+		
+		list.add("每期应收账款金额");
+		list.add("每期应收账款到期日");
+		list.add("期数");
+		list.add("每期保理融资到期日");
+		list.add("每期保理融资本金到期金额");
+		list.add("每期保理融资利息到期金额");
+
+		return list;
+	}
+
+	private List<String> setColumnsField() {
+		List<String> fieldName = new ArrayList<String>();
+		fieldName.add("orderId");
+		fieldName.add("name");
+		fieldName.add("idCard");
+		fieldName.add("mobile");
+		fieldName.add("totalPrice");
+		fieldName.add("needmoney");
+		
+		fieldName.add("periodBlRepayAmt");
+		fieldName.add("currentRepayDate");
+		fieldName.add("period");
+		fieldName.add("currentRepayDate");
+		fieldName.add("currentMoney");
+		fieldName.add("interest");
+		return fieldName;
+	}
+
+	private List<String> setRowSpan() {
+		List<String> rowSpan = new ArrayList<String>();
+		rowSpan.add("orderId");
+		rowSpan.add("name");
+		rowSpan.add("mobile");
+		rowSpan.add("idCard");
+		rowSpan.add("totalPrice");
+		rowSpan.add("needmoney");
+		return rowSpan;
+	}
+	
+	private List<String> setYZFColumnsTitle() {
+		List<String> list = new ArrayList<String>();
+		list.add("乐超人订单号（合同编号）");
+		list.add("翼支付订单号");
+		list.add("姓名");
+		list.add("身份证号");
+		list.add("联系方式");
+		list.add("订单回款总金额");
+		list.add("保理融资投放金额");
+		list.add("营销费");
+		
+		list.add("保理每期应收账款金额");
+		list.add("用户每期回款金金额");
+		list.add("每期应收账款到期日");
+		list.add("期数");
+		list.add("每期保理融资到期日");
+		list.add("每期保理融资本金到期金额");
+		list.add("每期营销费到期金额");	
+		list.add("每期保理融资利息到期金额");
+		list.add("每期乐超人服务费金额");
+		list.add("每期翼支付服务费金额");
+		return list;
+	}
+
+	private List<String> setYZFColumnsField() {
+		List<String> fieldName = new ArrayList<String>();
+		fieldName.add("orderId");
+		fieldName.add("orderId");
+		fieldName.add("name");
+		fieldName.add("idCard");
+		fieldName.add("mobile");
+		fieldName.add("totalPrice");
+		fieldName.add("needmoney");
+		fieldName.add("sumMarketingFeeYi");
+		
+		fieldName.add("periodBlRepayAmt");
+		fieldName.add("periodYhPayAmt");
+		fieldName.add("currentRepayDate");
+		fieldName.add("period");
+		fieldName.add("currentRepayDate");
+		
+		fieldName.add("currentMoney");
+		fieldName.add("marketingFeeYi");
+		fieldName.add("interest");
+		
+		fieldName.add("lcMoney");
+		fieldName.add("serviceChargeYi");
+		
+		return fieldName;
+	}
+
+	private List<String> setYZFRowSpan() {
+		List<String> rowSpan = new ArrayList<String>();
+		rowSpan.add("orderId");
+		rowSpan.add("orderId");
+		rowSpan.add("name");
+		rowSpan.add("mobile");
+		rowSpan.add("idCard");
+		rowSpan.add("totalPrice");
+		rowSpan.add("needmoney");
+		rowSpan.add("sumMarketingFeeYi");
+		return rowSpan;
+	}
+	
+	
+
+}

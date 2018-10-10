@@ -1,0 +1,16 @@
+package com.ut.scf.service.tradfact;
+
+
+import com.ut.scf.pojo.auto.TfLoanInfo;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+public interface IProjectLoanService {
+
+    List<TfLoanInfo> getLoanInfoList();
+
+    void calInterestByDay();
+
+    BigDecimal calInterestByDay(BigDecimal interestRate, BigDecimal amount, BigDecimal day);
+}

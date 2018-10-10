@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.project.IRepayManagerDao" >
+
+  <select id="getRepayList" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+      repayment_id repaymentId,
+      repayment_date repaymentDate,
+      repay_sum_amt repaySumAmt,
+      repay_capital_amt repayCapitalAmt,
+      repay_interest_amt repayInterestAmt,
+      repay_car_type  repayCarType,
+      act_repay_amt  actRepayAmt,express,expressNum
+    from dyk_repayment_info
+	where
+	  1 = 1
+      <if test="repaymentDate != null and repaymentDate != ''">`
+	    and DATE_FORMAT(repayment_date, '%Y-%m-%d') = #{repaymentDate}
+	  </if>
+	  <if test="repaymentCorpId != null and repaymentCorpId != ''">
+	    and repayment_corp_id = #{repaymentCorpId}
+	  </if>
+	  order by repayment_date desc
+  </select>
+  
+  
+    <select id="getaddInfoList" resultType="hashmap" parameterType="hashmap" >
+	select
+		fi.cpr_year cprYear,
+		fi.cpr_month cprMonth,
+		gi.guarantee_balance guaranteeBalance,
+		fi.corp_id corpId,
+		fi.pay_id payId,
+		fi.pay_amt payAmt,
+		fi.pay_date payDate,
+		gi.pay_able_guarantee payAbleGuarantee,
+		gi.pay_act_guarantee payActGuarantee
+	from finance_info fi
+	left join guarantee_info gi on fi.finance_id =gi.finance_id
+	where 1 = 1 and gi.guarantee_balance >0
+	  <if test="corpId != null and corpId != ''">
+	    and fi.corp_id = #{corpId}
+	  </if>
+  </select>
+
+  <select id="getCarInfoList" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+      ci.car_frame_num carFrameNum,
+      ci.car_actual_price carActualPrice,
+      fi.finance_id financeId,
+      fi.finance_start_date financeStartDate,
+      fi.finance_end_date financeEndDate
+    from repayment_finance_batch rfb
+    join finance_info fi on rfb.finance_id = fi.finance_id
+    join car_info ci on rfb.car_frame_num = ci.car_frame_num
+	where
+	  rfb.repayment_id = #{repaymentId}
+  </select>
+  
+  <select id="getRepayCarInfoList" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+      	ci.car_frame_num carFrameNum,
+      	ci.car_actual_price carActualPrice,
+        ci.revenue_day revenueDay,
+      	fi.finance_id financeId,
+      	fi.finance_start_date financeStartDate,
+      	fi.finance_end_date financeEndDate,
+      	fi.finance_amount financeAmount,
+      	fi.pay_amt payAmt,
+      	fi.finance_balance financeBalance,
+		fi.cpr_year cprYear,
+		fi.cpr_month cprMonth
+    from finance_info fi
+    join car_info ci on fi.finance_id = ci.finance_id
+	where 1=1 and ci.sale_status = 0
+		  <if test="corpId != null and corpId != ''">
+	    and fi.corp_id = #{corpId}
+	  </if>
+	  <if test="carFrameNums != null and carFrameNums != ''">
+	    and FIND_IN_SET(ci.car_frame_num, #{carFrameNums}) > 0
+	  </if>
+	    <if test="carFrameNum != null and carFrameNum != ''">
+	    and ci.car_frame_num like '%${carFrameNum}%'
+	  </if>
+	  <if test="financeEndDate != null and financeEndDate != ''">
+	  	and fi.finance_end_date=#{financeEndDate}
+	  </if>
+	      <if test="cprYear != null and cprYear != ''">
+	  	and fi.cpr_year=#{cprYear}
+	  </if>
+	      <if test="cprMonth != null and cprMonth != ''">
+	   	and fi.cpr_month=#{cprMonth}
+	  </if>
+	  
+  </select>
+  
+  <select id="getAllCarInfoList" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+      ci.car_frame_num carFrameNum,
+      ci.car_actual_price carActualPrice,
+       ci.revenue_day revenueDay,
+      fi.finance_id financeId,
+      fi.finance_start_date financeStartDate,
+      fi.finance_end_date financeEndDate,
+      fi.finance_amount financeAmount,
+      fi.pay_amt payAmt,
+      fi.finance_balance financeBalance
+    from finance_info fi
+    join car_info ci on fi.finance_id = ci.finance_id
+	where
+	  FIND_IN_SET(ci.car_frame_num, #{carFrameNums}) > 0
+  </select>
+  
+  <select id="importAbleCarInfoList" resultType="string" parameterType="hashmap" >
+    SELECT
+      ci.finance_id financeId
+    from finance_info fi
+    join car_info ci on fi.finance_id = ci.finance_id
+	where
+	  fi.corp_id = #{corpId}
+	  and ci.car_frame_num = #{carFrameNum}
+	  and ci.sale_status = 0
+  </select>
+  
+  <select id="getAllNotPayInterest" resultType="string" parameterType="hashmap" >
+    SELECT
+      sum(rm.not_pay_interest)
+    from finance_info fi
+    join revenue_management rm on fi.finance_id = rm.finance_id
+	where
+	  fi.corp_id = #{corpId}
+  </select>
+  
+    <select id="findRepayDaySum" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+      simple_date simpleDate,
+      business_type businessType,
+      repay_num repayNum,
+      repay_amt repayAmt,
+      repay_aut_amt repayAutAmt,
+      note note
+    from day_repay_record_info 
+   
+		where
+		1=1
+	
+	  <if test="simpleDate != null and simpleDate != ''">
+	   	and DATE_FORMAT(simple_date,'%Y-%m-%d')=DATE_FORMAT(#{simpleDate},'%Y-%m-%d')
+	  </if>
+	  <if test="businessType != null and businessType != ''">
+	   and business_type=${businessType}
+	  </if>
+	 <if test="orderBy =='desc'">
+	 ORDER BY ${orderByName} desc
+	</if>
+	<if test="orderBy =='asc'">
+	 ORDER BY ${orderByName} asc
+	</if>
+	 	
+		
+  </select>
+  
+  
+  
+</mapper>

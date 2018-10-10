@@ -1,0 +1,15 @@
+package com.ut.scf.service.project;
+
+import com.alibaba.fastjson.JSONArray;
+
+public interface ISSMHttpConnService {
+
+	String getOrders(String startDate, String endDate);
+
+	String updateOrderStatus(String ordderId, String status);
+
+	String checkOrder(String ordderId, String planInfo);
+
+	String getRepaymentInfo(String startDate, String endDate);
+	JSONArray getRepaymentInfo(String date,int page,int pagNum) throws Exception;
+}

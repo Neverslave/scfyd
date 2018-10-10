@@ -1,0 +1,250 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+	 dateload();
+    initTable();
+   
+});
+
+function searchFun() {
+    initTable();
+    
+}
+function dateload() {
+$('#cprYear').datetimepicker({
+    language: 'zh-CN',
+    autoclose: 1,
+    todayBtn: true, // 显示今天时间
+    pickerPosition: "bottom-left",
+    minuteStep: 5,
+    format: 'yyyy',
+    startView: 4,
+    minView: 4,
+     // 日期时间选择器所能够提供的最精确的时间选择视图。
+    initialDate: new Date()
+});
+$('#cprYear').val(new Date().getFullYear());
+}
+function initTable() {
+    $('#ARInfoListTable').bootstrapTable('destroy');
+    $("#ARInfoListTable").bootstrapTable({
+        method: "post",
+        url: "../ARInfo/financePayAndRepay",
+        contentType:"application/json;charset=UTF-8",
+        striped: true, //表格显示条纹  
+        pagination: false, //启动分页  
+        showFooter:false,
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+        	var param = {              
+        			cprYear: jsonData.cprYear
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [[{
+            field: 'Number',
+            title: '</br>序</br>号</br></br>',
+            align: 'center',
+            valign: 'middle',
+            rowspan:2,
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'cprYear',
+            title: '</br>合作</br>年份</br></br>',
+            align: 'center',
+            rowspan:2,
+            valign: 'middle'
+        }, {
+            field: 'cprMonth',
+            title: '</br>合作</br>月份</br></br>',
+            align: 'center',
+            rowspan:2,
+            valign: 'middle'
+        }, {
+            title: '零售私家车业务',
+            align: 'center',
+            valign: 'middle',
+            colspan:6
+        },{
+            title: '大宗业务',
+            align: 'center',
+            valign: 'middle',
+            colspan:6
+        }],[{
+            field: 'corpCountLs',
+            title: '零售合作</br>经销商数量',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'carCountLs',
+            title: '零售管理</br>车辆数量',
+            align: 'center',
+            valign: 'middle',
+       
+        }, {
+            field: 'payGuaranteeLs',
+            title: '零售保证金</br>余额',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                return $.number(value, 2);
+            }
+        }, {
+            field: 'sumPayAmitLs',
+            title: '零售付款函</br>金额',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                return $.number(value, 2);
+            }
+        }, {
+            field: 'payRepayLs',
+            title: '零售业务</br>回款情况',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value,row,index) {
+            	if(row.sumPayAmitLs==0)
+            		{
+            		return "";
+            		}
+            	else if(row.sumPayAmitLs<=row.payRepayLs)
+            		{
+            		 return "已结清";
+            		}
+            	else
+            		{
+            		 return $.number(value, 2);
+            		}
+               
+            }
+        }, {
+            field: 'rePayPercentLs',
+            title: '零售业务</br>回款比例',
+            align: 'center',
+            valign: 'middle'
+      
+        },{
+            field: 'corpCountDz',
+            title: '大宗合作</br>经销商数量',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'carCountDz',
+            title: '大宗管理</br>车辆数量',
+            align: 'center',
+            valign: 'middle',
+       
+        }, {
+            field: 'payGuaranteeDz',
+            title: '大宗保证金</br>余额',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                return $.number(value, 2);
+            }
+        }, {
+            field: 'sumPayAmitDz',
+            title: '大宗付款函</br>金额',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                return $.number(value, 2);
+            }
+        }, {
+            field: 'payRepayDz',
+            title: '大宗业务</br>回款情况',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                return $.number(value, 2);
+            }
+        }, {
+            field: 'rePayPercentDz',
+            title: '大宗业务</br>回款比例',
+            align: 'center',
+            valign: 'middle'
+        }
+        ]
+        ],
+        onLoadSuccess: function (data) {
+        	 $('#ARInfoListTable').bootstrapTable('mergeCells', {index: 0,field: 'cprYear',colspan: 1, rowspan:12 })
+            
+        },
+        
+    });
+}
+
+function mergeCells(data, fieldName, colspan, target) {
+    if (data.length == 0) {
+        alert("不能传入空数据");
+        return;
+    }
+    var numArr = [];
+    var value = data[0][fieldName];
+    var num = 0;
+    for (var i = 0; i < data.length; i++) {
+        if (value != data[i][fieldName]) {
+            numArr.push(num);
+            value = data[i][fieldName];
+            num = 1;
+            continue;
+        }
+        num++;
+    }
+    var merIndex = 0;
+    for (var i = 0; i < numArr.length; i++) {
+        $(target).bootstrapTable('mergeCells', { index: merIndex, field: fieldName, colspan: colspan, rowspan: numArr[i] })
+        merIndex += numArr[i];
+    }
+}
+
+function mergeColspan(data, fieldNameArr, target) {
+    if (data.length == 0) {
+        alert("不能传入空数据");
+        return;
+    }
+    if (fieldNameArr.length == 0) {
+        alert("请传入属性值");
+        return;
+    }
+    var num = -1;
+    var index = 0;
+    for (var i = 0; i < data.length; i++) {
+        num++;
+        for (var v in fieldNameArr) {
+            index = 1;
+            if (data[i][fieldNameArr[v]] != data[i][fieldNameArr[0]]) {
+                index = 0;
+                break;
+            }
+        }
+        if (index == 0) {
+            continue;
+        }
+        $(target).bootstrapTable('mergeCells', { index: num, field: fieldNameArr[0], colspan: fieldNameArr.length, rowspan: 1 });
+    }
+}

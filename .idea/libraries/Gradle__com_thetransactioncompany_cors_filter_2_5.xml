@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.thetransactioncompany:cors-filter:2.5">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../gradle/jars/caches/modules-2/files-2.1/com.thetransactioncompany/cors-filter/2.5/134ed76ccd3605ccf874c4fb4f138c36202b8030/cors-filter-2.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../gradle/jars/caches/modules-2/files-2.1/com.thetransactioncompany/cors-filter/2.5/ffe0aa7eaf37567a147f5de4428b8c6eb15ff16c/cors-filter-2.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

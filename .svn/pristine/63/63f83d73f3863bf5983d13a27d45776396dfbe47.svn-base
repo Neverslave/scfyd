@@ -1,0 +1,50 @@
+package com.ut.scf.service.project;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpSession;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.pojo.auto.OrderBatchInfo;
+import com.ut.scf.pojo.auto.OrderInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.reqbean.project.OrderCheckCatchReqBean;
+import com.ut.scf.reqbean.project.OrderManagerReqBean;
+import com.ut.scf.reqbean.project.OrderYcManagerReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IOrderManagerService {
+
+    BaseRespBean orderInfoById(String batchId, Map<String, String> map);
+    BaseRespBean orderInfoById(String batchId, Map<String, String> map,PageInfoBean page);
+    OrderBatchInfo batchInfoById(String batchId);
+
+    List<List<Map<String, Object>>> getRepaymentPlans(String orderIds)
+            throws Exception;
+
+/*    BaseRespBean addRepayPlanInfo(List<String> orderIds, Map<String, String> map,String batchId)
+            throws Exception;*/
+
+    String generateRepayPlan(Map<String, Object> orderInfo) throws Exception;
+
+    BaseRespBean endProcess(
+            org.activiti.engine.impl.util.json.JSONObject jsonObject,
+            OrderManagerReqBean reqBean) throws Exception;
+
+    BaseRespBean doAgree(OrderManagerReqBean reqBean) throws Exception;
+    
+	BaseRespBean startProcess(org.activiti.engine.impl.util.json.JSONObject repayInfoStr, HttpSession httpSession, ProcessRepeatCheck checkInfo) throws Exception;
+
+	BaseRespBean deleteProcess(String procInstId);
+
+	OrderInfo selectByPrimaryKey(String orderId);
+
+	BaseRespBean orderInfoByList(String orderIdList,PageInfoBean page);
+
+	BaseRespBean endProcess(org.activiti.engine.impl.util.json.JSONObject jsonObject, OrderYcManagerReqBean reqBean);
+	BaseRespBean orderInfoByMap(OrderManagerReqBean reqBean, Map<String, String> map, PageInfoBean page);
+	BaseRespBean orderCheckCatch(OrderCheckCatchReqBean map) ;
+	BaseRespBean orderListCatchValidate(OrderCheckCatchReqBean map) ;
+	OrderBatchInfo opearte(OrderManagerReqBean reqBean);
+}

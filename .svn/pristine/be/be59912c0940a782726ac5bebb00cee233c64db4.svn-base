@@ -1,0 +1,20 @@
+package com.ut.scf.service.wechat;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.core.util.HttpPostUtil;
+import com.ut.scf.reqbean.tradfact.Agency;
+
+/**
+ * @author jihang
+ *	微信模板
+ */
+@Service
+public class WechatTemplate {
+	//推送
+	public void send(Agency agency) {
+		HttpPostUtil connection = new HttpPostUtil("http://172.25.1.61:8085/scfyd-wx/wechat/template/send");
+        connection.post(new JSONObject(agency).toString());
+	}
+}

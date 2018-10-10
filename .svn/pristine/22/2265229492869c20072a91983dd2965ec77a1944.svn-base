@@ -1,0 +1,52 @@
+package com.ut.scf.service.test.tradfact;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.tradfact.impl.ProjectFileServiceImpl;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class projectFileTest {
+
+	@Autowired
+	ProjectFileServiceImpl projectFileService;
+
+	@Test
+	public void testprojectFile() {
+		Map<String, Object> paramMap = new HashMap<>();
+		PageInfoBean page = new PageInfoBean();
+		paramMap.put("projectId", "2c99849c5f5bc9534cd75bc9b4500001");
+		page.setPageNumber(1);
+		page.setPageSize(10);
+		BaseRespBean selectProjectFile = projectFileService.selectProjectFile(paramMap);
+		System.err.println(selectProjectFile);
+	}
+
+	@Test
+	public void testSelectContractProjectFile() {
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("projectId", "pro0001");
+		BaseRespBean selectContractProjectFile = projectFileService.selectContractProjectFile(paramMap);
+		System.err.println(selectContractProjectFile);
+	}
+
+	@Test
+	public void testSelectLoanProjectFile() {
+		Map<String, Object> paramMap = new HashMap<>();
+		PageInfoBean page = new PageInfoBean();
+		// paramMap.put("projectId", "pro0001");
+		page.setPageNumber(1);
+		page.setPageSize(10);
+		BaseRespBean selectContractProjectFile = projectFileService.selectLoanProjectFile(paramMap, page);
+		System.err.println(selectContractProjectFile);
+	}
+}

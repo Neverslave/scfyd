@@ -1,0 +1,78 @@
+package com.ut.scf.web.controller.wechat;
+
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.pojo.auto.OrderBatchInfo;
+import com.ut.scf.reqbean.project.OrderManagerReqBean;
+import com.ut.scf.reqbean.project.SignContractBpmReqBean;
+import com.ut.scf.reqbean.project.SignContractReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.project.ISignContractService;
+import com.ut.scf.web.controller.ActivitiController;
+
+@Controller
+@RequestMapping(value = "/wechat/contractSign")
+public class ContractSignWechatController extends ActivitiController<SignContractBpmReqBean> {
+	
+	@Resource
+	private ISignContractService signContractService;
+	
+	@Resource(name = "signContractBpmService")
+	private IActivitiService<SignContractBpmReqBean> activitiService;
+	
+	@Override
+	protected IActivitiService<SignContractBpmReqBean> getBpmProcessService() {
+		return activitiService;
+	}
+	
+	
+	@RequestMapping(value = "/batchInfo")
+	@ResponseBody
+	public OrderBatchInfo batchInfoById(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		return signContractService.batchInfoById(reqBean.getBatchId());
+
+	}
+
+	// 返回超人合同视图
+	@RequestMapping(value = "/view")
+	@ResponseBody
+	public String viewContract(@RequestBody SignContractReqBean reqBean) throws Exception {
+		return signContractService.viewContract(reqBean.getSignId(), reqBean.getFileId());
+
+	}
+
+	// 获取订单信息
+	@RequestMapping(value = "/orderList")
+	@ResponseBody
+	public BaseRespBean orderInfoList(HttpSession httpSession, @RequestBody OrderManagerReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		return signContractService.orderInfoByBatchId(paramMap, page);
+
+	}
+	
+	@RequestMapping(value = "/repayInfo")
+	@ResponseBody
+	public BaseRespBean repayInfoListPage(HttpSession httpSession, @RequestBody SignContractReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		return signContractService.repaymentInfoBean(paramMap, page);
+	}
+	
+}

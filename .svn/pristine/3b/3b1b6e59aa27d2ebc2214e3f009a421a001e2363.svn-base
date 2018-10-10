@@ -1,0 +1,123 @@
+package com.ut.scf.service.pub.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.delegate.DelegateTask;
+import org.activiti.engine.delegate.Expression;
+import org.activiti.engine.delegate.TaskListener;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricTaskInstance;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
+
+import com.ut.scf.dao.pub.ICustDao;
+import com.ut.scf.reqbean.tradfact.Agency;
+import com.ut.scf.service.wechat.WechatTemplate;
+
+public class TaskListenerImpl implements TaskListener {
+    /**
+     *
+     */
+    private static final long serialVersionUID = -123037493041558708L;
+    private Expression roleId;
+    private Expression rollBackUser;
+    private Expression corpId;
+    private Expression representId;
+    private static WebApplicationContext ctx = ContextLoader.getCurrentWebApplicationContext();
+    private ICustDao custDao = ctx.getBean(ICustDao.class);
+    private WechatTemplate wechatTemplate = ctx.getBean(WechatTemplate.class);
+    private ProcessEngine processEngine = ctx.getBean(ProcessEngine.class);
+
+    // @Resource private ICustDao custDao;
+
+    /**
+     * 设置任务的办理人（个人任务和组任务）
+     */
+    @Override
+    public void notify(DelegateTask delegateTask) {
+        try {
+            String roleIds;
+
+            //弱不配 为空 则为会签
+            if (roleId == null) {
+                roleIds = delegateTask.getVariable("assignee", String.class);
+            } else {
+                roleIds = (String) roleId.getValue(delegateTask);
+                roleIds = roleIds.toUpperCase();
+            }
+
+            String processInstanceId = delegateTask.getProcessInstanceId();
+            String processInstanceName = "";
+            String preTaskName = "";
+            String taskid = "";
+            List<HistoricTaskInstance> AllTaskList = processEngine.getHistoryService().createHistoricTaskInstanceQuery()
+                    .processInstanceId(processInstanceId).list();
+            if (AllTaskList.size() >= 1) {
+                String parentId = AllTaskList.get(AllTaskList.size() - 1).getId();
+                HistoricTaskInstance preTask = processEngine.getHistoryService().createHistoricTaskInstanceQuery()
+                        .taskId(parentId).singleResult();
+                preTaskName = preTask.getAssignee();
+                processInstanceName = processEngine.getRepositoryService().createProcessDefinitionQuery().processDefinitionId(preTask.getProcessDefinitionId()).singleResult().getName();
+            }
+            Vector<String> users = new Vector<String>();
+            String rollBackUsers = "";
+            if (rollBackUser != null) {
+                rollBackUsers = (String) delegateTask.getVariable((String) rollBackUser.getValue(delegateTask));
+            }
+            if (StringUtils.isNotEmpty(rollBackUsers)) {
+                users.add(roleIds + rollBackUsers);
+            } else {
+                String corpIds = "";
+                String representIds = "";
+                if (corpId != null) {
+                    corpIds = (String) delegateTask.getVariable((String) corpId.getValue(delegateTask));
+                }
+
+                Map<String, Object> paramMap = new HashMap<String, Object>();
+                paramMap.put("corpId", corpIds);
+                paramMap.put("roleId", roleIds);
+                if (representId != null) {
+                    representIds = (String) delegateTask.getVariable((String) representId.getValue(delegateTask));
+                    paramMap.put("representId", representIds);
+                }
+                List<Map<String, Object>> userList = custDao.getUserByRole(paramMap);
+                Agency agency = new Agency();
+                agency.setProcdefName(processInstanceName);
+                agency.setUserName(preTaskName);
+                for (Map<String, Object> user : userList) {
+                    users.add(roleIds + user.get("username").toString());
+                    if (user.get("openId") != null && user.get("openId") != "" && !user.get("openId").equals("")
+                            && !user.get("openId").equals("null") && AllTaskList.size() >= 1) {// 微信批量推送
+                        agency.setToUser(user.get("openId").toString());
+                        agency.setTaskId(delegateTask.getId());
+                        agency.setProcInstId(processInstanceId);
+                        agency.setTaskDefKey(delegateTask.getTaskDefinitionKey());
+                        agency.setProcdefKey(delegateTask.getProcessDefinitionId());
+                        wechatTemplate.send(agency);
+                    }
+                }
+            }
+
+            delegateTask.setOwner(roleIds);
+            delegateTask.addCandidateUsers(users);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Expression getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Expression roleId) {
+        this.roleId = roleId;
+    }
+}

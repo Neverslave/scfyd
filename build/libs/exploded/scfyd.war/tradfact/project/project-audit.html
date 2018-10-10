@@ -1,0 +1,336 @@
+<section>
+    <script type="text/javascript" src="../../js/common/fileupload.js"></script>
+    <script type="text/javascript" src="../../js/common/dictload.js"></script>
+    <!--<script type="text/javascript" src="../../js/tradfact/project/project-audit.js"></script>-->
+    <div class="main-content-child">
+        <div class="nav" id="nav">
+        </div>
+        <div class="col-md-12"
+             style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+            <div class="nav">
+                <ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+                    <li class="tablename">立项申请</li>
+                </ol>
+            </div>
+            <div class="whiteBgDiv row">
+                <fieldset id='field'>
+                    <form class="form-horizontal" id="infoForm">
+                        <div class="col-sm-12" style="margin-top: 30px">
+                            <div class="form-group">
+                                <label for="projectName" class="col-sm-2 control-label"><span class="required">*</span>项目名称</label>
+                                <div class="col-sm-3 scf_valid">
+                                    <input type="text" class="form-control" id="projectName" name="projectName">
+                                </div>
+                                <label class="col-sm-2 control-label" for="factoringType"><span
+                                        class="required">*</span>保理类型</label>
+                                <div class="col-sm-3 date form_datetime">
+                                    <select name="factoringType" class="form-control" id="factoringType"
+                                            dictName="factoring_type">
+                                        <option value="">请选择</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                            <div class="form-group">
+                                <label for="nameBuy" class="col-sm-2 control-label"><span class="required">*</span>买方名称</label>
+                                <div class="col-sm-3 scf_valid">
+                                    <input type="text" class="form-control" id="nameBuy" name="nameBuy">
+                                </div>
+                                <label for="orgnNumBuy" class="col-sm-2 control-label"><span class="required">*</span>社会统一信用代码</label>
+                                <div class="col-sm-3 scf_valid">
+                                    <input type="text" class="form-control" id="orgnNumBuy" name="orgnNumBuy">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="nameSale" class="col-sm-2 control-label"><span class="required">*</span>卖方名称</label>
+                                <div class="col-sm-3 scf_valid">
+                                    <input type="text" class="form-control" id="nameSale" name="nameSale">
+                                </div>
+                                <label for="orgnNumSale" class="col-sm-2 control-label"><span class="required">*</span>社会统一信用代码</label>
+                                <div class="col-sm-3 scf_valid">
+                                    <input type="text" class="form-control" id="orgnNumSale" name="orgnNumSale">
+                                </div>
+                            </div>
+                            <div class="form-group" id="dis">
+                                <label for="creditMain" class="col-sm-2 control-label"><span class="required">*</span>授信主体</label>
+                                <div class="col-sm-3 scf_valid">
+                                    <select name="creditMain" class="form-control" id="creditMain"
+                                            dictName="buy_or_sale">
+
+                                    </select>
+                                </div>
+                                <label for="creditAmount" class="col-sm-2 control-label"><span class="required">*</span>授信金额</label>
+                                <div class="col-sm-3 scf_valid">
+                                    <input type="text" class="form-control" id="creditAmount" name="creditAmount">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="creditTerm"><span class="required">*</span>授信期限(月)</label>
+                                <div class="col-sm-3 date form_datetime">
+                                    <input class="form-control" id="creditTerm" name="creditTerm" size="16" type="text"
+                                           value="">
+                                </div>
+                                <label class="col-sm-2 control-label" for="financingAmount">单笔融资金额</label>
+                                <div class="col-sm-3 valid_group">
+                                    <input type="text" class="form-control" id="financingAmount" name="financingAmount">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="financingTerm">融资期限(月)</label>
+                                <div class="col-sm-3 date form_datetime">
+                                    <input name="financingTerm" class="form-control" id="financingTerm" size="16"
+                                           type="text">
+                                </div>
+                                <label class="col-sm-2 control-label" for="interestRate">利率(%)</label>
+                                <div class="col-sm-3 valid_group">
+                                    <input type="text" class="form-control" id="interestRate" name="interestRate">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="receiptWay">计息方式</label>
+                                <div class="col-sm-3 date form_datetime">
+                                    <select name="receiptWay" class="form-control" id="receiptWay"
+                                            dictName="receipt_way">
+                                        <option value="">请选择</option>
+                                    </select>
+                                </div>
+                                <label class="col-sm-2 control-label" for="manageFeeAmount">管理费</label>
+                                <div class="col-sm-3 valid_group">
+                                    <input type="text" class="form-control" id="manageFeeAmount" name="manageFeeAmount">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="manageFeeRate">管理费比例(%)</label>
+                                <div class="col-sm-3 date form_datetime">
+                                    <input name="manageFeeRate" class="form-control" id="manageFeeRate" size="16"
+                                           type="text">
+                                </div>
+                                <label class="col-sm-2 control-label" for="mngFeePayWay">管理费支付方式</label>
+                                <div class="col-sm-3 valid_group">
+                                    <select name="mngFeePayWay" class="form-control" id="mngFeePayWay"
+                                            dictName="mng_fee_pay_way">
+                                        <option value="">请选择</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="repaymentWay">还款方式</label>
+                                <div class="col-sm-3 date form_datetime">
+                                    <select name="repaymentWay" class="form-control" id="repaymentWay"
+                                            dictName="repayment_way">
+                                        <option value="">请选择</option>
+                                    </select>
+                                </div>
+                                <label class="col-sm-2 control-label" for="reapymentAmount">各期还款</label>
+                                <div class="col-sm-3 valid_group">
+                                    <input type="text" class="form-control" id="reapymentAmount" name="reapymentAmount">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="returnRate">内含报酬率(%)</label>
+                                <div class="col-sm-3 date form_datetime">
+                                    <input name="returnRate" class="form-control" id="returnRate" size="16" type="text">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="riskMitigationMeasures">风险缓释措施</label>
+                                <div class="col-sm-8 valid_group">
+                                    <textarea id="riskMitigationMeasures" name="riskMitigationMeasures"
+                                              class="form-control"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="projectDescription">项目简介</label>
+                                <div class="col-sm-8 valid_group">
+                                    <textarea id="projectDescription" name="projectDescription"
+                                              class="form-control"></textarea>
+                                </div>
+                            </div>
+                             <div class="form-group" style="display: none" id="risk">
+					          <input id="userId" name="userId" type="hidden">
+							<label for="riskManager" class="col-sm-2 control-label"><span
+											class="required"></span>风险经理</label>
+										<div class="col-sm-3 scf_valid">
+											<input type="text" class="form-control" 
+												id="riskManager" name="riskManager">
+										</div>
+                                <div class="col-md-1">
+									<input type='button' style="margin: auto"
+										class="btn btn-default add" value='选择'
+										onclick="searchriskManager()" />
+								</div>
+					</div>
+                        </div>
+                    </form>
+                </fieldset>
+            </div>
+            <div>
+                <input type='button' id="bntBuy" class="btnUpload btn btn-default add"
+                       onclick='uploadClick("btnBuyUpload","buyFiles","material_type_buy")' value="附件上传">
+            </div>
+            <div class="nav">
+                <ol class="breadcrumb" style="border: 1px solid #dddddd;border-bottom: 0px;">
+                    <li class="active">买方材料</li>
+                </ol>
+            </div>
+            <table id="buyFiles" class="table" cellspacing="0" width="100%"></table>
+            <div>
+                <input type='button' id="btnSale" class="btnUpload btn btn-default add"
+                       onclick='uploadClick("btnSalseUpload","saleFiles","material_type_buy")' value="附件上传">
+            </div>
+            <div class="nav">
+                <ol class="breadcrumb" style="border: 1px solid #dddddd;border-bottom: 0px;">
+                    <li class="active">卖方材料</li>
+                </ol>
+            </div>
+            <table id="saleFiles" class="table" cellspacing="0" width="100%"></table>
+
+            <div>
+                <input type='button' id="btnGuarantee" class="btnUpload btn btn-default add"
+                       onclick='uploadClick("btnGuaranteeUpload","guaranteeFiles","material_type_guarantee")'
+                       value="附件上传">
+            </div>
+            <div class="nav">
+                <ol class="breadcrumb" style="border: 1px solid #dddddd;border-bottom: 0px;">
+                    <li class="active">担保方材料</li>
+                </ol>
+            </div>
+            <table id="guaranteeFiles" class="table" cellspacing="0" width="100%"></table>
+            <div>
+                <input type='button' id="btnTran" class="btnUpload btn btn-default add"
+                       onclick='uploadClick("btnTranUpload","tranFiles","material_type_tran")' value="附件上传">
+            </div>
+            <div class="nav">
+                <ol class="breadcrumb" style="border: 1px solid #dddddd;border-bottom: 0px;">
+                    <li class="active">交易基础材料</li>
+                </ol>
+            </div>
+            <table id="tranFiles" class="table" cellspacing="0" width="100%"></table>
+        </div>
+    </div>
+</section>
+<form class="form-horizontal" id="fileInfoForm">
+    <div class="modal fade" id="fileModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <input id='material-type' type='hidden'>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="modalLabel">上传附件</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-sm-4 scf_valid"></div>
+                        <div class="col-sm-6 scf_valid">
+                            <a id="btn_choice" style="position:relative" class="btn btn-default add">文件选择
+                                <input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;"
+                                       id="fileupload" type="file" name="file">
+                            </a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fileName" class="col-sm-4 control-label">文件名称：</label>
+                        <div class="col-sm-6 scf_valid">
+                            <input type="text" class="form-control" id="fileName" name="fileName" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fileClass" class="col-sm-4 control-label">附件类型：</label>
+                        <div class="col-sm-6 scf_valid">
+                            <select id="fileClass" name="fileClass" class="form-control">
+                                <option value="0">签约视频</option>
+                                <option value="1">签约文件</option>
+                                <option value="2">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fileType" class="col-sm-4 control-label">文件格式：</label>
+                        <div class="col-sm-6 scf_valid">
+                            <input type="text" class="form-control" id="fileType" name="fileType" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fileSize" class="col-sm-4 control-label">文件大小：</label>
+                        <div class="col-sm-6 scf_valid">
+                            <input type="text" class="form-control" id="fileSize" name="fileSize" readonly>
+                        </div>
+                    </div>
+                    <input type="hidden" class="form-control" id="fileUrl" name="fileUrl">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <input type="button" class="btn btn-primary add" onclick="addFile()" value='提交更改'>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+				<div class="modal fade" id="riskManagerInfoModal" aria-hidden="true"
+				data-backdrop="static" tabindex="-1" role="dialog"
+				aria-labelledby="riskManagerInfoModalLabel">
+				<div class="modal-dialog" role="document" style='width: 800px'>
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+							<h4 class="modal-title" id="riskManagerInfoModalLabel">风险经理信息</h4>
+						</div>
+						<div class="modal-body">
+							<div class="main-content-child" >
+			        		<div class="row	rowpad" style="background-color:white;">
+					     		<div class="form-group">
+						      		<form class="form-horizontal" role="form" id="riskManagerSearchForm">
+							    		<div class="form-group col-sm-17">
+							    				<label class="col-sm-3 control-label" for="userName">用户名</label>
+							    				<div class="col-sm-3">
+												<input class="form-control" id="userName" disabled
+													name="userName" type="text" /> 
+												</div >
+												<label class="col-sm-2 control-label" for="realName">真实姓名</label>
+												<div class="col-sm-3">
+												<input
+													class="form-control" id="realName" name="realName" disabled
+													type="text" /> 
+												</div>
+										</div>
+										
+										<div class="form-group">
+											<div class="col-sm-9"></div>
+												<div class="col-sm-1">
+												<input onclick="searchriskManagerNo()" type="button" 
+												class="btn btn-primary search" value="查找">
+												</div>
+											<div class="col-sm-1" style="margin-left:30px;">
+											<input onclick="$('#userName,#realName').val('')"
+												type="button" class="btn btn-primary search" value="重置"/>
+											</div>
+										</div>
+						            </form>
+					            </div>
+	            			</div>
+				        	</div>
+							<div class="panel-body">
+								<table id="riskManagerListTable" class="table" height="100%" cellspacing="0" width="100%">
+								</table>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<div class="form-group">
+								<div class="col-sm-9"></div>
+								<div class="col-sm-1">
+									<button type="button" class="btn btn-default cancel"
+										data-dismiss="modal">取消</button>
+								</div>
+								<div class="col-sm-1" style="margin-left:30px;">
+									<button type="button" id="btn_save" class="btn btn-default save"
+										data-dismiss="modal" onclick="riskManagerInfo()">确定</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+

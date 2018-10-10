@@ -1,0 +1,243 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+    //initTable();
+	justOperate();
+    //operateFun();
+    //dateload();
+    numFormat();
+    //wingPaymentYuqiInfo();
+
+});
+
+function searchFun() {
+    initTable();
+}
+function numFormat() {
+	$("#currentSumCount").number(true, 0);
+	$("#currentSumNeedMoney").number(true, 2);
+
+
+}
+
+function justOperate(){
+	var options = {
+		     url: '../SSMSummaryInfo/justOperate',
+		     data: {},
+		     callBackFun: function(data) {
+		     	if(data.result==0){
+		     		operateFun();
+		     	    wingPaymentYuqiInfo();
+		     	}else if(data.result==1){
+		     	    wingPaymentYuqiInfo();
+		     	}else{
+		     		bootbox.alert("操作失败！");
+		     	}
+		     },
+		     errorCallback: function(data) {
+		         bootbox.alert("error");
+		     }
+		 };
+	 CloudUtils.ajax(options);
+}
+
+
+function operateFun(){
+	var dataTemp = CloudUtils.convertStringJson('searchForm');
+    var jsonData = eval("(" + dataTemp + ")");
+var options = {
+
+     url: '../SSMSummaryInfo/createWingRepaymentYuqi',
+     data: JSON.stringify(jsonData),
+     callBackFun: function(data) {
+     	if(data.result==0){
+     		//bootbox.alert("操作成功！");
+     	
+     	}else{
+     		bootbox.alert("操作失败！");
+     	}
+     	
+     },
+     errorCallback: function(data) {
+         bootbox.alert("error");
+     }
+ };
+ CloudUtils.ajax(options);
+}
+
+function initTable() {
+	
+
+	   var dataTemp = CloudUtils.convertStringJson('searchForm');
+	    var jsonData = eval("(" + dataTemp + ")");
+ var options = {
+
+         url: '../SSMSummaryInfo/wingRepaymentYuqiList',
+         data: JSON.stringify(jsonData),
+         callBackFun: function(data) {
+         	if(data.result==0){
+         		 CloudUtils.setForm(data.resultMap, 'detailFormMonthly');
+         	
+         	}else{
+         		bootbox.alert("操作失败！");
+         	}
+         	
+         },
+         errorCallback: function(data) {
+             bootbox.alert("error");
+         }
+     };
+     CloudUtils.ajax(options);
+
+	
+}
+
+
+
+function dateload() {
+    $('#syncDate').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        startView: 4,
+        minView: 4,
+         // 日期时间选择器所能够提供的最精确的时间选择视图。
+        initialDate: new Date()
+});
+
+}
+
+function wingPaymentYuqiInfo(){
+var options = {
+     url: '../SSMSummaryInfo/wingPaymentYuqiInfo',
+     data: {},
+     callBackFun: function(data) {
+     	if(data.result==0){
+     		//bootbox.alert("操作成功！");
+     		
+     		var dataInfo=data.dataList[0];
+     		
+     		$("#orderSumCountTable").text($.number(dataInfo.orderSumCount, 2));
+     		$("#orderSumMoneyTable").text($.number(dataInfo.orderSumMoney, 2));
+     		$("#shouldPayCountTable").text($.number(dataInfo.shouldPayCount, 2));
+     	    $("#restRepaymentPriceTable").text($.number(dataInfo.restRepaymentPrice, 2));
+     	    
+     	   var m01=Number(dataInfo.m0YuqiRestCount == null ? 0 : dataInfo.m0YuqiRestCount )/Number(dataInfo.orderSumCount == null ? 0 : dataInfo.orderSumCount );
+    	   var m02=Number(dataInfo.m0YuqiRestCurrentMoney == null ? 0 : dataInfo.m0YuqiRestCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m03=Number(dataInfo.m0YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m0YuqiRestNoCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m04=Number(dataInfo.m0YuqiRestCount == null ? 0 : dataInfo.m0YuqiRestCount )/Number(dataInfo.shouldPayCount == null ? 0 : dataInfo.shouldPayCount );
+    	   var m05=Number(dataInfo.m0YuqiRestCurrentMoney == null ? 0 : dataInfo.m0YuqiRestCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+    	   var m06=Number(dataInfo.m0YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m0YuqiRestNoCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+   
+    	  
+    		   
+     	   $("#m01").text(Math.round((isNaN(m01) ?0:m01) * 10000) / 100.00+'%');
+     	   $("#m02").text(Math.round((isNaN(m02) ?0:m02) * 10000) / 100.00+'%');
+     	   $("#m03").text(Math.round((isNaN(m03) ?0:m03) * 10000) / 100.00+'%');
+     	   $("#m04").text(Math.round((isNaN(m04) ?0:m04) * 10000) / 100.00+'%');
+     	   $("#m05").text(Math.round((isNaN(m05) ?0:m05) * 10000) / 100.00+'%');
+     	   $("#m06").text(Math.round((isNaN(m06) ?0:m06) * 10000) / 100.00+'%');
+     	   
+    	   var m11=Number(dataInfo.m1YuqiRestCount == null ? 0 : dataInfo.m1YuqiRestCount )/Number(dataInfo.orderSumCount == null ? 0 : dataInfo.orderSumCount );
+    	   var m12=Number(dataInfo.m1YuqiRestCurrentMoney == null ? 0 : dataInfo.m1YuqiRestCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m13=Number(dataInfo.m1YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m1YuqiRestNoCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m14=Number(dataInfo.m1YuqiRestCount == null ? 0 : dataInfo.m1YuqiRestCount )/Number(dataInfo.shouldPayCount == null ? 0 : dataInfo.shouldPayCount );
+    	   var m15=Number(dataInfo.m1YuqiRestCurrentMoney == null ? 0 : dataInfo.m1YuqiRestCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+    	   var m16=Number(dataInfo.m1YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m1YuqiRestNoCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+     	   
+     	   $("#m11").text(Math.round((isNaN(m11) ?0:m11) * 10000) / 100.00+'%');
+     	   $("#m12").text(Math.round((isNaN(m12) ?0:m12) * 10000) / 100.00+'%');
+     	   $("#m13").text(Math.round((isNaN(m13) ?0:m13) * 10000) / 100.00+'%');
+     	   $("#m14").text(Math.round((isNaN(m14) ?0:m14) * 10000) / 100.00+'%');
+     	   $("#m15").text(Math.round((isNaN(m15) ?0:m15) * 10000) / 100.00+'%');
+     	   $("#m16").text(Math.round((isNaN(m16) ?0:m16) * 10000) / 100.00+'%');
+     	   
+    	   var m21=Number(dataInfo.m2YuqiRestCount == null ? 0 : dataInfo.m2YuqiRestCount )/Number(dataInfo.orderSumCount == null ? 0 : dataInfo.orderSumCount );
+    	   var m22=Number(dataInfo.m2YuqiRestCurrentMoney == null ? 0 : dataInfo.m2YuqiRestCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m23=Number(dataInfo.m2YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m2YuqiRestNoCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m24=Number(dataInfo.m2YuqiRestCount == null ? 0 : dataInfo.m2YuqiRestCount )/Number(dataInfo.shouldPayCount == null ? 0 : dataInfo.shouldPayCount );
+    	   var m25=Number(dataInfo.m2YuqiRestCurrentMoney == null ? 0 : dataInfo.m2YuqiRestCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+    	   var m26=Number(dataInfo.m2YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m2YuqiRestNoCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+     	   
+     	   $("#m21").text(Math.round((isNaN(m21) ?0:m21) * 10000) / 100.00+'%');
+     	   $("#m22").text(Math.round((isNaN(m22) ?0:m22) * 10000) / 100.00+'%');
+     	   $("#m23").text(Math.round((isNaN(m23) ?0:m23) * 10000) / 100.00+'%');
+     	   $("#m24").text(Math.round((isNaN(m24) ?0:m24) * 10000) / 100.00+'%');
+     	   $("#m25").text(Math.round((isNaN(m25) ?0:m25) * 10000) / 100.00+'%');
+     	   $("#m26").text(Math.round((isNaN(m26) ?0:m26) * 10000) / 100.00+'%');
+     	   
+     	   var m31=Number(dataInfo.m3YuqiRestCount == null ? 0 : dataInfo.m3YuqiRestCount )/Number(dataInfo.orderSumCount == null ? 0 : dataInfo.orderSumCount );
+    	   var m32=Number(dataInfo.m3YuqiRestCurrentMoney == null ? 0 : dataInfo.m3YuqiRestCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m33=Number(dataInfo.m3YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m3YuqiRestNoCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m34=Number(dataInfo.m3YuqiRestCount == null ? 0 : dataInfo.m3YuqiRestCount )/Number(dataInfo.shouldPayCount == null ? 0 : dataInfo.shouldPayCount );
+    	   var m35=Number(dataInfo.m3YuqiRestCurrentMoney == null ? 0 : dataInfo.m3YuqiRestCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+    	   var m36=Number(dataInfo.m3YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m3YuqiRestNoCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+     	   
+     	   
+     	   $("#m31").text(Math.round((isNaN(m31) ?0:m31) * 10000) / 100.00+'%');
+     	   $("#m32").text(Math.round((isNaN(m32) ?0:m32) * 10000) / 100.00+'%');
+     	   $("#m33").text(Math.round((isNaN(m33) ?0:m33) * 10000) / 100.00+'%');
+     	   $("#m34").text(Math.round((isNaN(m34) ?0:m34) * 10000) / 100.00+'%');
+     	   $("#m35").text(Math.round((isNaN(m35) ?0:m35) * 10000) / 100.00+'%');
+     	   $("#m36").text(Math.round((isNaN(m36) ?0:m36) * 10000) / 100.00+'%');
+     	   
+     	   var m41=Number(dataInfo.m4YuqiRestCount == null ? 0 : dataInfo.m4YuqiRestCount )/Number(dataInfo.orderSumCount == null ? 0 : dataInfo.orderSumCount );
+    	   var m42=Number(dataInfo.m4YuqiRestCurrentMoney == null ? 0 : dataInfo.m4YuqiRestCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m43=Number(dataInfo.m4YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m4YuqiRestNoCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m44=Number(dataInfo.m4YuqiRestCount == null ? 0 : dataInfo.m4YuqiRestCount )/Number(dataInfo.shouldPayCount == null ? 0 : dataInfo.shouldPayCount );
+    	   var m45=Number(dataInfo.m4YuqiRestCurrentMoney == null ? 0 : dataInfo.m4YuqiRestCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+    	   var m46=Number(dataInfo.m4YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m4YuqiRestNoCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+     	   
+     	   
+     	   $("#m41").text(Math.round((isNaN(m41) ?0:m41) * 10000) / 100.00+'%');
+     	   $("#m42").text(Math.round((isNaN(m42) ?0:m42) * 10000) / 100.00+'%');
+     	   $("#m43").text(Math.round((isNaN(m43) ?0:m43) * 10000) / 100.00+'%');
+     	   $("#m44").text(Math.round((isNaN(m44) ?0:m44) * 10000) / 100.00+'%');
+     	   $("#m45").text(Math.round((isNaN(m45) ?0:m45) * 10000) / 100.00+'%');
+     	   $("#m46").text(Math.round((isNaN(m46) ?0:m46) * 10000) / 100.00+'%');
+     	   
+    	   var m51=Number(dataInfo.m5YuqiRestCount == null ? 0 : dataInfo.m5YuqiRestCount )/Number(dataInfo.orderSumCount == null ? 0 : dataInfo.orderSumCount );
+    	   var m52=Number(dataInfo.m5YuqiRestCurrentMoney == null ? 0 : dataInfo.m5YuqiRestCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m53=Number(dataInfo.m5YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m5YuqiRestNoCurrentMoney )/Number(dataInfo.orderSumMoney == null ? 0 : dataInfo.orderSumMoney );
+    	   var m54=Number(dataInfo.m5YuqiRestCount == null ? 0 : dataInfo.m5YuqiRestCount )/Number(dataInfo.shouldPayCount == null ? 0 : dataInfo.shouldPayCount );
+    	   var m55=Number(dataInfo.m5YuqiRestCurrentMoney == null ? 0 : dataInfo.m5YuqiRestCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+    	   var m56=Number(dataInfo.m5YuqiRestNoCurrentMoney == null ? 0 : dataInfo.m5YuqiRestNoCurrentMoney )/Number(dataInfo.restRepaymentPrice  == null ? 0 : dataInfo.restRepaymentPrice  );
+     	   
+     	   
+     	   $("#m51").text(Math.round((isNaN(m51) ?0:m51) * 10000) / 100.00+'%');
+     	   $("#m52").text(Math.round((isNaN(m52) ?0:m52) * 10000) / 100.00+'%');
+     	   $("#m53").text(Math.round((isNaN(m53) ?0:m53) * 10000) / 100.00+'%');
+     	   $("#m54").text(Math.round((isNaN(m54) ?0:m54) * 10000) / 100.00+'%');
+     	   $("#m55").text(Math.round((isNaN(m55) ?0:m55) * 10000) / 100.00+'%');
+     	   $("#m56").text(Math.round((isNaN(m56) ?0:m56) * 10000) / 100.00+'%');
+     	}else{
+     		bootbox.alert("操作失败！");
+     	}
+     	
+     },
+     errorCallback: function(data) {
+         bootbox.alert("error");
+     }
+ };
+ CloudUtils.ajax(options);
+}
+function print(){
+	$('#print_div').printThis({
+	    doctypeString: "<!DOCTYPE html>",
+	    importCSS: false,
+	    importStyle: ["<style type='text/css'>"+
+	    ".table-bordered {border: 1px solid #ddd; }"+
+	    ".table {width: 100%;}"+
+	    ".table {margin-bottom: 0 !important;border-collapse: collapse !important;border-radius: 1px;table-layout: fixed;}"+
+	    "table {max-width: 100%;background-color: transparent;}"+
+	    "table {border-spacing: 0;}"+
+	    "body {font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size: 14px;line-height: 1.42857143;color: #333;}"+
+	    "</style>"],
+	    header:$("#wingPaymentYuqiInfoTable").html(),
+
+	});
+	
+}
+

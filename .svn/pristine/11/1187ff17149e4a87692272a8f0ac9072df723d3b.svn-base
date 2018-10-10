@@ -1,0 +1,111 @@
+package com.ut.scf.service.project.impl;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.ut.scf.core.util.HttpConnection;
+import com.ut.scf.core.util.SignUtil;
+import com.ut.scf.service.project.ISSMHttpConnService;
+
+/**
+ * 超人接口service
+ * 
+ * @author liwd
+ * 
+ * **/
+@Service("sSMHttpConnService")
+public class SSMHttpConnServiceImpl implements ISSMHttpConnService {
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	private static String KEY_CODE = "oiUHf8y282asjn218hsadwq234sfda";
+
+	@Override
+	public String getOrders(String startDate, String endDate) {
+		String url = "http://api.fenqichaoren.com/p2p/api.php/Home/Index/need_check_order";
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("keyCode", KEY_CODE);
+		paramMap.put("start_date", startDate);
+		paramMap.put("end_date", endDate);
+		paramMap.put("state", "1");
+		String result = HttpConnection.sendGet(paramMap, url);
+		logger.info("获取到的超人订单信息{}", result);
+		return result;
+	}
+
+	// 还款信息同步
+	@Override
+	public String getRepaymentInfo(String startDate, String endDate) {
+		String url = "http://api.fenqichaoren.com/p2p/finance/temp_finance_repay.php";
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("keyCode", "oiUHf8y282asjn218hsadwq234sfda");
+		paramMap.put("rePayDateS", startDate);
+		paramMap.put("rePayDateE", endDate);
+		String result = HttpConnection.sendGet(paramMap, url);
+		logger.info("获取到的超人还款信息{}", result);
+		return result;
+	}
+	// 还款信息同步
+	@Override
+	public JSONArray getRepaymentInfo(String date) throws Exception {
+	/*	String url = "http://api.fenqichaoren.com/p2p/finance/temp_finance_repay.php";
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("keyCode", "oiUHf8y282asjn218hsadwq234sfda");
+		paramMap.put("rePayDateS", startDate);
+		paramMap.put("rePayDateE", endDate);
+		String result = HttpConnection.sendGet(paramMap, url);
+		logger.info("获取到的超人还款信息{}", result);*/
+		com.alibaba.fastjson.JSONArray dataArray=new com.alibaba.fastjson.JSONArray();
+		try {
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("date", date);
+		String url = SignUtil.userReplaymant;
+	
+		com.alibaba.fastjson.JSONObject result = SignUtil.requestInterface(map, url);
+		System.out.println(result);
+		if(result.getString("code").equals("200"))
+		{	
+			String dataString=new String();
+			
+			dataString = SignUtil.parseData(result.getString("data"));	
+			dataArray = JSON.parseArray(dataString);
+		}
+	
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new Exception(e);
+		}
+		
+		return dataArray;
+	}
+	
+	@Override
+	public String updateOrderStatus(String orderId, String status) {
+		String url = "http://api.fenqichaoren.com/p2p/api.php/Home/Index/operate_order";
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("keyCode", KEY_CODE);
+		paramMap.put("orderid", orderId);
+		// 状态 1 通过 0 不通过
+		paramMap.put("operate", "1".equals(status) ? "pass" : "'refuse'");
+		String result = HttpConnection.sendGet(paramMap, url);
+		logger.info("订单{}状态修改结果{}", orderId, result);
+		return result;
+	}
+
+	@Override
+	public String checkOrder(String ordderId, String planInfo) {
+		String url = "http://api.fenqichaoren.com/p2p/api.php/Home/Index/check_order";
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("keyCode", KEY_CODE);
+		paramMap.put("orderid", ordderId);
+		// 状态 1 通过 0 不通过
+		paramMap.put("plan_info", planInfo);
+		String result = HttpConnection.sendGet(paramMap, url);
+		logger.info("订单{}还款计划比对结果{}", ordderId, result);
+		return result;
+	}
+}

@@ -1,0 +1,82 @@
+package com.ut.scf.web.controller.wechat;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.project.RepayPlanListReqBean;
+import com.ut.scf.reqbean.project.RepayPlanReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.project.IRepayManagerService;
+import com.ut.scf.web.controller.ActivitiController;
+import com.ut.scf.web.controller.pub.CustManagerController;
+
+@Controller
+@RequestMapping("/wechat/repay")
+public class RepayManagerWechatController extends ActivitiController<RepayPlanReqBean>{
+	
+	private static final Logger log = LoggerFactory
+			.getLogger(CustManagerController.class);
+
+	@Resource(name = "repayBpmServiceImpl")
+	private IActivitiService<RepayPlanReqBean> activitiService;
+	
+	@Resource
+	private IRepayManagerService repayManagerService;
+	
+	@Override
+	protected IActivitiService<RepayPlanReqBean> getBpmProcessService() {
+		return activitiService;
+	}
+
+	// 流程结束
+		@RequestMapping(value = "/endProcess")
+		public @ResponseBody BaseRespBean endProcess(HttpSession httpSession,
+				@RequestBody RepayPlanReqBean reqBean) {
+			log.info("还款登记结束流程开始,还款信息{}", reqBean.getCurrentPayablePrincipal());
+			BaseRespBean respBean = new BaseRespBean();
+			try {
+				Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+				log.info("还款登记结束流程,还款信息{}",
+						(String) paramMap.get("currentPayablePrincipal"));
+				// 获取当前用户
+				String userName = (String) httpSession
+						.getAttribute(ScfConsts.SESSION_USERNAME);
+				reqBean.setUserId(userName);
+				reqBean.setActivitiKey("ssmRepayManager");
+				JSONObject repayInfoStr = new JSONObject(reqBean);
+				respBean = repayManagerService
+						.ssmEndProcess(paramMap, repayInfoStr);
+			} catch (Exception e) {
+				e.printStackTrace();
+				respBean.setResult(-1);
+				respBean.setResultNote("还款登记失败，还款登记异常");
+			}
+
+			return respBean;
+		}
+	
+	// 超人还款计划 代还款
+		@RequestMapping(value = "/repayPlan")
+		@ResponseBody
+		public BaseRespBean findRepayPlanByStatus(
+				@RequestBody RepayPlanListReqBean reqBean) {
+			Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+			BaseRespBean respBean = repayManagerService
+					.findRepayPlanByStatus(paramMap);
+			return respBean;
+		}
+
+}

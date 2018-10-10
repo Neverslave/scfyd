@@ -1,0 +1,52 @@
+package com.ut.scf.web.controller.wechat;
+
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.pojo.auto.OrderBatchInfo;
+import com.ut.scf.reqbean.project.OrderManagerReqBean;
+import com.ut.scf.reqbean.project.PayCommitProcessReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IOrderManagerService;
+import com.ut.scf.service.project.IPayCommitmentService;
+import com.ut.scf.web.controller.BaseJsonController;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 订单管理
+ *
+ * @author liwd
+ */
+@Controller
+@RequestMapping("/wechat/payComm")
+public class payCommitmentBpmController extends BaseJsonController {
+    private static final Logger log = LoggerFactory
+            .getLogger(payCommitmentBpmController.class);
+
+
+    @Resource
+    private IPayCommitmentService iPayCommitmentService;
+
+    // 5.审核是否同意
+    @RequestMapping(value = "/doAgree")
+    public @ResponseBody BaseRespBean doAgree(HttpSession httpSession,
+                                              @RequestBody PayCommitProcessReqBean reqBean) {
+        reqBean.setUserId((String) httpSession.getAttribute(ScfConsts.SESSION_USERNAME));
+        return iPayCommitmentService.doAgree(reqBean, httpSession);
+    }
+
+
+
+}

@@ -1,0 +1,68 @@
+package com.ut.scf.reqbean.project;
+
+import com.ut.scf.reqbean.PageReqBean;
+
+public class RepayPlanListReqBean extends PageReqBean {
+	private String simpleDate;
+	
+	private String businessType;
+	
+	private String repayNum;
+	
+	private String repayAmt;
+	
+	private String orderBy;
+	
+	private String orderByName;
+
+	public String getSimpleDate() {
+		return simpleDate;
+	}
+
+	public void setSimpleDate(String simpleDate) {
+		this.simpleDate = simpleDate;
+	}
+
+	public String getBusinessType() {
+		return businessType;
+	}
+
+	public void setBusinessType(String businessType) {
+		this.businessType = businessType;
+	}
+
+	public String getRepayNum() {
+		return repayNum;
+	}
+
+	public void setRepayNum(String repayNum) {
+		this.repayNum = repayNum;
+	}
+
+	public String getRepayAmt() {
+		return repayAmt;
+	}
+
+	public void setRepayAmt(String repayAmt) {
+		this.repayAmt = repayAmt;
+	}
+
+	public String getOrderBy() {
+		return orderBy;
+	}
+
+	public void setOrderBy(String orderBy) {
+		this.orderBy = orderBy;
+	}
+
+	public String getOrderByName() {
+		return orderByName;
+	}
+
+	public void setOrderByName(String orderByName) {
+		this.orderByName = orderByName;
+	}
+	
+	
+	
+}

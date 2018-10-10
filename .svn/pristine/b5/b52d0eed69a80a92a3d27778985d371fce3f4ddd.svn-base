@@ -1,0 +1,45 @@
+package com.ut.scf.service.test;
+
+import javax.annotation.Resource;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.reqbean.project.AgencySearchPageReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IAgencyService;
+import com.ut.scf.web.controller.project.AgencyManageController;
+import com.ut.scf.web.scheduled.InterfaceSyncJobTest;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class OrderTest {
+	private static final Logger log = LoggerFactory
+			.getLogger(OrderTest.class);
+
+	@Resource
+	private IAgencyService agencyService;
+
+	
+
+	@Test
+	public void agencyListTest() {
+		log.info("=============================agencyListTest start=============================");
+		try {
+
+			String datee="";
+			InterfaceSyncJobTest interfaceSyncJobTest=new InterfaceSyncJobTest();
+			 datee=interfaceSyncJobTest.getOrderList();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================agencyListTest end=============================");
+	};
+
+	
+}

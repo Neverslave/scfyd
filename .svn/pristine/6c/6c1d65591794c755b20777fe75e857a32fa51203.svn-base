@@ -1,0 +1,781 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+	initTable();
+	numFormat();
+	dateload();
+	ajaxFileUpload();
+	$('#detailModal').on('hidden.bs.modal', function() {
+		$("#detailForm").bootstrapValidator('resetForm', true);
+		$("#detailForm")[0].reset();
+	});
+	$('#uploadModal').on('hidden.bs.modal', function() {
+		$("#uploadForm").bootstrapValidator('resetForm', true);
+		$("#uploadForm")[0].reset();
+	});
+    $("#financeAmount").focus(function(){
+        
+    }).blur(function(){
+  	  if($('#financeAmount').val()==null||$('#financeAmount').val()=="")
+  		  {
+  		  return;
+  		  }
+  	  ajaxProGuarantee();
+    });
+} );
+
+window.operateEvents = {
+	'click .detail': function (e, value, row, index) {
+		detailFun(row);
+    },
+    'click .modify': function (e, value, row, index) {
+    	modifyFun(row);
+    },
+    'click .remove': function (e, value, row, index) {
+		updatestatus(row);
+    },
+    'click .download': function (e, value, row, index) {
+		download(row);
+    },
+    'click .uploadfile': function (e, value, row, index) {
+    	uploadfile(row);
+    },
+};
+
+function ajaxProGuarantee() {
+ 	var productId  = $("#productId").val();
+ 	var data ={productId:productId};
+    var options = {
+        url: '../../finance/getProGuarantee',
+        data: JSON.stringify(data),
+        callBackFun: function(data) {
+            if (data.result == 0) {
+                // 保证金比例
+                $("#guaranteeRate").val(data.guaranteeRate);
+                console.log(data.guaranteeRate);
+                console.log(data.financeAmount);
+                if(data.guaranteeRate!=null&&data.guaranteeRate!=""&&$('#financeAmount').val()!=null&&$('#financeAmount').val()!="")
+                	{
+                
+                	$("#payAbleGuarantee").val(Number(data.guaranteeRate)*Number($('#financeAmount').val())/100);
+                	}
+                
+                
+         
+            } else {
+                bootbox.alert(data.resultNote);
+                return false;
+            }
+        },
+        errorCallback: function(data) {
+            bootbox.alert(data.resultNote);
+            return false;
+        }
+    };
+    CloudUtils.ajax(options);
+   
+}
+
+
+function uploadfile(row) {
+ 	CloudUtils.setForm(row,'uploadForm');
+ 	$('#uploadForm').find("select").attr('disabled',true);
+ 	$('#uploadForm').find("input").attr('readonly',true);
+ 	$('#uploadModal').modal({backdrop: 'static', keyboard: false});
+}
+function searchFun(){
+	 initTable();
+}
+function download(row) {
+    var options = {
+        url: '../../finance/downloadPdf',
+        data: JSON.stringify(row),
+        callBackFun: function(data) {
+        	var pdfUrl = "../../"+data.resultNote;        	
+			$('#download').attr('href',pdfUrl);
+			$('#download').attr('download',pdfUrl);
+        	
+        },
+        errorCallback: function(data) {
+            alert("error");
+        }
+    };
+    CloudUtils.ajax(options);
+	document.getElementById("download").click();
+}
+
+function savemodel() {
+
+    var data = CloudUtils.convertStringJson('uploadForm');
+    var jsonData = eval("(" + data + ")");
+    var options = {
+        url: "../../finance/updateModel",
+        data: JSON.stringify(jsonData),
+        callBackFun: function(data) {
+            if (data.result == 0) {
+                bootbox.alert(data.resultNote, function() {
+                    window.location.href = '../../project/dykManager/financeInfoManager.html';
+                });
+            } else {
+                bootbox.alert(data.resultNote);
+                return false;
+            }
+        },
+        errorCallback: function(data) {
+            bootbox.alert("error");
+        }
+    };
+    CloudUtils.ajax(options);
+
+}
+function detailFun(row) {
+ 	CloudUtils.setForm(row,'detailForm');
+ 	initInterestTable(row.productId);
+ 	$('#detailForm').find("select").attr('disabled',true);
+ 	$('#detailForm').find("input").attr('readonly',true);
+ 	$('#detailModal').modal({backdrop: 'static', keyboard: false});
+	if(row.ywlxId=='1'){
+		$('#lsDIV').css("display","block");
+		$('#dzDIV').css("display","none");
+	}else if(row.ywlxId=='2'){
+		$('#lsDIV').css("display","none");
+		$('#dzDIV').css("display","block");
+	}
+ 	GuaranteeFun(row.financeId);
+}
+function modifyFun(row) {
+	CloudUtils.setForm(row,'detailForm');
+ 	initInterestTable(row.productId);
+ 	$('#detailForm').find("select").attr('disabled',true);
+ 	$('#detailForm').find("input").attr('readonly',true);
+ 	$('#financeAmount').attr('readonly',false);
+ 	$('#financeStartDate').attr('readonly',false);
+	$('#financeEndDate').attr('readonly',false);
+	$('#note').attr('readonly',false);
+	if(row.ywlxId=='1'){
+		$('#lsDIV').css("display","block");
+		$('#dzDIV').css("display","none");
+	}else if(row.ywlxId=='2'){
+		$('#lsDIV').css("display","none");
+		$('#dzDIV').css("display","block");
+	}
+ 	$('#detailModal').modal({backdrop: 'static', keyboard: false});
+ 	GuaranteeFun(row.financeId);
+}
+
+function dateload(){
+	 $('#financeStartDate').datetimepicker({
+	      language: 'zh-CN',
+	      autoclose: 1,
+	      todayBtn: true,// 显示今天时间
+	      pickerPosition: "bottom-left",
+	      minuteStep: 5,
+	      format: 'yyyy-mm-dd',
+	      minView: 'month',// 日期时间选择器所能够提供的最精确的时间选择视图。
+	      initialDate : new Date() //参考financeInfoManager.js
+	     });
+	 $('#financeEndDate').datetimepicker({
+	      language: 'zh-CN',
+	      autoclose: 1,
+	      todayBtn: true,// 显示今天时间
+	      pickerPosition: "bottom-left",
+	      minuteStep: 5,
+	      format: 'yyyy-mm-dd',
+	      minView: 'month',// 日期时间选择器所能够提供的最精确的时间选择视图。
+	      initialDate : new Date() //参考financeInfoManager.js
+	     });
+	 $('#financeStartDate').datetimepicker('setEndDate', new Date());
+}
+
+
+var orderBy ="";
+var orderByName="";
+
+function initTable() { 
+	$('#financeInfoList').bootstrapTable('destroy'); 
+	$("#financeInfoList").bootstrapTable({  
+		 method: "post", 
+         url: "../../finance/list", 
+         striped: true,  //表格显示条纹  
+         pagination: true, //启动分页  
+         pageSize: 5,  //每页显示的记录数  
+         pageNumber:1, //当前第几页  
+         pageList: [5, 10, 15, 20, 25],  //记录数可选列表  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为limit可以获取limit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+           var data = CloudUtils.convertStringJson('searchForm');
+           var jsonData = eval("(" + data + ")");
+           var param = {    
+               pageNumber: params.pageNumber,
+               pageSize: params.pageSize,
+               isPage : 1,
+               agencyName:jsonData.agencyName,
+               agencyNum:jsonData.agencyNum,
+	           financeId:jsonData.financeId,
+	           cprYear:jsonData.cprYear,
+	           cprMonth:jsonData.cprMonth,
+	           financeStatus:jsonData.financeStatus,
+	           ywlxId:jsonData.ywlxId,
+	           orderBy : orderBy,
+           		orderByName:orderByName,
+           };    
+           return JSON.stringify(param);
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [{
+ 	        field: 'operation',
+ 	        title: '操作',
+ 	        align: 'center',
+            valign: 'middle',
+            width: 100,
+ 	        formatter:function(value,row,index){
+ 	       	var s = '<a class = "fa fa-edit modify" style="color:#278bdd;padding:0px 5px;" title="编辑" href="javascript:void(0)"></a>';
+			var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="取消合作" href="javascript:void(0)"></a>';
+	            var d = '<a class = "fa fa-list-ul detail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+	            return s + ' ' + r + ' ' + d;
+	     
+ 	        },
+ 	        events: 'operateEvents'
+ 	    },{
+ 	        field: 'agencyName',
+ 	        title: '经销商名称',
+ 	        align: 'center',
+            valign: 'middle',
+            width: 200,
+            sortable : true,
+ 	    }, {
+ 	        field: 'agencyNum',
+ 	        title: '经销商代码',
+ 	        align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100,
+ 	    },{
+ 	        field: 'applyDate',
+ 	        title: '申请日期',
+ 	        align: 'center',
+            valign: 'middle',
+            width: 100,
+            sortable : true,
+ 	    },{
+ 	        field: 'ywlxId',
+ 	        title: '业务类型',
+ 	        align: 'center',
+            valign: 'middle',
+            visible: false,
+            sortable : true,
+            width: 100,
+          
+ 	    },{
+ 	        field: 'typeName',
+ 	        title: '业务类型',
+ 	        align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100,
+          
+ 	    },/*{
+ 	        field: 'productId',
+ 	        title: '产品类型',
+ 	        align: 'center',
+            valign: 'middle',lsIdlsId
+            sortable : true,
+          
+ 	    }, */
+ 	   {
+ 	        field: 'lsId',
+ 	        title: '零售ID',
+ 	        align: 'center',
+            valign: 'middle',
+            visible:false
+ 	    },{
+ 	        field: 'dzId',
+ 	        title: '大宗ID',
+ 	        align: 'center',
+            valign: 'middle',
+            visible:false
+          
+ 	    },{
+ 	        field: 'corpId',
+ 	        title: '经销商ID',
+ 	        align: 'center',
+            valign: 'middle',
+            visible:false
+          
+ 	    },{
+ 	        field: 'productName',
+ 	        title: '产品名称',
+ 	        align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100,
+          
+ 	    },{
+ 	        field: 'financeId',
+ 	        title: '融资编号',
+ 	        align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 200,
+ 	    },{
+ 	        field: 'cprYear',
+ 	        title: '合作年份',
+ 	        align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100,          
+ 	    },{
+ 	        field: 'cprMonth',
+ 	        title: '合作月份',
+ 	        align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100,          
+ 	    }, {
+ 	        field: 'financeAmount',
+ 	        title: '融资金额',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	        width: 130,
+ 	        formatter:function(value,row,index){
+ 	        	return $.number(value, 2);
+ 	        },
+            sortable : true,
+ 	    },{
+ 	        field: 'fileUrl',
+ 	        title: '函件地址',
+ 	       align: 'center',
+           valign: 'middle',
+           visible: false,
+           sortable : true,
+           width: 100,
+           
+ 	    },{
+ 	        field: 'uploadUrl',
+ 	        title: '函件名称',
+ 	       align: 'center',
+           valign: 'middle',
+           width: 100,
+           formatter:function(value,row,index){
+        	   if(value!=""&&value!=null)
+        		   {
+        		   var s = '<a target="view_window" href="/../..'+row.fileUrl+'">'+value+'</a>';
+        		   return s;
+        		   }
+        	   else
+        		   {
+        		   return '';
+        		   }      	 
+  	     
+   	        },
+            sortable : true,
+   	      
+ 	    },{
+ 	        field: 'templateUrl',
+ 	        title: '模板',
+ 	       align: 'center',
+           valign: 'middle',
+           width: 100,
+           formatter:function(value,row,index){
+        	   if(value!=""&&value!=null)
+    		   {
+    	       	var m = '<a class = "download" style="color:#278bdd;padding:0px 5px;" title="下载" href="javascript:void(0)">下载</a>';
+    	       	return m ;
+    		   }
+    	        else
+	     		   {
+	     		   return '';
+	     		   } 
+    	        },
+    	        events: 'operateEvents'
+ 	    },{
+ 	        field: 'templateUrlNew',
+ 	        title: '模板(已盖章)',
+ 	       align: 'center',
+           valign: 'middle',
+           width: 100,
+           formatter:function(value,row,index){
+        	   if(value!=""&&value!=null)
+    		   {
+        		   var s = '<a target="view_window" href="/../..'+row.templateUrlNew+'">预览</a>';
+        		   var n = '<a target="view_window" class = "uploadfile" >&nbsp&nbsp&nbsp重新上传</a>';
+        		   return s+''+n;
+    		   }
+    	        else
+	     		   {
+    	        	var s = '<a target="view_window" class = "uploadfile" >上传</a>';
+	     		   return s;
+	     		   } 
+    	        },
+    	        events: 'operateEvents'
+ 	    },{
+ 	        field: 'financeStatus',
+ 	        title: '融资状态',
+ 	        align: 'center',
+ 	        valign: 'middle',
+            sortable : true,
+            width: 100,
+ 	       formatter:function(value,row,index) {
+				if (value == "0") {
+					return "未审核";
+				} else if (value == "1") {
+					return "待放款";
+				}else if (value == "2") {
+					return "已放款";
+				}else if (value == "3") {
+					return "已部分还款";
+				}else if (value == "4") {
+					return "已全额还款";
+				}else if (value == "5") {
+					return "逾期";
+				}else if (value == "999") {
+					return "合作取消";
+				}
+	    	}
+ 	    }
+ 	    ],
+        onSort:function(name, order){
+        	orderBy = order;
+        	orderByName=name;
+        },
+       });
+}
+
+function initInterestTable(productId) {
+	$('#interestInfoList').bootstrapTable('destroy'); 
+	$("#interestInfoList").bootstrapTable({  
+		 method: "post", 
+         url: "../../finance/getProGuarantee", 
+         striped: true,  //表格显示条纹  
+         pagination: false, //启动分页  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为limit可以获取limit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+           var date ={productId:productId}
+           return JSON.stringify(date);
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [{
+ 	        field: 'rateStandard',
+ 	        title: '利率标准',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'dykRate',
+ 	        title: '利率(%)',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index) {
+				return $.number(value, 2);
+	    	}
+ 	    }, {
+ 	        field: 'interest',
+ 	        title: '日利息',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	        formatter:function(value,row,index) {
+ 	        	// 利息:融资金额*（融资到期日-融资起始日）*利率/360
+ 	        	var financeAmount = $("#financeAmount").val();
+ 	        	var financeStartDate = $("#detailForm #financeStartDate").val();
+ 	        	var financeEndDate = $("#detailForm #financeEndDate").val();
+ 	        	var diff = CloudUtils.DateDiffSec(financeEndDate, financeStartDate);
+ 	        	var a = CloudUtils.Math(financeAmount, diff, "mul");
+ 	        	var b = CloudUtils.Math(financeAmount, row.dykRate, "mul");
+ 	        	var c = CloudUtils.Math(b, 360, "div");
+ 	        	var d = CloudUtils.Math(c, 100, "div");
+				return CloudUtils.ccyFormatNoPre(d, 2);
+	    	}
+ 	    }]
+       });
+}
+
+function numFormat(){
+	$("#maxCredit").number(true, 2);	//最高信用额度
+	$("#availableCredit").number(true, 2);	//可用信用额度
+	$("#financeRate").number(true, 2);	//融资比例
+	$("#cashRate").number(true, 4);	//费率
+	$("#financeAmount").number(true, 2);	//融资金额
+	$("#expense").number(true, 2);	//费用
+	$("#payAbleGuarantee").number(true, 2);	//应缴保证金金额
+	$("#maxLscredit").number(true, 2);	//零售最高授信额度
+	$("#availableLscredit").number(true, 2);	//零售可用授信额度
+	$("#payActGuarantee").number(true, 2);	//实缴保证金
+	
+}
+
+function addFun() {
+	$('#mainFrame',top.document).attr('src','project/dykManager/financeAdd.html');
+}
+function click_YL_uploadUrl(){
+	if($("#fileUrl").val()==null||$("#fileUrl").val()=='')
+		{
+		return false;
+		}
+	window.open("../../.." + $("#fileUrl").val());
+}
+function click_YL_templateUrl(){
+	if($("#templateUrl").val()==null||$("#templateUrl").val()=='')
+		{
+		return false;
+		}
+	window.open("../../uploadFile/common/" + $("#templateUrl").val());
+}
+function save() {
+
+        var data = CloudUtils.convertStringJson('detailForm');
+        var jsonData = eval("(" + data + ")");
+        var options = {
+            url: "../../finance/update",
+            data: JSON.stringify(jsonData),
+            callBackFun: function(data) {
+                if (data.result == 0) {
+                    bootbox.alert(data.resultNote, function() {
+                        window.location.href = '../../project/dykManager/financeInfoManager.html';
+                    });
+                } else {
+                    bootbox.alert(data.resultNote);
+                    return false;
+                }
+            },
+            errorCallback: function(data) {
+                bootbox.alert("error");
+            }
+        };
+        CloudUtils.ajax(options);
+    
+}
+function updatestatus(row) {
+    bootbox.confirm({
+        message: "确定取消合作？",
+        buttons: {
+            confirm: {
+              label: "确认"
+            },
+            cancel:{
+                label:"取消"
+            }
+          },        
+        callback: function(result) {
+            if(result) {
+          
+            	    var options = {
+            	        url: "../../finance/deleteFinance",
+            	        data: JSON.stringify(row),
+            	        callBackFun: function(data) {
+            	            if (data.result == 0) {
+            	                bootbox.alert(data.resultNote, function() {
+            	                    window.location.href = '../../project/dykManager/financeInfoManager.html';
+            	                });
+            	            } else {
+            	                bootbox.alert(data.resultNote);
+            	                return false;
+            	            }
+            	        },
+            	        errorCallback: function(data) {
+            	            bootbox.alert("error");
+            	        }
+            	    };
+            	    CloudUtils.ajax(options);
+            }
+            
+        }
+    });   
+}
+
+//2018年月8日 增加上传函件功能 许晖
+function ajaxFileUpload(){
+	$('#file').fileupload({	  
+		
+		url:"../../file/uploadFile?pathId=3",
+	        dataType: 'json',
+	        // 上传完成后的执行逻辑
+	        done: function(e, data) {
+	        	data = data.result;
+	            if(data.result==0){    
+	            	$('#templateUrlNew').val(data.fileName);
+	            	$('#attachSizeNew').val(data.fileSize);
+	            	$('#fileUrlNew').val(data.fileUrl);
+	            	$('#attachTypeNew').val(data.fileType);
+	            } else {
+	            	 bootbox.alert(data.resultNote);
+	            }
+		            
+		     }
+	});
+	$('#file').bind('fileuploadadd', function (e, data) {
+ 		var obj = data.files[0];
+ 		var name = obj.name;
+ 		var size = obj.size;
+ 		/*if (!checkFileNum()) {
+	            bootbox.alert("上传的附件数不能超过10个");
+	            return false;
+	        }*/
+ 		var attachData = $('#attachInfoTable').bootstrapTable('getData');
+        if (attachData.length > 9) {
+            bootbox.alert("上传的附件数不能超过10个");
+            return false;
+        }
+	        var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+	        if (!checkFileType(type)) {
+	            bootbox.alert("仅支持上传word、excel、pdf、png、jpg类型的文件");
+	            return false;
+	        }
+ 		
+ 		 if (!checkFileSize(size)) {
+            bootbox.alert("上传文件不超过50M");
+	            return false;
+	        }
+	   
+ 	});
+}
+
+var fileTypes = [ ".pdf"];
+
+function checkFileType(type) {
+    var result = $.inArray(type, fileTypes);
+    if (result == -1) {
+        return false;
+    }
+    return true;
+}
+
+function checkFileSize(fileSize) {
+    fileSize = Math.round(fileSize / 1024 * 100) / 100; //单位为KB
+    fileSize = Math.round(fileSize / 1024);
+    if (fileSize > 50) {
+        return false;
+    }
+    return true;
+}
+function click_file(){
+	if($("#fileUrlNew").val()==null||$("#templateUrlNew").val()=="")
+		{
+		bootbox.alert("请上传文件");
+        return false;
+		}
+	window.open( $("#fileUrlNew").val());
+}
+function clear_file(){
+	$('#templateUrlNew').val('');
+	$('#attachSizeNew').val('');
+	$('#fileUrlNew').val('');
+	$('#attachTypeNew').val('');
+}
+
+function GuaranteeFun(financeId) {
+
+ 	
+ 	$('#guaranteeHistoryTable').bootstrapTable('destroy'); 
+	$("#guaranteeHistoryTable").bootstrapTable({  
+		 method: "post", 
+		 url: "../../guaranteeQuery/listNewHistory",
+         striped: true,  //表格显示条纹  
+         pagination: true, //启动分页  
+         pageSize: 5,  //每页显示的记录数  
+         pageNumber:1, //当前第几页  
+         pageList: [5, 10, 15, 20, 25],  //记录数可选列表  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为limit可以获取limit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+           var data = CloudUtils.convertStringJson('searchForm');
+           var jsonData = eval("(" + data + ")");
+           var param = {    
+               pageNumber: params.pageNumber,
+               pageSize: params.pageSize,
+               isPage : 1,
+	           financeId:financeId
+           };    
+           return JSON.stringify(param);
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+        		 
+        		$('#payActGuarantee').val(res.resultNote); 
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [{
+ 	        field: 'financeId',
+ 	        title: '融资承诺函',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'payDate',
+ 	        title: '到账日期',
+ 	        align: 'center',
+            valign: 'middle',
+ 	    }, {
+ 	        field: 'payGuarantee',
+ 	        title: '金额',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index) {
+				return $.number(value, 2);
+	    	}
+ 	    }, {
+ 	        field: 'payWay',
+ 	        title: '方式',
+ 	       align: 'center',
+           valign: 'middle'
+ 	    },{
+ 	        field: 'note',
+ 	        title: '备注',
+ 	        align: 'center',
+ 	        valign: 'middle'
+ 	    }
+ 	    ]
+       });	
+}

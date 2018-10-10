@@ -1,0 +1,507 @@
+package com.ut.scf.reqbean.project;
+
+import java.util.Date;
+
+import com.ut.scf.reqbean.BaseReqBean;
+
+public class FinanceFlowReqBean extends BaseReqBean {
+
+	private String userId;
+
+	private String activitiKey;
+
+	private String agree;
+
+	private String advice;
+
+	private String histroyAdvice;
+
+	private String taskId;
+
+	private String procInstId;
+
+	// 融资申请信息
+	private String financeId;
+	
+	private String financeStatus;
+	
+	private String corpId;
+	
+	private String agencyName;
+
+	private String agencyNum;
+
+	private String maxCredit;
+
+	private String availableCredit;
+
+	private String financeRate;
+
+	private String cashRate;
+
+	private String financeAmount;
+	
+	/**
+	 * 原来的融资金额
+	 */
+	private String orginFinanceAmount;
+
+	private String expense;
+
+	// DYK备注信息
+	private String remark;
+
+	private String interestListInfo;
+	
+	// 保证金登记信息
+	private String guaranteeRate;
+	
+	private String payAbleGuarantee;
+	
+	private String guaranteePayDate;
+	
+	private String payActGuarantee;
+	
+	private String guaranteePayHis;
+	
+	// 登记保证金备注
+	private String note;
+	
+	private String guaranteeAccountAmt;
+	
+	private String rzTemplate;
+	
+	private String templateUrl;
+	
+	private String backTarget;
+	
+	// "0":融资申请；"1":登记保证金
+	private String handleType;
+	
+	// 发起者角色ID
+	private String launchRoleId;
+	
+	//产品Id
+	private String productId;
+	
+	
+	
+	//2018年6月7日新增字段 许晖 
+	//start
+	private String ywlxId;
+	
+	private String cprYear;
+	
+	private String cprMonth;
+	
+	private String uploadUrl;
+	
+	private String attachSize;
+	
+	private String fileUrl;
+	
+	private String attachType;
+		
+	private String applyDate;
+	
+	private String financeStartDate;
+	
+	private String financeEndDate;
+	private String templateUrlNew;
+	private String fileUrlNew;
+	
+	private String guaranteeListInfo;
+	//通知单的ID
+	private String tzdId;
+	
+	
+	
+	public String getTzdId() {
+		return tzdId;
+	}
+
+	public void setTzdId(String tzdId) {
+		this.tzdId = tzdId;
+	}
+
+	public String getFinanceStartDate() {
+		return financeStartDate;
+	}
+
+	public void setFinanceStartDate(String financeStartDate) {
+		this.financeStartDate = financeStartDate;
+	}
+	
+	public String getFinanceEndDate() {
+		return financeEndDate;
+	}
+
+	public void setFinanceEndDate(String financeEndDate) {
+		this.financeEndDate = financeEndDate;
+	}
+	
+	public String getYwlxId() {
+		return ywlxId;
+	}
+
+	public void setYwlxId(String ywlxId) {
+		this.ywlxId = ywlxId;
+	}
+
+	public void setCprYear(String cprYear) {
+		this.cprYear = cprYear;
+	}
+	public String getCprYear() {
+		return cprYear;
+	}
+	
+	
+	public String getCprMonth() {
+		return cprMonth;
+	}
+
+	public void setCprMonth(String cprMonth) {
+		this.cprMonth = cprMonth;
+	}
+	
+	
+	public String getUploadUrl() {
+		return uploadUrl;
+	}
+
+	public void setUploadUrl(String uploadUrl) {
+		this.uploadUrl = uploadUrl;
+	}
+	
+	
+	public String getAttachSize() {
+		return attachSize;
+	}
+
+	public void setAttachSize(String attachSize) {
+		this.attachSize = attachSize;
+	}
+	public String getFileUrl() {
+		return fileUrl;
+	}
+
+	public void setFileUrl(String fileUrl) {
+		this.fileUrl = fileUrl;
+	}
+	public String getAttachType() {
+		return attachType;
+	}
+
+	public void setAttachType(String attachType) {
+		this.attachType = attachType;
+	}
+	
+	
+	public String getApplyDate() {
+		return applyDate;
+	}
+
+	public void setApplyDate(String applyDate) {
+		this.applyDate = applyDate;
+	}
+	//end
+	
+
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
+	public String getActivitiKey() {
+		return activitiKey;
+	}
+
+	public void setActivitiKey(String activitiKey) {
+		this.activitiKey = activitiKey;
+	}
+
+	public String getAgree() {
+		return agree;
+	}
+
+	public void setAgree(String agree) {
+		this.agree = agree;
+	}
+
+	public String getAdvice() {
+		return advice;
+	}
+
+	public void setAdvice(String advice) {
+		this.advice = advice;
+	}
+
+	public String getHistroyAdvice() {
+		return histroyAdvice;
+	}
+
+	public void setHistroyAdvice(String histroyAdvice) {
+		this.histroyAdvice = histroyAdvice;
+	}
+
+	public String getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+
+	public String getProcInstId() {
+		return procInstId;
+	}
+
+	public void setProcInstId(String procInstId) {
+		this.procInstId = procInstId;
+	}
+
+	public String getFinanceId() {
+		return financeId;
+	}
+
+	public void setFinanceId(String financeId) {
+		this.financeId = financeId;
+	}
+
+	public String getFinanceStatus() {
+		return financeStatus;
+	}
+
+	public void setFinanceStatus(String financeStatus) {
+		this.financeStatus = financeStatus;
+	}
+
+	public String getCorpId() {
+		return corpId;
+	}
+
+	public void setCorpId(String corpId) {
+		this.corpId = corpId;
+	}
+
+	public String getAgencyName() {
+		return agencyName;
+	}
+
+	public void setAgencyName(String agencyName) {
+		this.agencyName = agencyName;
+	}
+
+	public String getAgencyNum() {
+		return agencyNum;
+	}
+
+	public void setAgencyNum(String agencyNum) {
+		this.agencyNum = agencyNum;
+	}
+
+	public String getMaxCredit() {
+		return maxCredit;
+	}
+
+	public void setMaxCredit(String maxCredit) {
+		this.maxCredit = maxCredit;
+	}
+
+	public String getAvailableCredit() {
+		return availableCredit;
+	}
+
+	public void setAvailableCredit(String availableCredit) {
+		this.availableCredit = availableCredit;
+	}
+
+	public String getFinanceRate() {
+		return financeRate;
+	}
+
+	public void setFinanceRate(String financeRate) {
+		this.financeRate = financeRate;
+	}
+
+	public String getCashRate() {
+		return cashRate;
+	}
+
+	public void setCashRate(String cashRate) {
+		this.cashRate = cashRate;
+	}
+
+	public String getFinanceAmount() {
+		return financeAmount;
+	}
+
+	public void setFinanceAmount(String financeAmount) {
+		this.financeAmount = financeAmount;
+	}
+
+	public String getExpense() {
+		return expense;
+	}
+
+	public void setExpense(String expense) {
+		this.expense = expense;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+
+	public String getInterestListInfo() {
+		return interestListInfo;
+	}
+
+	public void setInterestListInfo(String interestListInfo) {
+		this.interestListInfo = interestListInfo;
+	}
+
+	public String getGuaranteeRate() {
+		return guaranteeRate;
+	}
+
+	public void setGuaranteeRate(String guaranteeRate) {
+		this.guaranteeRate = guaranteeRate;
+	}
+
+	public String getPayAbleGuarantee() {
+		return payAbleGuarantee;
+	}
+
+	public void setPayAbleGuarantee(String payAbleGuarantee) {
+		this.payAbleGuarantee = payAbleGuarantee;
+	}
+
+	public String getGuaranteePayDate() {
+		return guaranteePayDate;
+	}
+
+	public void setGuaranteePayDate(String guaranteePayDate) {
+		this.guaranteePayDate = guaranteePayDate;
+	}
+
+	public String getPayActGuarantee() {
+		return payActGuarantee;
+	}
+
+	public void setPayActGuarantee(String payActGuarantee) {
+		this.payActGuarantee = payActGuarantee;
+	}
+
+	public String getGuaranteePayHis() {
+		return guaranteePayHis;
+	}
+
+	public void setGuaranteePayHis(String guaranteePayHis) {
+		this.guaranteePayHis = guaranteePayHis;
+	}
+
+	public String getNote() {
+		return note;
+	}
+
+	public void setNote(String note) {
+		this.note = note;
+	}
+
+	public String getGuaranteeAccountAmt() {
+		return guaranteeAccountAmt;
+	}
+
+	public void setGuaranteeAccountAmt(String guaranteeAccountAmt) {
+		this.guaranteeAccountAmt = guaranteeAccountAmt;
+	}
+
+	public String getRzTemplate() {
+		return rzTemplate;
+	}
+
+	public void setRzTemplate(String rzTemplate) {
+		this.rzTemplate = rzTemplate;
+	}
+
+	public String getTemplateUrl() {
+		return templateUrl;
+	}
+
+	public void setTemplateUrl(String templateUrl) {
+		this.templateUrl = templateUrl;
+	}
+
+	public String getBackTarget() {
+		return backTarget;
+	}
+
+	public void setBackTarget(String backTarget) {
+		this.backTarget = backTarget;
+	}
+
+	public String getHandleType() {
+		return handleType;
+	}
+
+	public void setHandleType(String handleType) {
+		this.handleType = handleType;
+	}
+
+	public String getLaunchRoleId() {
+		return launchRoleId;
+	}
+
+	public void setLaunchRoleId(String launchRoleId) {
+		this.launchRoleId = launchRoleId;
+	}
+
+	public String getOrginFinanceAmount() {
+		return orginFinanceAmount;
+	}
+
+	public void setOrginFinanceAmount(String orginFinanceAmount) {
+		this.orginFinanceAmount = orginFinanceAmount;
+	}
+
+	public String getProductId() {
+		return productId;
+	}
+
+	public void setProductId(String productId) {
+		this.productId = productId;
+	}
+
+
+	public String getTemplateUrlNew() {
+		return templateUrlNew;
+	}
+
+	public void setTemplateUrlNew(String templateUrlNew) {
+		this.templateUrlNew = templateUrlNew;
+	}
+
+	public String getFileUrlNew() {
+		return fileUrlNew;
+	}
+
+	public void setFileUrlNew(String fileUrlNew) {
+		this.fileUrlNew = fileUrlNew;
+	}
+
+	public String getGuaranteeListInfo() {
+		return guaranteeListInfo;
+	}
+
+	public void setGuaranteeListInfo(String guaranteeListInfo) {
+		this.guaranteeListInfo = guaranteeListInfo;
+	}
+	
+}

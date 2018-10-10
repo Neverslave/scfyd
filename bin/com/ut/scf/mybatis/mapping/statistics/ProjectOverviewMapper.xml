@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.statistics.IProjectOverviewDao" >
+  <select id="getProjectOverviewList" resultType="hashmap" parameterType="hashmap" >
+	  select 
+		 SUM(fi.pay_amt) payAmount,
+		 a.num agencyCount,
+		 COUNT(fi.finance_id) payNumber,
+		 SUM(g.guarantee_balance) restGuaranteeAmount,
+		 sum(fi.pay_amt-fi.finance_balance) cashCollection,
+		 SUM(fi.pay_amt)-SUM(g.guarantee_balance)-sum(fi.pay_amt-fi.finance_balance) riskExposure
+	from finance_info fi
+	join factor_contract_info fff on fff.agency_corp_id = fi.corp_id
+	join corp_info c ON c.corp_id = fff.agency_corp_id
+	join guarantee_info g ON g.finance_id = fi.finance_id
+    join (select COUNT(ci.corp_id) num,ci.corp_name from corp_info ci 
+  			join factor_contract_info fc ON ci.corp_id = fc.agency_corp_id ) a
+	where 1=1
+		<if test="financeStartDate != null and financeStartDate !='' ">
+			and DATE_FORMAT(fi.finance_start_date, '%Y-%m-%d') >= #{financeStartDate}
+		</if>
+		<if test="payDate != null and payDate !='' ">
+			and DATE_FORMAT(fi.pay_date, '%Y-%m-%d') <![CDATA[<=]]> #{payDate}
+		</if>
+  </select>
+</mapper>

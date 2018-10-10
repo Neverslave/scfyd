@@ -1,0 +1,44 @@
+<style type="text/css">
+#planInfo .th-inner {
+    height: 80px;
+}
+.fixed-table-body
+{
+max-height:1000px;
+}
+</style>
+<script src='../../js/referrer-killer.js'></script>
+
+<body class="">
+    <section>
+        <div class="main-content-child modal-lg" style="padding-right:60px">
+            <div class="row whiteBgDiv">
+                <form class="form-horizontal" role="form" id="detailFormDetail">
+                    <div class="form-group">
+                    <input type="text" name="orderIdList" class="form-control" id="orderIdList"  readonly style="display:none" >
+                        <label class="col-sm-2 control-label" for="orderNum">订单条数</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="orderNum" class="form-control" id="orderNum" placeholder="订单条数" readonly>
+                     </div>
+                      <label class="col-sm-2 control-label" for="sysGetDate">同步日期</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="sysGetDate" class="form-control" id="sysGetDate" placeholder="同步日期" readonly>
+                     	</div>
+                    </div>
+                </form>
+                <div class="panel-body">
+                    <div class="nav">
+                        <ol class="breadcrumb">
+                            <li class="active">订单信息表</li>
+                        </ol>
+                    </div>
+   
+                    <table id="orderListDetail" class="table" height="100%" cellspacing="0" width="100%">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div id="agencyDetailModal"></div>
+

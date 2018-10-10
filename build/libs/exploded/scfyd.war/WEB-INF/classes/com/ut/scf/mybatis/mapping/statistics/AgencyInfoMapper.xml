@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.statistics.IAgencyInfoDao" >
+  <select id="getAgencyInfoList" resultType="hashmap" parameterType="hashmap" >
+    select
+    c.corp_id,
+    c.corp_name corpName,
+    c.agency_num agencyNum,
+    c.office_address officeAddress,
+    c.contact_info contactInfo,
+    c.fixed_phone fixedPhone,
+    da.area_name area,
+    dr.represent_name represent,
+    c.sys_type,
+    li.use_able_credit_amt useAbleCreditAmt
+    from corp_info c
+    join limit_info li on c.corp_id = li.corp_id
+    join factor_contract_info fc on c.corp_id = fc.agency_corp_id
+    left join dyk_area da on da.area_id = c.area 
+    left join dyk_represent dr on dr.represent_id = c.represent
+    where 1=1 
+	   	<if test="corpName != null and corpName != ''">
+		    and c.corp_name LIKE CONCAT(CONCAT('%', #{corpName}),'%')
+		</if>
+		<if test="agencyNum != null and agencyNum != ''">
+		    and c.agency_num LIKE CONCAT(CONCAT('%', #{agencyNum}),'%')
+		</if>
+	order by c.agency_num
+  </select>
+</mapper>

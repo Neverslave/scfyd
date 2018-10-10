@@ -1,0 +1,13 @@
+package com.ut.scf.service.tradfact;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.tradfact.SendBookBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface ISendBookService {
+	public BaseRespBean addBookInfo(SendBookBean sendBookBean);
+	
+	public BaseRespBean getBookInfoList(Map<String, Object> paramMap, PageInfoBean page);
+}

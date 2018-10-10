@@ -1,0 +1,175 @@
+package com.ut.scf.service.project.impl;
+
+import java.math.BigDecimal;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.apache.commons.codec.binary.Base64;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.ut.scf.core.util.HttpClientUtil;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.core.util.SignUtil;
+import com.ut.scf.dao.auto.RepaymentPlanInfoMapper;
+import com.ut.scf.pojo.auto.RepaymentPlanInfo;
+import com.ut.scf.pojo.auto.RepaymentPlanInfoExample;
+import com.ut.scf.pojo.auto.RepaymentPlanInfoExample.Criteria;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IRepaymentPlanService;
+
+@Service("repaymentPlanService")
+public class RepaymentPlanServiceImpl implements IRepaymentPlanService {
+
+    Logger log = LoggerFactory.getLogger(this.getClass());
+
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+
+    private static final String repaymentPlanUrl="http://api.test.fenqichaoren.com/yueda/index/repayment_plan";
+	@Resource
+	private RepaymentPlanInfoMapper repaymentPlanInfoMapper;
+    
+   
+	@SuppressWarnings("null")
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+    public BaseRespBean repayMentInfoByOrderList(ArrayList<String> Orderlist)
+    {	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		BaseRespBean  respBean=new BaseRespBean();
+		if(Orderlist==null&&Orderlist.isEmpty())
+		{
+			respBean.setResult(1);
+			respBean.setResultNote("订单为空");
+		}
+		for(int i=0;i<Orderlist.size();i++)
+		{
+			try {
+				String order_id=Orderlist.get(i);
+				RepaymentPlanInfoExample example=new RepaymentPlanInfoExample();
+				Criteria criteria=example.createCriteria();
+				criteria.andOrderIdEqualTo(order_id);
+				if(repaymentPlanInfoMapper.countByExample(example)>0)
+				{
+					continue;
+				}
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("order_id", order_id);
+				
+				com.alibaba.fastjson.JSONObject repaymentPlayJson= SignUtil.requestInterface(map,repaymentPlanUrl);
+				if(!repaymentPlayJson.getString("code").equals("200"))
+				{
+					respBean.setResult(1);
+					respBean.setResultNote(repaymentPlayJson.getString("errMsg"));
+					return respBean;
+				}
+				String  data=SignUtil.parseData(repaymentPlayJson.getString("data"));   
+				JSONArray repaymentPlayJsonArray= JSONArray.parseArray(data);
+				if(repaymentPlayJsonArray.size()>0)
+				{
+					for(int j=0 ;j<repaymentPlayJsonArray.size();j++)
+					{
+						RepaymentPlanInfo repaymentPlanInfo=new RepaymentPlanInfo();
+						com.alibaba.fastjson.JSONObject object=repaymentPlayJsonArray.getJSONObject(j);
+						repaymentPlanInfo.setRepaymentId(ScfUUID.generate());
+						repaymentPlanInfo.setOrderId(object.getString("order_id"));
+						repaymentPlanInfo.setPeriod((byte)object.getIntValue("current_period"));
+						String date = sdf.format(object.getIntValue("should_pay_time"));
+						repaymentPlanInfo.setCurrentRepayDate(sdf.parse(date));
+						repaymentPlanInfo.setInterest(new BigDecimal(object.getIntValue("interest")));
+						repaymentPlanInfo.setLcMoney(new BigDecimal(object.getIntValue("lc_money")));
+						repaymentPlanInfo.setCurrentMoney(new BigDecimal(object.getIntValue("current_money")));
+						repaymentPlanInfo.setEnsureMoney(new BigDecimal(object.getIntValue("ensure_money")));
+						repaymentPlanInfo.setPayedTime(sdf.format(object.getString("payed_time")));
+						repaymentPlanInfo.setRepaymentMoney(new BigDecimal(object.getIntValue("repayment_money")));
+						repaymentPlanInfo.setState(object.getIntValue("state"));
+						repaymentPlanInfo.setMarketingFeeYi(new BigDecimal(object.getIntValue("marketing_fee_yi")));
+						repaymentPlanInfo.setServiceChargeYi(new BigDecimal(object.getIntValue("service_charge_yi")));
+						int re=repaymentPlanInfoMapper.insertSelective(repaymentPlanInfo);
+						if(re<0)
+						{
+							respBean.setResult(1);
+							respBean.setResultNote("还款计划插入失败！");
+							return respBean;
+						}
+					}
+				}
+				
+				
+			} catch (Exception e) {
+				
+				e.printStackTrace();
+			}
+		}
+		return respBean;
+		
+    }
+	
+	
+	public void getRepaymentPlan(List<Map<String, String>> statusList) throws Exception {/*
+		// TODO Auto-generated method stub
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		if(statusList.size()>0){
+			List<RepaymentPlanInfo> repaymentList = new ArrayList<RepaymentPlanInfo>();
+			for(int i=0;i<statusList.size();i++){
+				Map<String, String> map = statusList.get(i);
+				String orderId = map.get("orderId"); 
+				//判定还款计划表中是否存在这个订单号，如果有则视为已经存在还款计划表
+				List<RepaymentPlanInfo> repayments = repaymentPlanInfoMapper.selectByOrderId(orderId);
+				if (repayments == null || repayments.size()==0) {
+					if (orderId != null || orderId != "") {
+						//通过订单号，获取还款计划。
+						Map<String, Object> paramMap = new HashMap<String, Object>();
+						paramMap.put("order_id", orderId);
+						com.alibaba.fastjson.JSONObject jsonObject = SignUtil.requestInterface(paramMap, SignUtil.repaymentPlan);
+						if(jsonObject.getString("code").equals("200"))
+						{
+							String  data=SignUtil.parseData(jsonObject.getString("data")); 
+							System.out.println(data);
+							JSONArray repaymentPlayJsonArray= JSONArray.parseArray(data);
+							if(repaymentPlayJsonArray.size()>0)
+							{
+								for(int j=0 ;j<repaymentPlayJsonArray.size();j++)
+								{
+									RepaymentPlanInfo repaymentPlanInfo=new RepaymentPlanInfo();
+									com.alibaba.fastjson.JSONObject object=repaymentPlayJsonArray.getJSONObject(j);
+									repaymentPlanInfo.setRepaymentId(ScfUUID.generate());
+									repaymentPlanInfo.setOrderId(object.getString("order_id"));
+									repaymentPlanInfo.setPeriod((byte)object.getIntValue("current_period"));
+									String date = sdf.format(object.getIntValue("should_pay_time"));
+									repaymentPlanInfo.setCurrentRepayDate(sdf.parse(date));
+									repaymentPlanInfo.setInterest(new BigDecimal(object.getIntValue("interest")));
+									repaymentPlanInfo.setLcMoney(new BigDecimal(object.getIntValue("lc_money")));
+									repaymentPlanInfo.setCurrentMoney(new BigDecimal(object.getIntValue("current_money")));
+									repaymentPlanInfo.setEnsureMoney(new BigDecimal(object.getIntValue("ensure_money")));
+									repaymentPlanInfo.setPayedTime(sdf.format(object.getIntValue("payed_time")));
+									repaymentPlanInfo.setRepaymentMoney(new BigDecimal(object.getIntValue("repayment_money")));
+									repaymentPlanInfo.setState(object.getIntValue("state"));
+									repaymentPlanInfo.setMarketingFeeYi(new BigDecimal(object.getIntValue("marketing_fee_yi")));
+									repaymentPlanInfo.setServiceChargeYi(new BigDecimal(object.getIntValue("service_charge_yi")));
+									repaymentList.add(repaymentPlanInfo);
+								}
+							}
+						}
+					}
+				}
+				
+			}
+			int re=repaymentPlanInfoMapper.insertListRepayment(repaymentList);
+			System.out.println(re);
+		}
+	*/}
+}

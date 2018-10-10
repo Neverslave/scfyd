@@ -1,0 +1,34 @@
+package com.ut.scf.web.controller.wechat;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.reqbean.pub.CustAgreeInfoReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.pub.ICustManagerService;
+import com.ut.scf.web.controller.BaseJsonController;
+@Controller
+@RequestMapping("/wechat/custManager")
+public class CustManagerWechatController extends BaseJsonController  {
+	
+		@Resource
+		private ICustManagerService custManagerService;
+		
+		@RequestMapping(value = "/doAgree")
+		@ResponseBody
+		public BaseRespBean doAgree(HttpSession httpSession,@RequestBody CustAgreeInfoReqBean reqBean){
+			//获取当前用户
+			String userName = (String) httpSession.getAttribute(ScfConsts.SESSION_USERNAME);
+			reqBean.setUserId(userName);
+			return custManagerService.doAgreeWechat(reqBean);
+		}
+		
+		 
+}

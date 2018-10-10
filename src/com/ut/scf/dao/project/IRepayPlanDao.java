@@ -1,0 +1,47 @@
+package com.ut.scf.dao.project;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+
+import com.ut.scf.core.dict.PageInfoBean;
+
+public interface IRepayPlanDao {
+
+	List<Map<String, Object>> selectRepayPlanInfo(Map<String, Object> paramMap);
+
+	List<Map<String, Object>> selectRepayPlanInfo(Map<String, Object> paramMap,
+			PageInfoBean page);
+
+	List<Map<String, Object>> selectRepayPlanInfoByOrder(
+			Map<String, Object> paramMap);
+	List<Map<String, Object>> selectRepayPlanInfoByOrderSuper(
+			Map<String, Object> paramMap);
+	List<Map<String, Object>> selectRepayPlanInfoByOrders(
+			Map<String, Object> paramMap);
+
+	String selectCrReqAmtByBatchId(Map<String, Object> paramMap);
+
+	List<Map<String, Object>> selectRepayInfo(Map<String, Object> paramMap,
+			PageInfoBean page);
+
+	List<Map<String, Object>> selectRepayInfo(Map<String, Object> paramMap);
+
+	List<Map<String, Object>> selectSumAmt(Map<String, Object> paramMap);
+
+	int updateSSMStatus(Map<String, Object> paramMap);
+
+	List<Map<String, Object>> findCountByBatchId(Map<String, Object> paramMap);
+	
+	List<Map<String, Object>> getRepymentInfoList(Map<String, Object> paramMap,PageInfoBean page);
+	List<Map<String, Object>> getRepymentInfoList(Map<String, Object> paramMap);
+	
+	Map<String, Object> getComputeDayRepay (Map<String, Object> paramMap);
+	Map<String, Object> getComputeDayShouldRepay (Map<String, Object> paramMap);
+	@Select("SELECT	order_id,batch_id,people_type FROM	order_info a WHERE	NOT EXISTS (	SELECT 1	FROM repayment_plan_user_info b		WHERE		a.order_id = b.order_id	)")
+	List<Map<String, Object>> selectAllorder();
+	@Select("SELECT	order_id,batch_id,people_type FROM	order_info where batch_id=#{batchId}" )
+	List<Map<String, Object>> selectOrderByBatchId(String batchId);
+}

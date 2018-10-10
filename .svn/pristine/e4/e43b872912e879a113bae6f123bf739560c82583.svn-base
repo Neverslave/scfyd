@@ -1,0 +1,23 @@
+package com.ut.scf.web.controller.wechat;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.ut.scf.reqbean.project.RefundDepositAgreeReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.web.controller.ActivitiController;
+
+@Controller
+@RequestMapping("/wechat/refundDeposit")
+public class RefundDepositWechatController extends ActivitiController<RefundDepositAgreeReqBean> {
+	@Resource(name = "refundDepositBpmService")
+	private IActivitiService<RefundDepositAgreeReqBean> activitiService;
+
+	@Override
+	protected IActivitiService<RefundDepositAgreeReqBean> getBpmProcessService() {
+		return activitiService;
+	}
+	
+}

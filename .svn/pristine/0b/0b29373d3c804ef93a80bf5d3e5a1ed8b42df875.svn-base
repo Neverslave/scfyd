@@ -1,0 +1,207 @@
+package com.ut.scf.web.controller.project;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.dao.auto.CorpInfoMapper;
+import com.ut.scf.pojo.auto.CorpInfo;
+import com.ut.scf.pojo.auto.CorpInfoExample;
+import com.ut.scf.pojo.auto.DayRepayRecordInfo;
+import com.ut.scf.pojo.auto.CorpInfoExample.Criteria;
+import com.ut.scf.reqbean.project.RepayPlanListReqBean;
+import com.ut.scf.reqbean.project.RepayPlanReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IRepayManagerService;
+import com.ut.scf.web.controller.BaseJsonController;
+import com.ut.scf.web.controller.pub.CustManagerController;
+
+@Controller
+@RequestMapping("/ssmRepay")
+public class SSMRepayManagerController extends BaseJsonController {
+	private static final Logger log = LoggerFactory
+			.getLogger(CustManagerController.class);
+
+	@Resource
+	private IRepayManagerService repayManagerService;
+
+	@Resource
+	private IActivitiService activitiService;
+	@Resource
+	private CorpInfoMapper corpInfoMapper;
+
+	// 超人还款计划 代还款
+	@RequestMapping(value = "/repayPlan")
+	@ResponseBody
+	public BaseRespBean findRepayPlanByStatus(
+			@RequestBody RepayPlanListReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		BaseRespBean respBean = repayManagerService
+				.findRepayPlanByStatus(paramMap);
+		return respBean;
+	}
+
+	
+	@RequestMapping(value = "/repayDaySum")
+	@ResponseBody
+	public BaseRespBean findRepayDaySum(
+			@RequestBody RepayPlanListReqBean reqBean) {
+		
+		String orderByNameSql="";
+		if(StringUtils.isNotBlank(reqBean.getOrderByName()))
+		{
+			char[] orderByNameBytes=reqBean.getOrderByName().toCharArray();
+			for(int i = 0;i<orderByNameBytes.length; i++)
+			{
+				if(orderByNameBytes[i]>='A'&&orderByNameBytes[i]<='Z'){
+					
+					orderByNameSql=orderByNameSql+'_'+Character.toLowerCase(orderByNameBytes[i]);
+				}
+				else{
+					orderByNameSql=orderByNameSql+orderByNameBytes[i];
+				}
+				
+			}
+			reqBean.setOrderByName(orderByNameSql);
+		}
+		else{
+			reqBean.setOrderBy("desc");
+			reqBean.setOrderByName("simple_date");
+		}
+		
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		BaseRespBean respBean = repayManagerService.findRepayDaySum(paramMap,page);
+		return respBean;
+	}
+	@RequestMapping(value = "/updateRepayDaySum")
+	@ResponseBody
+	public BaseRespBean updateRepayDaySum(
+			@RequestBody DayRepayRecordInfo reqBean) {
+
+		
+
+		BaseRespBean respBean = repayManagerService
+				.updateRepayDaySum(reqBean);
+		return respBean;
+	}
+	
+	// 超人需还金额
+	@RequestMapping(value = "/sum")
+	@ResponseBody
+	public BaseRespBean repaySumAmt(@RequestBody RepayPlanListReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		BaseRespBean respBean = repayManagerService.selectSumAmt(paramMap);
+		return respBean;
+	}
+
+	// 流程发起
+	@RequestMapping(value = "/startProcess")
+	public @ResponseBody BaseRespBean startProcess(HttpSession httpSession,
+			@RequestBody RepayPlanReqBean reqBean, BindingResult bindingResult) {
+		BaseRespBean respBean = null;
+		try {
+
+			// 获取当前用户
+			String userName = (String) httpSession
+					.getAttribute(ScfConsts.SESSION_USERNAME);
+			reqBean.setUserId(userName);
+			reqBean.setActivitiKey("ssmRepayManager");
+			JSONObject repayInfoStr = new JSONObject(reqBean);
+			respBean = repayManagerService.ssmStartProcess(repayInfoStr);
+		} catch (Exception e) {
+			respBean = new BaseRespBean();
+			respBean.setResult(-1);
+			respBean.setResultNote("还款登记失败，还款登记异常");
+			e.printStackTrace();
+		}
+		return respBean;
+	}
+
+	// 流程结束
+	@RequestMapping(value = "/endProcess")
+	public @ResponseBody BaseRespBean endProcess(HttpSession httpSession,
+			@RequestBody RepayPlanReqBean reqBean) {
+		log.info("还款登记结束流程开始,还款信息{}", reqBean.getCurrentPayablePrincipal());
+		BaseRespBean respBean = new BaseRespBean();
+		try {
+			Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+			log.info("还款登记结束流程,还款信息{}",
+					(String) paramMap.get("currentPayablePrincipal"));
+			// 获取当前用户
+			String userName = (String) httpSession
+					.getAttribute(ScfConsts.SESSION_USERNAME);
+			reqBean.setUserId(userName);
+			reqBean.setActivitiKey("ssmRepayManager");
+			
+			
+			String corpId = (String) httpSession
+					.getAttribute(ScfConsts.SESSION_CORP_ID);
+			//通过corpId获取名称
+			CorpInfoExample example=new CorpInfoExample();
+			Criteria criteria = example.createCriteria();
+			criteria=criteria.andCorpIdEqualTo(corpId);
+			List<CorpInfo> list=corpInfoMapper.selectByExample(example);
+			String corpName=list.get(0).getCorpName();
+			//新增
+			reqBean.setCorpName(corpName);
+			
+			JSONObject repayInfoStr = new JSONObject(reqBean);
+			respBean = repayManagerService
+					.ssmEndProcess(paramMap, repayInfoStr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			respBean.setResult(-1);
+			respBean.setResultNote("还款登记失败，还款登记异常");
+		}
+
+		return respBean;
+	}
+
+	// 审核是否同意
+	@RequestMapping(value = "/doAgree")
+	public @ResponseBody BaseRespBean doAgree(HttpSession httpSession,
+			@RequestBody RepayPlanReqBean reqBean, BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 获取当前用户
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		JSONObject jsonObject = new JSONObject(reqBean);
+		activitiService.doAgree(jsonObject);
+		return respBean;
+	}
+
+	
+	@RequestMapping(value = "/getDayRepayRecordInfoByid")
+	public @ResponseBody BaseRespBean getDayRepayRecordInfoByid(HttpSession httpSession,@RequestBody DayRepayRecordInfo dayRepayRecordInfo, BindingResult bindingResult) {
+		DayRepayRecordInfo dayRepayRecordInfo1 = repayManagerService.getDayRepayRecordInfoByid(dayRepayRecordInfo.getId());
+		List<DayRepayRecordInfo> list=new ArrayList<DayRepayRecordInfo>();
+		list.add(dayRepayRecordInfo1);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setDataList(list);
+		return respBean;
+	}
+}

@@ -1,0 +1,367 @@
+package com.ut.scf.web.controller.project;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.pojo.auto.FinanceInfo;
+import com.ut.scf.reqbean.project.FinanceFlowReqBean;
+import com.ut.scf.reqbean.project.FinanceInfoListReqBean;
+import com.ut.scf.reqbean.project.FinanceListReqBean;
+import com.ut.scf.reqbean.pub.ActivitiDeleteProcessReqBean;
+import com.ut.scf.reqbean.pub.TaskInfoReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IFinanceInfoService;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.web.controller.BaseJsonController;
+
+/**
+ * 融资操作相关的控制类
+ * 
+ * @author yuancy
+ *
+ */
+@Controller
+@RequestMapping("/finance")
+public class FinanceInfoController extends BaseJsonController {
+
+	private static final Logger log = LoggerFactory
+			.getLogger(FinanceInfoController.class);
+
+	@Resource
+	private IFinanceInfoService financeInfoService;
+
+	@Resource
+	private IActivitiService activitiService;
+
+	@Resource
+	private IProcessRepeatChkService processRepeatChkService;
+
+	@RequestMapping(value = "/productId")
+	@ResponseBody
+	public String getProductId(HttpSession httpSession) {
+		String corpId = (String) httpSession.getAttribute("corpId");
+		return financeInfoService.getProductId(corpId);
+
+	}
+	@RequestMapping(value = "/list", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean financeInfoList(
+			@RequestBody FinanceInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		
+		BaseRespBean respBean = new BaseRespBean();
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		respBean = financeInfoService.getFinanceInfoList(paramMap, page);
+		log.debug("financeInfoList: {}", respBean);
+
+		return respBean;
+	}
+	@RequestMapping(value = "/downloadPdf", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getDownloadPdf(HttpSession httpSession,
+			@RequestBody FinanceFlowReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		respBean = financeInfoService.download(reqBean,httpSession);
+		return respBean;
+	}
+	@RequestMapping(value = "/getProGuarantee", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getProGuarantee(
+			@RequestBody FinanceInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		respBean = financeInfoService.getProGuarantee(reqBean);
+		return respBean;
+	}
+	
+	@RequestMapping(value = "/getRecommend", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getRecommend(
+			@RequestBody FinanceFlowReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		respBean = financeInfoService.getRecommend(reqBean.getCorpId(),reqBean.getYwlxId());
+		return respBean;
+	}
+	@RequestMapping(value = "/getRecommendAdd", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getRecommendAdd(
+			@RequestBody FinanceFlowReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		respBean = financeInfoService.getRecommendAdd(reqBean.getCorpId(),reqBean.getYwlxId());
+		return respBean;
+	}
+	@RequestMapping(value = "/apply", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean apply(HttpSession httpSession,
+			@Valid @RequestBody FinanceFlowReqBean flowReqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		if (bindingResult.hasErrors()) {
+			log.warn("bindingResult has error");
+			respBean.setResult(ErrorCodeEnum.PARAM_VALID_ERROR);
+			respBean.setResultErrorMap(bindingResult);
+			return respBean;
+		}
+
+		// 该经销商下还没有用户时，不能申请融资
+		if (!financeInfoService.hasAgencyUser(flowReqBean)) {
+			respBean.setResult(ErrorCodeEnum.AGENCY_HAS_NOT_USER);
+			respBean.setResultNote("该经销商下不存在用户");
+			return respBean;
+		}
+		
+		// 融资承编号重复
+		if (financeInfoService.hasFinanceId(flowReqBean)) {
+			respBean.setResult(ErrorCodeEnum.FINANCEID_NAME_EXIST);
+			respBean.setResultNote("融资承编号重复");
+			return respBean;
+		}
+		
+		
+/*		// 该经销商下有未完成的付款承诺函，不能再次申请融资
+		if (financeInfoService.checkFinanceStatus(flowReqBean)) {
+			respBean.setResult(ErrorCodeEnum.NOT_FINISHED_PAY);
+			return respBean;
+		}
+		*/
+		
+		financeInfoService.addFinance(flowReqBean, httpSession, "#0001");
+		// 流程重复验证
+		
+	
+		
+	/*	ProcessRepeatCheck checkInfo = new ProcessRepeatCheck();
+		checkInfo.setProcessKey("financeMngProcess");
+		checkInfo.setItemKey("AGENCY_CORP_ID");
+		checkInfo.setItemValue(flowReqBean.getCorpId());
+		if (processRepeatChkService.isProcessExist(checkInfo)) {
+			respBean.setResult(ErrorCodeEnum.FINANCE_AGENCY_EXIST);
+			return respBean;
+		}
+
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		String roleId = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_ROLE_ID);
+		flowReqBean.setUserId(userName);
+		flowReqBean.setLaunchRoleId(roleId);
+		flowReqBean.setActivitiKey("financeMngProcess");
+		JSONObject jsonObject = new JSONObject(flowReqBean);
+	
+		respBean = financeInfoService.startProcess(jsonObject, checkInfo);
+*/
+		return respBean;
+	}
+	@RequestMapping(value = "/update", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean updateFinance(HttpSession httpSession,
+			@Valid @RequestBody FinanceFlowReqBean flowReqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		if (bindingResult.hasErrors()) {
+			log.warn("bindingResult has error");
+			respBean.setResult(ErrorCodeEnum.PARAM_VALID_ERROR);
+			respBean.setResultErrorMap(bindingResult);
+			return respBean;
+		}
+		
+		financeInfoService.updateFinance(flowReqBean, httpSession, "#0001");
+
+		return respBean;
+	}
+	
+	@RequestMapping(value = "/updateModel", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean updateFinanceModel(HttpSession httpSession,
+			@Valid @RequestBody FinanceFlowReqBean flowReqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		if (bindingResult.hasErrors()) {
+			log.warn("bindingResult has error");
+			respBean.setResult(ErrorCodeEnum.PARAM_VALID_ERROR);
+			respBean.setResultErrorMap(bindingResult);
+			return respBean;
+		}
+		
+		financeInfoService.updateFinanceModel(flowReqBean, httpSession, "#0001");
+
+		return respBean;
+	}
+	
+	@RequestMapping(value = "/deleteFinance", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean updateFinanceStatus(HttpSession httpSession,
+			@Valid @RequestBody FinanceFlowReqBean flowReqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		if (bindingResult.hasErrors()) {
+			log.warn("bindingResult has error");
+			respBean.setResult(ErrorCodeEnum.PARAM_VALID_ERROR);
+			respBean.setResultErrorMap(bindingResult);
+			return respBean;
+		}
+		
+		int financeid=financeInfoService.getFinanceStatus(flowReqBean.getFinanceId());
+		if(financeid!=1)
+		{
+			respBean.setResult(ErrorCodeEnum.PARAM_VALID_ERROR);
+			respBean.setResultNote("该承诺函已经出具付款,不可以解除合作");
+		}
+		else
+		{
+			financeInfoService.updateFinanceStatus(flowReqBean, httpSession, "#0001");
+		}
+		return respBean;
+	}
+	@RequestMapping(value = "/getFinanceInfo", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getFinanceInfo(HttpSession httpSession,
+			@Valid @RequestBody TaskInfoReqBean flowReqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		respBean = financeInfoService.getFinanceInfo(flowReqBean);
+		return respBean;
+	}
+
+	@RequestMapping(value = "/applyGuarantee", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean applyGuarantee(HttpSession httpSession,
+			@Valid @RequestBody FinanceFlowReqBean flowReqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		if (bindingResult.hasErrors()) {
+			log.warn("bindingResult has error");
+			respBean.setResult(ErrorCodeEnum.PARAM_VALID_ERROR);
+			respBean.setResultErrorMap(bindingResult);
+			return respBean;
+		}
+
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		flowReqBean.setUserId(userName);
+		financeInfoService.applyGuarantee(flowReqBean);
+
+		return respBean;
+	}
+
+	@RequestMapping(value = "/doAgree", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean doAgree(HttpSession httpSession,
+			@RequestBody FinanceFlowReqBean reqBean, BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 获取当前用户
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		respBean = financeInfoService.doAgree(reqBean, httpSession);
+		return respBean;
+	}
+
+	@RequestMapping(value = "/reApply", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean reApply(HttpSession httpSession,
+			@RequestBody FinanceFlowReqBean reqBean, BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 获取当前用户
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		financeInfoService.reApply(reqBean);
+		return respBean;
+	}
+
+	@RequestMapping(value = "/financelist", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean financeList(HttpSession httpSession,
+			@RequestBody FinanceListReqBean reqBean, BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		respBean = financeInfoService.getFinanceList(paramMap);
+		return respBean;
+	}
+
+	@RequestMapping(value = "/deleteProcess", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean deleteProcess(HttpSession httpSession,
+			@RequestBody ActivitiDeleteProcessReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		String procInstId = reqBean.getProcInstId();
+		respBean = financeInfoService.deleteProcessById(procInstId);
+		return respBean;
+	}
+
+	//2018-08-13新增的给经销商查询页面列表的查询
+	@RequestMapping(value = "/listQuery", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean listQuery(HttpSession httpSession, @RequestBody FinanceInfoListReqBean reqBean,BindingResult bindingResult) {
+		
+		
+		BaseRespBean respBean = new BaseRespBean();
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		// 获取当前用户
+		String corpId = (String) httpSession.getAttribute(ScfConsts.SESSION_CORP_ID);
+		if ("corp00001".equals(corpId)) {// 悦达
+
+		} else if ("corp00002".equals(corpId)) {// dyk
+			paramMap.put("sysType", 4);
+			paramMap.put("corpId", corpId);
+		} else if ("corp00003".equals(corpId)) {//
+			paramMap.put("sysType", 6);
+		} else {
+			paramMap.put("corpId", corpId);
+		}
+		
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		respBean = financeInfoService.getFinanceInfoList(paramMap, page);
+		log.debug("financeInfoList: {}", respBean);
+
+		return respBean;
+	}
+	
+	
+	
+	@RequestMapping(value = "/getDYKFinancePayAndRepayList", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+
+	public  @ResponseBody BaseRespBean getDYKFinancePayAndRepayList(
+			@RequestBody FinanceInfo financeInfo,
+			BindingResult bindingResult) {
+		System.out.println("$$$"+financeInfo.getFirTime());
+		System.out.println("######"+financeInfo.getSecTime());
+		BaseRespBean respBean = new BaseRespBean();
+		Map<String, Object> paramMap = BeanUtil.beanToMap(financeInfo);
+/*		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(financeInfo.getPageNumber());
+		page.setPageSize(financeInfo.getPageSize());*/
+		respBean = financeInfoService.getDYKFinancePayAndRepayList(paramMap);
+		return respBean;
+	}
+	
+	@RequestMapping(value = "/getDYKOccupyMoneyInfo", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getDYKOccupyMoneyInfo(@RequestBody FinanceInfo financeInfo, BindingResult bindingResult) {
+		 BaseRespBean respBean = new BaseRespBean();
+		respBean = financeInfoService.getDYKOccupyMoneyInfo(financeInfo);
+		return respBean;
+	}
+	
+	@RequestMapping(value = "/getDykCashHistoryList", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getDykCashHistoryList(@RequestBody FinanceInfo financeInfo, BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		System.out.println("$$$1111"+financeInfo.getFirTime());
+		System.out.println("######11111"+financeInfo.getSecTime());
+		respBean = financeInfoService.getDykCashHistoryList(financeInfo);
+		return respBean;
+	}
+	
+	
+	
+}

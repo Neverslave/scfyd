@@ -1,0 +1,247 @@
+
+var guaraIndex=0;
+$(document).ready(function() {
+	$("form").attr("autocomplete","off");
+	CloudUtils.getMenuNames("nav");
+	initTable();
+	dateload();
+	var row=store.get('guaranteeRow');
+	$("#guarfinanceId").val(row.financeId);
+	
+//	formValidator();
+//	noteFormValidator();
+	// 金额项目千分位符表示 
+	numFormat();
+	//modal绑定事件
+	$('#addModal').on('hidden.bs.modal', function(){
+		$("#addForm")[0].reset();
+		if ($("#addForm").data('bootstrapValidator')) {
+			$("#addForm").data('bootstrapValidator').destroy();
+	        $('#addForm').data('bootstrapValidator', null);
+		}
+//        formValidator();
+	});
+} );
+
+window.operateEvents = {
+
+		'click .remove': function (e, value, row, index) {
+			$("#addGuaranteeListTable").bootstrapTable("remove", {
+				field: "tableId",
+				values: [row.tableId]
+			});
+		},
+		
+	
+};
+
+function initTable() { 
+	$('#addGuaranteeListTable')
+	.bootstrapTable('destroy')
+	.bootstrapTable({  
+         method: "post", 
+         url: "", 
+         striped: true,  //表格显示条纹  
+         pagination: false, //启动分页  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为limit可以获取limit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+        	 return null;
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [{
+             field: 'tableId', 
+             title: '序号',  	     
+     	    align: 'center',
+             valign: 'middle',
+     	    visible:false
+             },{
+ 	        field: 'financeId',
+ 	        title: '融资承诺函',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'payDate',
+ 	        title: '到账日期',
+ 	        align: 'center',
+            valign: 'middle',
+ 	    }, {
+ 	        field: 'opearte',
+ 	        title: '操作',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index) {
+				if (value == "delete") {
+					return "删除";
+				} else {
+					return "新增";
+				}
+	    	}
+ 	    }, {
+ 	        field: 'payGuarantee',
+ 	        title: '金额',
+ 	        align: 'center',
+            valign: 'middle',
+         
+ 	    }, {
+ 	        field: 'payWay',
+ 	        title: '方式',
+ 	       align: 'center',
+           valign: 'middle'
+ 	    },{
+ 	        field: 'note',
+ 	        title: '备注',
+ 	        align: 'center',
+ 	        valign: 'middle'
+ 	    }, {
+ 	        field: 'operation',
+ 	        title: '删除',
+ 	        align: 'center',
+            valign: 'middle',
+ 	        formatter:function(value,row,index){
+				var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" href="javascript:void(0)"></a>';
+ 	            return  r ;
+ 	        },
+ 	        events: 'operateEvents'
+ 	    }
+ 	    ]
+       });
+}
+
+function add(){
+	formValidator();
+	$("#represent").empty();
+	$('#isEdit').val("0"); //新增0；修改1
+	$("#addForm").find('input').attr("readonly", false);
+	$("#addForm").find('select').attr("disabled", false);
+	$("#btn_blank").removeClass('col-sm-7').addClass('col-sm-4');
+	$("#btn_save").show();
+	$(".required").show();
+    $('#addModal').modal({backdrop: 'static', keyboard: false});//防止点击空白/ESC 关闭
+    $("#financeId").val($("#guarfinanceId").val());
+    guaraIndex=guaraIndex+1;
+    $('#tableId').val(guaraIndex);
+}
+
+function dateload() {
+    $('#payDate').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+}
+
+
+
+
+function addGuarantee() {
+	var data = CloudUtils.convertStringJson("addForm");	
+	$("#addGuaranteeListTable").bootstrapTable('append', JSON.parse(data));
+	$('#addModal').modal('hide');
+
+}
+
+function apply() {
+
+	var addGuaranteeList = $("#addGuaranteeListTable").bootstrapTable('getData');
+	if (addGuaranteeList.length == 0) {
+		bootbox.alert("列表不能为空");
+		return false;
+	}
+	
+	var data = CloudUtils.convertStringJson('noteForm');
+	var jsonData = eval("(" + data + ")");
+	jsonData.guaranteeListInfo = JSON.stringify(addGuaranteeList);
+	
+	var options = {
+			url : '../../guaranteeQuery/listNewHistoryInsert',
+			data : JSON.stringify(jsonData),
+			callBackFun : function(data) {
+				if(data.result==0){
+					bootbox.alert(data.resultNote, function() {
+						window.location.href = '../../query/marginInfoQueryNew.html';
+					});
+				}else{
+					bootbox.alert(data.resultNote);
+					return false;
+				}
+			},
+			errorCallback:function(data){
+				bootbox.alert("error");
+			}
+	};
+	CloudUtils.ajax(options);
+}
+
+/**
+ * 金额项目千分位符表示
+ */
+function numFormat(){
+	$("input[name='payGuarantee']").number(true, 2);
+
+}
+
+//form验证规则
+function formValidator(){
+	$('#addForm').bootstrapValidator({
+	      message: 'This value is not valid',
+	      feedbackIcons: {
+	          valid: 'glyphicon glyphicon-ok',
+	          invalid: 'glyphicon glyphicon-remove',
+	          validating: 'glyphicon glyphicon-refresh'
+	      },
+	      fields: {
+	    payDate: {
+	              validators: {
+	                  notEmpty: {
+	                      message: '到账日期不能为空'
+	                  }
+	              }
+	          },
+	      payGuarantee: {
+	              validators: {
+	                  notEmpty: {
+	                      message: '金额不能为空'
+	                  },
+	                
+	              }
+	          },
+	          payWay: {
+              validators: {
+                  notEmpty: {
+                      message: '操作不能为空'
+                  },
+                
+              }
+          }
+	      }
+		})
+		.on('success.form.bv', function (e) {
+			e.preventDefault();
+		});	
+}
+

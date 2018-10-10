@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.query.ISaleInfoListDao" >
+
+	
+  
+  <select id="getSaleInfoList" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+		temp_a.corp_name agencyName,
+		temp_a.agency_num agencyNum,
+		temp_a.pay_id payId,
+		temp_a.pay_amt payAmt,
+		temp_a.ywlx_id ywlxId,
+		temp_a.cpr_year cprYear,
+		temp_a.cpr_month cprMonth,
+		bti.type_name typeName,
+		temp_a.guarantee_balance guaranteeBalance,
+		temp_a.total_car_num totalCarNum,
+		IFNULL(temp_b.sale_car_amt,0) saleCarAmt,
+		IFNULL(temp_b.sale_car_num,0) saleCarNum,
+		(
+			IFNULL(temp_b.sale_car_num,0)  / temp_a.total_car_num
+		) * 100 numRate,
+		(
+			IFNULL(temp_b.sale_car_amt,0) / temp_a.pay_amt
+		) * 100 amtRate,
+		temp_a.total_car_num - IFNULL(temp_b.sale_car_num,0) notSaleNum,
+		temp_a.pay_amt - IFNULL(temp_b.sale_car_amt,0) notSaleAmt
+	from
+		(
+			SELECT
+				ci.corp_name,
+				ci.agency_num,
+				fi.finance_id,
+				fi.pay_id,
+				fi.pay_amt,
+				fi.ywlx_id,
+				fi.cpr_year,
+				fi.cpr_month,
+				gi.guarantee_balance,
+				count(cari.car_frame_num) total_car_num
+			FROM
+				corp_info ci
+			JOIN finance_info fi ON ci.corp_id = fi.corp_id
+			JOIN car_info cari ON fi.finance_id = cari.finance_id
+			left join guarantee_info gi on fi.finance_id = gi.finance_id
+			WHERE 1 =1 
+			<if test="corpId != null and corpId != '' ">
+			  and	ci.corp_id = #{corpId}
+			</if>
+			GROUP BY
+				ci.agency_num,
+				ci.corp_name,
+				fi.finance_id,
+				fi.pay_id,
+				fi.pay_amt
+		) temp_a LEFT JOIN
+		(
+			SELECT
+				rfb.finance_id,
+				count(rfb.car_frame_num) sale_car_num,
+				sum(ci.car_actual_price) sale_car_amt
+			FROM
+				dyk_repayment_info dri
+			JOIN repayment_finance_batch rfb ON dri.repayment_id = rfb.repayment_id
+			AND rfb.car_frame_num IS NOT NULL
+			JOIN car_info ci ON rfb.car_frame_num = ci.car_frame_num
+			WHERE
+			1=1
+			<if test="repaymentDate != null and repaymentDate != '' ">
+			 and DATE_FORMAT(
+					dri.repayment_date,
+					'%Y-%m-%d'
+				) <![CDATA[<=]]> #{repaymentDate}
+			</if>
+		
+			GROUP BY
+				rfb.finance_id
+		) temp_b
+	ON
+		temp_a.finance_id = temp_b.finance_id
+		LEFT JOIN business_type_info bti on temp_a.ywlx_id=bti.type_id
+		where 1=1
+			<if test="ywlxId != null and ywlxId != '' ">
+			 and temp_a.ywlx_id <![CDATA[=]]> #{ywlxId}
+			</if>
+			<if test="cprYear != null and cprYear != '' ">
+			 and temp_a.cpr_year <![CDATA[=]]> #{cprYear}
+			</if>
+			<if test="cprMonth != null and cprMonth != '' ">
+			 and temp_a.cpr_month <![CDATA[=]]> #{cprMonth}
+			</if>
+			order by  temp_a.cpr_year desc,temp_a.cpr_month desc,temp_a.agency_num asc
+  </select>
+  
+  
+  <select id="getSaleAllInfoList" resultType="hashmap" parameterType="hashmap" >
+  	SELECT
+		COALESCE(SUM(temp.pay_amt),0) payAmt,
+		COALESCE(SUM(temp.total_car_num),0) totalCarNum,
+		COALESCE(SUM(temp.sale_car_amt),0) saleCarAmt,
+		COALESCE(SUM(temp.sale_car_num),0) saleCarNum,
+		COALESCE((
+			SUM(temp.sale_car_num) / SUM(temp.total_car_num)
+		) * 100,0) numRate,
+		COALESCE((
+			SUM(temp.sale_car_amt) / SUM(temp.sale_car_amt)
+		) * 100,0) amtRate
+	
+	from
+		(
+			SELECT
+				temp_a.pay_amt,
+				temp_a.total_car_num,
+				temp_b.sale_car_amt,
+				temp_b.sale_car_num
+			FROM
+				(
+					SELECT
+						ci.corp_name,
+						ci.agency_num,
+						fi.finance_id,
+						fi.pay_id,
+						fi.pay_amt,
+						count(cari.car_frame_num) total_car_num
+					FROM
+						corp_info ci
+				
+					JOIN finance_info fi ON ci.corp_id = fi.corp_id
+					JOIN car_info cari ON fi.finance_id = cari.finance_id
+					WHERE
+						1 = 1
+						<if test="corpId != null and corpId != '' ">
+							 and ci.corp_id = #{corpId}
+						</if>
+					GROUP BY
+						ci.agency_num,
+						ci.corp_name,
+						fi.finance_id,
+						fi.pay_id,
+						fi.pay_amt
+				) temp_a LEFT JOIN
+				(
+					SELECT
+						rfb.finance_id,
+						count(rfb.car_frame_num) sale_car_num,
+						sum(ci.car_actual_price) sale_car_amt
+					FROM
+						dyk_repayment_info dri
+					JOIN repayment_finance_batch rfb ON dri.repayment_id = rfb.repayment_id
+					AND rfb.car_frame_num IS NOT NULL
+					JOIN car_info ci ON rfb.car_frame_num = ci.car_frame_num
+					WHERE
+						1 = 1
+						<if test="repaymentDate != null and repaymentDate != '' ">
+							 and DATE_FORMAT(
+								dri.repayment_date,
+								'%Y-%m-%d'
+							) <![CDATA[<=]]> #{repaymentDate}
+						</if>
+					GROUP BY
+						rfb.finance_id
+				) temp_b
+			ON
+				temp_a.finance_id = temp_b.finance_id
+		) temp
+  </select>
+  
+</mapper>

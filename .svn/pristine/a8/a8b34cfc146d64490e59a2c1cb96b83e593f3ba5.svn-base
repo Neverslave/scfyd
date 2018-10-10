@@ -1,0 +1,708 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+	$('#detailModal').on('hidden.bs.modal', function() {
+		$("#detailForm")[0].reset();
+	});
+	dateload();
+	initTable();
+	numFormat();
+	ajaxFileUpload();
+});
+
+window.operateEvents = {
+	'click .detail': function (e, value, row, index) {
+		detailFun(row);
+	},
+	'click .download': function (e, value, row, index) {
+		download(row);
+    },
+    'click .uploadfile': function (e, value, row, index) {
+    	uploadfile(row);
+    },
+    'click .modify': function (e, value, row, index) {
+    	modify(row);
+    },
+};
+function modify(row)
+{
+    store.set('commitmentRow', row); //把数据存储在缓存中
+    $('#mainFrame', top.document).attr('src', 'project/dykManager/payCommitmentUpdate.html');
+
+}
+function download(row) {
+    var options = {
+        url: '../../commitment/downloadPdf',
+        data: JSON.stringify(row),
+        callBackFun: function(data) {
+        	var pdfUrl = "../../"+data.resultNote;        	
+        	
+			$('#download').attr('href',pdfUrl);
+			$('#download').attr('download',pdfUrl);
+        	
+        },
+        errorCallback: function(data) {
+            alert("error");
+        }
+    };
+    CloudUtils.ajax(options);
+	document.getElementById("download").click();
+}
+function uploadfile(row) {
+ 	CloudUtils.setForm(row,'uploadForm');
+ 	$('#uploadForm').find("select").attr('disabled',true);
+ 	$('#uploadForm').find("input").attr('readonly',true);
+ 	$('#uploadModal').modal({backdrop: 'static', keyboard: false});
+}
+function savemodel() {
+
+    var data = CloudUtils.convertStringJson('uploadForm');
+    var jsonData = eval("(" + data + ")");
+    var options = {
+        url: "../../commitment/updateModel",
+        data: JSON.stringify(jsonData),
+        callBackFun: function(data) {
+            if (data.result == 0) {
+                bootbox.alert(data.resultNote, function() {
+                    window.location.href = '../../project/dykManager/payCommitmentManager.html';
+                });
+            } else {
+                bootbox.alert(data.resultNote);
+                return false;
+            }
+        },
+        errorCallback: function(data) {
+            bootbox.alert("error");
+        }
+    };
+    CloudUtils.ajax(options);
+
+}
+function addFun() {
+	$('#mainFrame',top.document).attr('src','project/dykManager/payCommitmentAdd.html');
+}
+
+function searchFun(){
+	initTable();
+}
+
+function detailFun(row) {
+	CloudUtils.setForm(row, 'detailForm');
+	if(row.ywlxId=="1")
+		{
+			$('#lscredit').show();
+			$('#dzcredit').hide();
+		}
+	else 
+		{
+			$('#lscredit').hide();
+			$('#dzcredit').show();
+		}
+	initCarInfoTable(row.financeId);
+ 	$('#detailModal').modal();
+ 	GuaranteeFun(row.financeId);
+}
+
+function dateload(){
+	$('#pay_date').datetimepicker({
+      language: 'zh-CN',
+      autoclose: 1,
+      todayBtn: true,// 显示今天时间
+      pickerPosition: "bottom-left",
+      minuteStep: 5,
+      format: 'yyyy-mm-dd',
+      minView: 'month',　　// 日期时间选择器所能够提供的最精确的时间选择视图。
+      initialDate : new Date() //参考financeInfoManager.js
+    });
+	$('#cprYear').datetimepicker({
+		 format: 'yyyy',  
+	     weekStart: 1,  
+	     autoclose: true,  
+	     startView: 4,  
+	     minView: 4,  
+	     forceParse: false,  
+	     language: 'zh-CN' 
+	    });
+	$('#cprMonth').datetimepicker({
+		format: 'mm',
+	    autoclose:true,
+	    startView:3,
+	    minView:3,
+	    maxView:3,
+	    initialDate:new Date(),
+	    language:'zh-CN'
+	    });
+}
+
+function initTable() { 
+	$('#payCommitmentInfoList').bootstrapTable('destroy'); 
+	$("#payCommitmentInfoList").bootstrapTable({  
+		method: "post", 
+        url: "../../commitment/listQuery", 
+        striped: true,  //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 5,  //每页显示的记录数  
+        pageNumber:1, //当前第几页  
+        pageList: [5, 10, 20, 50, 100],  //记录数可选列表  
+        search: false,  //是否启用查询  
+        showColumns: false,  //显示下拉框勾选要显示的列  
+        showRefresh: false,  //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType : "undefined",   
+        queryParams: function queryParams(params) {   //设置查询参数  
+          var data = CloudUtils.convertStringJson('searchForm');
+          var jsonData = eval("(" + data + ")");
+          var param = {    
+              pageNumber: params.pageNumber,
+              pageSize: params.pageSize,
+              agencyName:jsonData.agency_name,
+              agencyNum:jsonData.agency_num,
+              financeId:jsonData.finance_id,
+              payId:jsonData.pay_id,
+              payDate:jsonData.pay_date,
+              cprYear:jsonData.cprYear,
+              cprMonth:jsonData.cprMonth,
+              financeStatus:jsonData.financeStatus
+          }; 
+          return JSON.stringify(param);
+        },  
+        responseHandler:function responseHandler(res) {
+       	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+       	 } else {
+       		 bootbox.alert(res.resultNote);
+       		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+       	 }
+        },
+         columns: [/*{
+ 	        field: 'operation',
+ 	        title: '详情',
+ 	        align: 'center',
+            valign: 'middle',
+            width: 100,
+ 	        formatter:function(value,row,index){
+ 	       	var s = '<a class = "fa fa-edit modify" style="color:#278bdd;padding:0px 5px;" title="更新明细" href="javascript:void(0)"></a>';
+			
+	            var d = '<a class = "fa fa-list-ul detail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+	            return s + ' ' + d;
+ 	        },
+ 	        events: 'operateEvents'
+ 	    },*/{
+ 	        field: 'cprYear',
+ 	        title: '合作年份',
+ 	        align: 'center',
+            valign: 'middle',
+            width: 80,
+ 	    },{
+ 	        field: 'cprMonth',
+ 	        title: '合作月份',
+ 	        align: 'center',
+            valign: 'middle',
+            width: 80,
+ 	    },{
+ 	        field: 'payId',
+ 	        title: '付款编号',
+ 	       align: 'center',
+           valign: 'middle',
+        	   width: 180,
+ 	    },{
+ 	        field: 'financeId',
+ 	        title: '融资编号',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       visible:false,
+ 	    },{
+ 	        field: 'corpId',
+ 	        title: '经销商ID',
+ 	        align: 'center',
+            valign: 'middle',
+            width: 100,
+            visible:false
+ 	    }, {
+ 	        field: 'agencyName',
+ 	        title: '经销商名称',
+ 	        align: 'center',
+ 	       width: 200,
+            valign: 'middle',
+ 	    }, {
+ 	        field: 'agencyNum',
+ 	        title: '经销商代码',
+ 	        align: 'center',
+ 	       width: 100,
+            valign: 'middle',
+ 	    }, {
+ 	        field: 'payDate',
+ 	        title: '付款日期',
+ 	        align: 'center',
+ 	       width: 100,
+ 	      visible:false,
+ 	        valign: 'middle'
+ 	    },{
+ 	        field: 'ywlxId',
+ 	        title: '业务ID',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       width: 100,
+ 	        visible:false
+ 	    },{
+ 	        field: 'typeName',
+ 	        title: '业务类型',
+ 	        align: 'center',
+ 	       width: 100,
+ 	        valign: 'middle'
+ 	    },{
+ 	        field: 'productId',
+ 	        title: '产品ID',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       width: 100,
+ 	        visible:false
+ 	    },{
+ 	        field: 'productName',
+ 	        title: '产品类型',
+ 	        align: 'center',
+ 	       width: 100,
+ 	      visible:false,
+ 	        valign: 'middle'
+ 	    },{
+ 	        field: 'financeAmount',
+ 	        title: '融资金额',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       width: 130,
+ 	      visible:false,
+ 	        formatter:function(value,row,index) {
+				return $.number(value, 2);
+	    	}
+ 	    },{
+ 	        field: 'payAmt',
+ 	        title: '付款金额',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       width: 130,
+ 	        formatter:function(value,row,index) {
+				return $.number(value, 2);
+	    	}
+ 	    },{
+ 	        field: 'maxCredit',
+ 	        title: '大宗最高授信额度',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       width: 100,
+ 	        visible: false
+ 	    },{
+ 	        field: 'availableCredit',
+ 	        title: '大宗可用授信额度',
+ 	        align: 'center',
+ 	       width: 130,
+ 	        valign: 'middle',
+ 	       visible:false,
+ 	       formatter:function(value,row,index) {
+				return $.number(value, 2);
+	    	}
+ 	      
+ 	    },{
+ 	        field: 'maxLscredit',
+ 	        title: '零售最高授信额度',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       width: 130,
+ 	        visible: false
+ 	    },{
+ 	        field: 'availableLscredit',
+ 	        title: '零售可用授信额度',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       width: 130,
+ 	      visible:false,
+ 	     formatter:function(value,row,index) {
+				return $.number(value, 2);
+	    	}
+ 	    },{
+ 	        field: 'financeStartDate',
+ 	        title: '付款承诺函起始日',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       width: 100,
+ 	        visible: false
+ 	    },{
+ 	        field: 'financeEndDate',
+ 	        title: '付款承诺函到期日',
+ 	        align: 'center',
+ 	       width: 100,
+ 	        valign: 'middle',
+ 	        
+ 	    },{
+ 	        field: 'payAbleGuarantee',
+ 	        title: '应缴保证金金额',
+ 	        align: 'center',
+ 	       width: 130,
+ 	        valign: 'middle',
+ 	       formatter:function(value,row,index) {
+				return $.number(value, 2);
+	    	}
+ 	      
+ 	    },{
+ 	        field: 'payActGuarantee',
+ 	        title: '实缴保证金金额',
+ 	        align: 'center',
+ 	       width: 130,
+ 	        valign: 'middle',
+ 	       formatter:function(value,row,index) {
+				return $.number(value, 2);
+	    	}
+ 	        
+ 	    },{
+ 	        field: 'guaranteeBalance',
+ 	        title: '保证金余额',
+ 	        align: 'center',
+ 	       width: 130,
+ 	        valign: 'middle',
+ 	       formatter:function(value,row,index) {
+				return $.number(value, 2);
+	    	}
+ 	        
+ 	    },{
+ 	        field: 'note',
+ 	        title: '备注',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       width: 100,
+ 	        visible: false
+ 	    },{
+ 	        field: 'financeStatus',
+ 	        title: '合作状态',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	       width: 100,
+ 	       formatter:function(value,row,index) {
+				if (value == "0") {
+					return "未审核";
+				} else if (value == "1") {
+					return "待放款";
+				}else if (value == "2") {
+					return "已放款";
+				}else if (value == "3") {
+					return "已部分还款";
+				}else if (value == "4") {
+					return "已全额还款";
+				}else if (value == "5") {
+					return "逾期";
+				}else if (value == "999") {
+					return "合作取消";
+				}
+	    	}
+ 	    },{
+ 	        field: 'fkTemplateUrl',
+ 	        title: '模板',
+ 	       align: 'center',
+           valign: 'middle',
+           width: 100,
+           formatter:function(value,row,index){
+        	   if(value!=""&&value!=null)
+    		   {
+    	       	var m = '<a class = "download" style="color:#278bdd;padding:0px 5px;" title="下载" href="javascript:void(0)">下载</a>';
+    	       	return m ;
+    		   }
+    	        else
+	     		   {
+	     		   return '';
+	     		   } 
+    	        },
+    	        events: 'operateEvents'
+ 	    }/*,{
+ 	        field: 'fkTemplateUrlNew',
+ 	        title: '模板(已盖章)',
+ 	       align: 'center',
+           valign: 'middle',
+           width: 100,
+           formatter:function(value,row,index){
+        	   if(value!=""&&value!=null)
+    		   {
+        		   var s = '<a target="view_window" href="/../..'+row.fkTemplateUrlNew+'">预览</a>';
+        		   var n = '<a target="view_window" class = "uploadfile" >&nbsp&nbsp&nbsp重新上传</a>';
+        		   return s+''+n;
+    		   }
+    	        else
+	     		   {
+    	        	var s = '<a target="view_window" class = "uploadfile" >上传</a>';
+	     		   return s;
+	     		   } 
+    	        },
+    	        events: 'operateEvents'
+ 	    }*/
+ 	    ]
+       });  
+}
+
+function initCarInfoTable(financeId) { 
+	$('#carInfoListTable').bootstrapTable('destroy'); 
+	$("#carInfoListTable").bootstrapTable({  
+		method: "post", 
+        url: "../../carInfo/list", 
+        striped: false,  //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false,  //是否启用查询  
+        showColumns: false,  //显示下拉框勾选要显示的列  
+        showRefresh: false,  //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType : "undefined",   
+        queryParams: function queryParams(params) {   //设置查询参数  
+          var param = {
+              financeId:financeId
+          }; 
+          return JSON.stringify(param);
+        },  
+        responseHandler:function responseHandler(res) {
+       	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		
+	        	 };
+
+       	 } else {
+       		 bootbox.alert(res.resultNote);
+       		 return {
+			        	 "rows": [],
+			        	
+			        	 };
+       	 }
+        },
+         columns: [{
+	 	        field: 'financeId',
+	 	        title: '付款函ID',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	}, {
+	 	        field: 'storeName',
+	 	        title: '经销商名称',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	}, {
+	 	        field: 'payDate',
+	 	        title: '付款日期',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	},{
+	 	        field: 'carFrameNum',
+	 	        title: '车架号',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	},{
+	 	        field: 'carActualPrice',
+	 	        title: '车辆价格',
+	 	        align: 'center',
+	            valign: 'middle',
+	            formatter:function(value,row,index) {
+					return $.number(value, 2);
+		    	}
+		 	},{
+	 	        field: 'carColor',
+	 	        title: '车辆颜色',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	},{
+	 	        field: 'engineNum',
+	 	        title: '发动机号',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	},{
+	 	        field: 'saleStatus',
+	 	        title: '销售状态',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	}]
+       });  
+}
+
+function numFormat(){
+	$("#maxCredit").number(true, 2);
+	$("#availableCredit").number(true, 2);
+	$("#payAmt").number(true, 2);
+	$("#guaranteeAmt").number(true, 2);
+	$("#payActGuarantee").number(true, 2);
+	$("#financeAmount").number(true, 2);
+	$("#maxLscredit").number(true, 2);
+	$("#availableLscredit").number(true, 2);
+	$("#payAbleGuarantee").number(true, 2);
+	$("#guaranteeBalance").number(true, 2); 	
+}
+
+
+//2018年月8日 增加上传函件功能 许晖
+function ajaxFileUpload(){
+	$('#file').fileupload({	  
+		
+		url:"../../file/uploadFile?pathId=3",
+	        dataType: 'json',
+	        // 上传完成后的执行逻辑
+	        done: function(e, data) {
+	        	data = data.result;
+	            if(data.result==0){    
+	            	$('#fkTemplateUrlNew').val(data.fileUrl);
+	            	$('#fkAttachSizeNew').val(data.fileSize);
+	            	$('#fkFileUrlNew').val(data.fileName);
+	            	$('#fkAttachTypeNew').val(data.fileType);
+	            } else {
+	            	 bootbox.alert(data.resultNote);
+	            }
+		            
+		     }
+	});
+	$('#file').bind('fileuploadadd', function (e, data) {
+ 		var obj = data.files[0];
+ 		var name = obj.name;
+ 		var size = obj.size;
+ 		/*if (!checkFileNum()) {
+	            bootbox.alert("上传的附件数不能超过10个");
+	            return false;
+	        }*/
+ 		var attachData = $('#attachInfoTable').bootstrapTable('getData');
+        if (attachData.length > 9) {
+            bootbox.alert("上传的附件数不能超过10个");
+            return false;
+        }
+	        var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+	        if (!checkFileType(type)) {
+	            bootbox.alert("仅支持上传word、excel、pdf、png、jpg类型的文件");
+	            return false;
+	        }
+ 		
+ 		 if (!checkFileSize(size)) {
+            bootbox.alert("上传文件不超过50M");
+	            return false;
+	        }
+	   
+ 	});
+}
+
+var fileTypes = [ ".pdf"];
+
+function checkFileType(type) {
+    var result = $.inArray(type, fileTypes);
+    if (result == -1) {
+        return false;
+    }
+    return true;
+}
+
+function checkFileSize(fileSize) {
+    fileSize = Math.round(fileSize / 1024 * 100) / 100; //单位为KB
+    fileSize = Math.round(fileSize / 1024);
+    if (fileSize > 50) {
+        return false;
+    }
+    return true;
+}
+function click_file(){
+	if($("#fkFileUrlNew").val()==null||$("#fkFileUrlNew").val()=="")
+		{
+		bootbox.alert("请上传文件");
+        return false;
+		}
+	window.open( $("#fkFileUrlNew").val());
+}
+function clear_file(){
+	$('#fkTemplateUrlNew').val('');
+	$('#fkAttachSizeNew').val('');
+	$('#fkFileUrlNew').val('');
+	$('#fkAttachTypeNew').val('');
+}
+
+
+function GuaranteeFun(financeId) {
+
+ 	
+ 	$('#guaranteeHistoryTable').bootstrapTable('destroy'); 
+	$("#guaranteeHistoryTable").bootstrapTable({  
+		 method: "post", 
+		 url: "../../guaranteeQuery/listNewHistory",
+         striped: true,  //表格显示条纹  
+         pagination: true, //启动分页  
+         pageSize: 5,  //每页显示的记录数  
+         pageNumber:1, //当前第几页  
+         pageList: [5, 10, 15, 20, 25],  //记录数可选列表  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为limit可以获取limit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+           var data = CloudUtils.convertStringJson('searchForm');
+           var jsonData = eval("(" + data + ")");
+           var param = {    
+               pageNumber: params.pageNumber,
+               pageSize: params.pageSize,
+               isPage : 1,
+	           financeId:financeId
+           };    
+           return JSON.stringify(param);
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+        		 
+        		$('#payActGuarantee').val(res.resultNote); 
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [{
+ 	        field: 'financeId',
+ 	        title: '融资承诺函',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'payDate',
+ 	        title: '到账日期',
+ 	        align: 'center',
+            valign: 'middle',
+ 	    }, {
+ 	        field: 'payGuarantee',
+ 	        title: '金额',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index) {
+				return $.number(value, 2);
+	    	}
+ 	    }, {
+ 	        field: 'payWay',
+ 	        title: '方式',
+ 	       align: 'center',
+           valign: 'middle'
+ 	    },{
+ 	        field: 'note',
+ 	        title: '备注',
+ 	        align: 'center',
+ 	        valign: 'middle'
+ 	    }
+ 	    ]
+       });	
+}

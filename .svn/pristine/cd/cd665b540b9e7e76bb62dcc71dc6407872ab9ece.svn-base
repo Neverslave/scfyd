@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+  <!-- classPathEntry:数据库的JDBC驱动,换成你自己的驱动位置 -->
+  <classPathEntry location="G:\mysql-connector-java-5.1.44-bin.jar" />
+  <context id="context1">
+    <jdbcConnection connectionURL="jdbc:mysql://106.15.189.67:3306/scfyd002?tinyInt1isBit=false" driverClass="com.mysql.jdbc.Driver" password="Sunyard123" userId="sunyard" />
+    <javaModelGenerator targetPackage="com.ut.scf.pojo.auto" targetProject="scfyd" />
+    <sqlMapGenerator targetPackage="com.ut.scf.mybatis.mapping.auto" targetProject="scfyd" />
+    <javaClientGenerator targetPackage="com.ut.scf.dao.auto" targetProject="scfyd" type="XMLMAPPER" />
+    <table tableName="repayment_plan_info" domainObjectName="RepaymentPlanInfo" >
+    </table>
+  </context>
+</generatorConfiguration>

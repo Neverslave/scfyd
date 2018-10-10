@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.tradfact.IProjectSignDao" >
+
+  <select id="selectProjectSignList" resultType="hashmap" parameterType="hashmap" >
+    select
+		pi.project_id projectId,
+		pi.project_name projectName,
+		pi.factoring_type factoringType,
+		c.corp_name buyName,
+		ci.corp_name saleName,
+		tpc.credit_main creditMain,
+		tpc.credit_term creditTerm,
+		tpc.credit_amount creditAmount,
+		cci.credit_contract_no creditContractNo,
+		cci.credit_contract_name creditContractName,
+		cci.credit_contract_term creditContractTerm,
+		cci.credit_contract_note creditContractNote,
+		temp.realName realName,temp.userId userId
+	from tf_project_info pi
+	left join tf_project_and_corp pc on pc.project_id = pi.project_id
+	join corp_info c on pc.corp_buy_id = c.corp_id
+	join corp_info ci on pc.corp_sale_id = ci.corp_id
+	left join tf_credit_contract_info cci on pc.project_id = cci.project_id
+	left join tf_project_credit tpc on tpc.project_id = pi.project_id
+	left join (select su.user_id userId,su.realname realName,tpa.project_id from sys_user su
+	left join tf_project_assign tpa on su.user_id = tpa.user_assign
+	where tpa.project_type = '0') temp on temp.project_id = pi.project_id
+	where (pi.project_status = '50' OR pi.project_status = '61')
+	and date_add(pi.create_time, interval tpc.credit_term MONTH) &gt; NOW()
+		<if test="projectName!=null and projectName!='' ">  
+            and pi.project_name LIKE CONCAT(CONCAT('%', #{projectName}),'%')   
+        </if>
+        <if test="buyName!=null and buyName!='' ">  
+            and c.corp_name LIKE CONCAT(CONCAT('%', #{buyName}),'%')   
+        </if>
+        <if test="saleName!=null and saleName!='' ">  
+            and ci.corp_name LIKE CONCAT(CONCAT('%', #{saleName}),'%')   
+        </if>
+        <if test="factoringType!=null and factoringType!='' ">  
+            and pi.factoring_type = #{factoringType}
+        </if>
+        <if test="projectId != null and projectId !=''">
+			 and pi.project_id = #{projectId}
+		</if>
+  </select>
+  
+  <update id="updateProjectStatus" parameterType="hashmap">
+  	update tf_project_info
+  	set project_status = #{projectStatus,jdbcType=VARCHAR}
+    where project_id = #{projectId,jdbcType=VARCHAR}
+  
+  </update>
+  
+</mapper>

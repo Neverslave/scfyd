@@ -1,0 +1,141 @@
+package com.ut.scf.web.controller.pub;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.pub.LoanInfoListReqBean;
+import com.ut.scf.reqbean.pub.LoanInfoProcessReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.pub.ILoanInfoManagerService;
+import com.ut.scf.web.controller.BaseJsonController;
+
+/**
+ * 放款管理的类
+ * 
+ * @author changx
+ *
+ */
+@Controller
+@RequestMapping("/loanInfo")
+public class LoanInfoManagerController extends BaseJsonController {
+	private static final Logger log = LoggerFactory
+			.getLogger(LoanInfoManagerController.class);
+
+	@Resource
+	private ILoanInfoManagerService loanInfoManagerService;
+
+	@Resource
+	ProcessEngine processEngine;
+
+	@RequestMapping(value = "/list", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean loanInfoList(HttpSession httpSession,
+			@RequestBody LoanInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		
+		reqBean.setStatus("1");
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		respBean = loanInfoManagerService.getLoanInfoList(paramMap, page);
+		log.debug("InterestManageList: {}", respBean);
+
+		return respBean;
+	}
+	@RequestMapping(value = "/historyList", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean loanInfoHistoryList(HttpSession httpSession,
+			@RequestBody LoanInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		respBean = loanInfoManagerService.getLoanInfoHistoryList(paramMap, page);
+		log.debug("InterestManageList: {}", respBean);
+
+		return respBean;
+	}
+	
+	@RequestMapping(value = "/historyListAdd", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean loanInfoHistoryListAdd(HttpSession httpSession,
+			@RequestBody LoanInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		
+		respBean = loanInfoManagerService.AddLoanInfoHistoryList(reqBean);
+		log.debug("InterestManageList: {}", respBean);
+
+		return respBean;
+	}
+	@RequestMapping(value = "/contractInfo", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean ContractInfo(HttpSession httpSession,
+			@RequestBody LoanInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		respBean = loanInfoManagerService.getContractInfoList(paramMap, page);
+		log.debug("contractInfoList: {}", respBean);
+		return respBean;
+	}
+
+	@RequestMapping(value = "/startProcess", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean startProcess(HttpSession httpSession,
+			@RequestBody LoanInfoProcessReqBean loanInfoProcess,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		loanInfoProcess.setUserId(userName);
+		loanInfoProcess.setActivitiKey("loanInfo");
+		JSONObject loanInfo = new JSONObject(loanInfoProcess);
+		respBean = loanInfoManagerService.startProcess(loanInfo);
+		return respBean;
+	}
+
+	@RequestMapping(value = "/doAgree", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean doAgree(HttpSession httpSession,
+			@RequestBody LoanInfoProcessReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		respBean = loanInfoManagerService.doAgree(reqBean);
+		return respBean;
+	}
+
+	@RequestMapping(value = "/reApply", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean reApply(HttpSession httpSession,
+			@RequestBody LoanInfoProcessReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		JSONObject jsonObject = new JSONObject(reqBean);
+		respBean = loanInfoManagerService.reApply(jsonObject);
+		return respBean;
+	}
+}

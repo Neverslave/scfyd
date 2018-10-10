@@ -1,0 +1,33 @@
+package com.ut.scf.web.controller.wechat.statistics;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.query.InterestInfoListReqBean;
+import com.ut.scf.reqbean.statistics.AgencyInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.query.IInterestInfoQueryService;
+import com.ut.scf.service.statistics.IAgencyInfoService;
+
+@Controller
+@RequestMapping("wechat/agencyQuery")
+public class WeChatAgencyController {
+
+	@Resource
+	private IAgencyInfoService agencyInfoService;
+	
+	@RequestMapping(value = "/list")
+	@ResponseBody
+	public BaseRespBean agencyInfoList(@RequestBody AgencyInfoListReqBean reqBean) {
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return agencyInfoService.AgencyInfoList(paramMap);
+	}
+}

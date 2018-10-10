@@ -1,0 +1,144 @@
+
+<div class="modal fade" id="stuImgDetail" aria-hidden="true" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="imgModal">
+        <div class="modal-dialog" role="document" style='width:60%'>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span> </button>
+                    <h4 class="modal-title" id="imgModal">学生信息图片</h4>
+                </div>
+                <div class="modal-body">
+                <form class="form-horizontal" role="form" id="detailFormStuInfo">
+							<div class="form-group col-sm-12">
+								<label class="col-sm-2 control-label" for="batchId">订单批次号</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="batchId" name="batchId" readonly
+										type="text" />
+								</div>
+								 	<label class="col-sm-2 control-label" for="orderId">订单编号</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="orderId" name="orderId" readonly
+										type="text"  />
+								</div>
+							</div>
+							<div class="form-group col-sm-12">
+								<label class="col-sm-2 control-label" for="name">姓名</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="name" name="name" readonly
+										type="text" />
+								</div>
+								 	<label class="col-sm-2 control-label" for="sex">性别</label>
+								<div class="col-sm-3">
+								  <select id="sex" name="sex" class="form-control" readonly disabled">
+		                             <option value="">未知</option>
+		                            <option value="0">女</option>
+		                            <option value="1">男</option>
+		                           
+						        </select>
+								</div>
+							</div>
+								<div class="form-group col-sm-12">
+								<label class="col-sm-2 control-label" for="idCard">省份证</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="idCard" name="idCard" readonly
+										type="text" />
+								</div>
+								 	<label class="col-sm-2 control-label" for="nation">民族</label>
+								<div class="col-sm-3">
+								  	<input class="form-control" id="nation" name="nation" readonly
+										type="text" />
+								</div>
+							</div>
+							<div class="form-group col-sm-12">
+								<label class="col-sm-2 control-label" for="age">年龄</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="age" name="age" readonly
+										type="text" />
+								</div>
+								 	<label class="col-sm-2 control-label" for="idcardBirthday">出生年月</label>
+								<div class="col-sm-3">
+								  	<input class="form-control" id="idcardBirthday" name="idcardBirthday" readonly
+										type="text" />
+								</div>
+							</div>
+								<div class="form-group col-sm-12">
+								<label class="col-sm-2 control-label" for="goodsName">产品名称</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="goodsName" name="goodsName" readonly
+										type="text" />
+								</div>
+								 	<label class="col-sm-2 control-label" for="ummTruename">面审员</label>
+								<div class="col-sm-3">
+								  	<input class="form-control" id="ummTruename" name="ummTruename" readonly
+										type="text" />
+								</div>
+							</div>
+							<div class="form-group col-sm-12">
+								<label class="col-sm-2 control-label" for="financePeriod">分期期数</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="financePeriod" name="financePeriod" readonly
+										type="text" />
+								</div>
+								 	<label class="col-sm-2 control-label" for="totalPrice">分期总费用</label>
+								<div class="col-sm-3">
+								  	<input class="form-control" id="totalPrice" name="totalPrice" readonly
+										type="text" />
+								</div>
+							</div>
+							<div class="form-group col-sm-12">
+								<label class="col-sm-2 control-label" for="tongdunRes">同盾分数</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="tongdunRes" name="tongdunRes" readonly
+										type="text" />
+								</div>
+								 	<label class="col-sm-2 control-label" for="needmoney">商家结算款</label>
+								<div class="col-sm-3">
+								  	<input class="form-control" id="needmoney" name="needmoney" readonly
+										type="text" />
+								</div>
+							</div>
+								<div class="form-group col-sm-12">
+								<label class="col-sm-2 control-label" for="serviceMoney">超人服务费</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="serviceMoney" name="serviceMoney" readonly
+										type="text" />
+								</div>
+								 	<label class="col-sm-2 control-label" for="ensureMoney">保证金</label>
+								<div class="col-sm-3">
+								  	<input class="form-control" id="ensureMoney" name="ensureMoney" readonly
+										type="text" />
+								</div>
+							</div>
+							<div class="form-group col-sm-12">
+								<label class="col-sm-2 control-label" for="contract">合同url</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="contract" name="contract" readonly
+										type="text" />
+								</div>
+								 	<label class="col-sm-2 control-label" for="state">订单状态</label>
+								<div class="col-sm-3">
+								  	  <select id="sex" name="sex" class="form-control" readonly disabled">
+		                             <option value="">未知</option>
+		                            <option value="0">拒绝</option>
+		                            <option value="1">通过</option>
+		                           
+						        </select>
+								</div>
+							</div>
+					
+					</form>
+                    <div id="imgsDetail">
+                        
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-sm-4"></div>
+                        <div class="col-sm-3">
+                            <button type="button" class="btn btn-default cancel" data-dismiss="modal">取消
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

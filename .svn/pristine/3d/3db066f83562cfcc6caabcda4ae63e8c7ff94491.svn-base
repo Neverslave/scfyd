@@ -1,0 +1,60 @@
+$(document).ready(function() {
+    CloudUtils.getMenuNames("nav");
+    initTable();
+    dateload();
+});
+
+function searchFun() {
+    initTable();
+
+}
+
+function initTable() {}
+
+function dateload() {
+    $('#dateBegin').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+
+    $('#dateEnd').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+}
+
+function exportFinacneRepayExcel(){
+    var dataTemp = CloudUtils.convertStringJson('financeFrom');
+    var options = {
+        url: '../../finaceRepay/exportFinacneRepayExcel',
+        data: dataTemp,
+        callBackFun: function(data) {
+            if (data.result==0) {
+                var datamap= data.resultMap;
+
+                CloudUtils.setForm(datamap, 'detailForm');
+                $('#detailModal #filePath').val(data.resultNote);
+                $('#detailModal').modal();
+                
+                
+                
+            } else {
+                bootbox.alert(data.resultNote);
+            }
+
+        }
+    };
+    CloudUtils.ajax(options);
+}

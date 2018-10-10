@@ -1,0 +1,371 @@
+package com.ut.scf.service.pub.impl;
+
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.util.json.JSONArray;
+import org.activiti.engine.impl.util.json.JSONException;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.activiti.engine.impl.util.json.JSONObject;
+
+import com.sun.org.apache.bcel.internal.generic.NEW;
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.core.util.SignUtil;
+import com.ut.scf.dao.auto.FinanceInfoMapper;
+import com.ut.scf.dao.auto.FqcrPayHistoryMapper;
+import com.ut.scf.dao.auto.GuaranteeInfoMapper;
+import com.ut.scf.dao.pub.ILoanInfoDao;
+import com.ut.scf.pojo.auto.FinanceInfo;
+import com.ut.scf.pojo.auto.FqcrPayHistory;
+import com.ut.scf.pojo.auto.FqcrPayHistoryExample;
+import com.ut.scf.pojo.auto.FqcrPayHistoryExample.Criteria;
+import com.ut.scf.pojo.auto.GuaranteeInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.reqbean.pub.LoanInfoListReqBean;
+import com.ut.scf.reqbean.pub.LoanInfoProcessReqBean;
+import com.ut.scf.reqbean.query.GuaranteeHistoryQueryReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.pub.ILoanInfoManagerService;
+
+@Service("loanInfoManagerService")
+public class LoanInfoManagerServiceImpl implements ILoanInfoManagerService {
+	private static final Logger log = LoggerFactory
+			.getLogger(LoanInfoManagerServiceImpl.class);
+
+	private static final SimpleDateFormat SDF = new SimpleDateFormat(
+			"yyyy-MM-dd");
+
+	@Resource
+	private ILoanInfoDao loanInfoDao;
+
+	@Resource
+	private ProcessEngine processEngine;
+
+	@Resource
+	private RuntimeService runtimeService;
+
+	@Resource
+	private TaskService taskService;
+
+	@Resource
+	private RepositoryService repositoryService;
+
+	@Resource
+	private IProcessRepeatChkService processRepeatChkService;
+
+	@Resource
+	private FinanceInfoMapper financeInfoMapper;
+
+	@Resource
+	private GuaranteeInfoMapper guaranteeInfoMapper;
+
+	
+	@Resource
+	private FqcrPayHistoryMapper fqcrPayHistoryMapper;
+	/**
+	 * 条件查询 分页获取
+	 * 
+	 * @param paramMap
+	 * @param page
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getLoanInfoList(Map<String, Object> paramMap,
+			PageInfoBean page) {
+
+		List<Map<String, Object>> list = loanInfoDao.getLoanInfoListNew(paramMap,
+				page);
+
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+
+		return respBean;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getContractInfoList(Map<String, Object> paramMap,
+			PageInfoBean page) {
+
+		List<Map<String, Object>> list = loanInfoDao.getContractInfoList(
+				paramMap, page);
+
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+
+		return respBean;
+	}
+
+	/**
+	 * 发起流程
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean startProcess(JSONObject jsonObject) {
+		BaseRespBean respBean = new BaseRespBean();
+
+		// 流程重复验证
+		String contractNo = jsonObject.getString("contractNo");
+		ProcessRepeatCheck checkInfo = new ProcessRepeatCheck();
+		checkInfo.setProcessKey("loanInfo");
+		checkInfo.setItemKey("CONTRACT_NO");
+		checkInfo.setItemValue(contractNo);
+		if (processRepeatChkService.isProcessExist(checkInfo)) {
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			respBean.setResultNote("合同编号为【" + contractNo + "】的合同已在放款流程中，不能再次申请");
+			return respBean;
+		}
+
+		String userName = (String) jsonObject.get("userId");
+		String key = (String) jsonObject.get("activitiKey");
+		// 加上当前用户
+		ProcessInstance pi = processEngine.getRuntimeService()// 管理流程实例和执行对象，也就是表示正在执行的操作
+				.startProcessInstanceByKey(key);
+		String procInstId = pi.getProcessInstanceId();
+		Task task = taskService.createTaskQuery().processInstanceId(pi.getId())
+				.singleResult();
+
+		// 拾取用户
+		taskService.claim(task.getId(), userName);
+		// 设置变量
+		taskService.setVariable(task.getId(), "launchUser", userName);// 发起者
+		taskService.setVariableLocal(task.getId(), "agencyJson",
+				jsonObject.toString());
+		// 完成节点
+		taskService.complete(task.getId());
+
+		checkInfo.setProcInstId(procInstId);
+		int result = processRepeatChkService.insert(checkInfo);
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean doAgree(LoanInfoProcessReqBean reqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+
+		// 1.获取taskId和当前用户
+		JSONObject jsonObject = new JSONObject(reqBean);
+		String procInstId = (String) jsonObject.get("procInstId");
+		String taskId = (String) jsonObject.get("taskId");
+		String userId = (String) jsonObject.get("userId");
+		String agree = (String) jsonObject.get("agree");
+		boolean flag = agree.equals("0") ? true : false;
+
+		// 2.拾取用户
+		taskService.claim(taskId, userId);
+		// 3.设置变量
+		taskService.setVariableLocal(taskId, "agencyJson",
+				jsonObject.toString());
+		// 4.流程走向
+		taskService.setVariable(taskId, "agree", flag);
+		// 5.完成流程
+		taskService.complete(taskId);
+		// 6.查看流程状态
+		ProcessInstance pi = runtimeService.createProcessInstanceQuery()
+				.processInstanceId(procInstId).singleResult();
+		if (pi == null) { // 流程已结束
+			addLoanInfo(reqBean);
+		}
+
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean reApply(JSONObject jsonObject) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 1.获取taskId和userId
+		String taskId = (String) jsonObject.get("taskId");
+		String userId = (String) jsonObject.get("userId");
+		// 2.拾取用户
+		taskService.claim(taskId, userId);
+		// 3.设置流程变量
+		taskService.setVariableLocal(taskId, "agencyJson",
+				jsonObject.toString());
+		// 4.完成流程
+		taskService.complete(taskId);
+		return respBean;
+	}
+
+	public void addLoanInfo(LoanInfoProcessReqBean reqBean) {
+		// 融资表登入
+		FinanceInfo financeInfo = new FinanceInfo();
+		String contractNo = reqBean.getContractNo();
+		try {
+			financeInfo.setFinanceId(contractNo);// 融资编号=合同编号
+			financeInfo.setApplyDate(SDF.parse(reqBean.getLoanDate()));// 申请日期=申请时的放款日期
+			financeInfo.setCorpId("corp00003");// 企业ID=分期超人
+			financeInfo.setFinanceRate(new BigDecimal(100)
+					.subtract(new BigDecimal(reqBean.getGuaranteeMoneyRate())));// 融资比例
+			financeInfo.setFinanceStartDate(SDF.parse(reqBean
+					.getFinanceStartDay()));// 融资起始日
+			financeInfo
+					.setFinanceEndDate(SDF.parse(reqBean.getFinanceDueDay()));// 融资到期日
+			financeInfo.setFinanceAmount(new BigDecimal(reqBean.getLoanAmt()));// 融资金额=放款金额
+			financeInfo.setFinanceBalance(new BigDecimal(reqBean.getLoanAmt()));// 融资金额=放款金额
+			financeInfo.setFinanceStatus("2");// 融资状态=2:已放款
+			financeInfo.setPayId(contractNo);// 付款编号=合同编号
+			financeInfo.setPayDate(new Date());// 付款日期=审核通过时的日期
+			financeInfo.setPayAmt(new BigDecimal(reqBean.getLoanAmt()));// 付款金额=放款金额
+			financeInfo.setNote(reqBean.getNote());// 备注
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		int recFinance = financeInfoMapper.insert(financeInfo);
+		if (recFinance < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		// 保证金表登入
+		GuaranteeInfo guaranteeInfo = new GuaranteeInfo();
+		try {
+			guaranteeInfo.setFinanceId(contractNo);// 融资编号=合同编号
+			guaranteeInfo.setGuaranteeMoneyRate(new BigDecimal(reqBean
+					.getGuaranteeMoneyRate()));// 保证金收取比例=保证金比例
+			guaranteeInfo.setPayAbleGuarantee(new BigDecimal(reqBean
+					.getGuaranteeMoney()));// 应缴保证金金额=保证金金额
+			guaranteeInfo.setGuaranteePayDate(SDF.parse(reqBean.getLoanDate()));// 保证金缴纳日期=申请时的放款日期
+			guaranteeInfo.setPayActGuarantee(new BigDecimal(reqBean
+					.getGuaranteeMoneyActual()));// 实缴保证金金额=实缴保证金
+			guaranteeInfo.setGuaranteeBalance(new BigDecimal(reqBean
+					.getGuaranteeMoneyActual()));// 保证金余额=实缴保证金
+			guaranteeInfo.setGuaranteePayHis(reqBean.getLoanDate()
+					+ "，实缴保证金 "
+					+ new DecimalFormat("#,##0.00").format(new BigDecimal(
+							reqBean.getGuaranteeMoneyActual())) + " 元");
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		int recGuarantee = guaranteeInfoMapper.insert(guaranteeInfo);
+		if (recGuarantee < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		// 申请流程删除
+		int result = processRepeatChkService.deleteByProcInstId(reqBean
+				.getProcInstId());
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+	}
+
+	@Override
+	public BaseRespBean getLoanInfoHistoryList(Map<String, Object> paramMap, PageInfoBean page) {
+		
+		FqcrPayHistoryExample example=new FqcrPayHistoryExample();
+		Criteria criteria=example.createCriteria();
+		criteria.andBatchIdEqualTo(paramMap.get("batchId").toString());
+		List<FqcrPayHistory> list = fqcrPayHistoryMapper.selectByExample(example);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+
+		return respBean; 
+	}
+
+	@Override
+	public BaseRespBean AddLoanInfoHistoryList(LoanInfoListReqBean bean) {
+		// TODO Auto-generated method stub
+		BaseRespBean respBean=new BaseRespBean();
+		JSONArray jsonArray = new JSONArray(StringUtils.isEmpty(bean.getPayHistoryListInfo())?"":bean.getPayHistoryListInfo());
+		try {
+		FqcrPayHistory fqcrPayHistory=new FqcrPayHistory();
+		for (int i = 0; i < jsonArray.length(); i++) {
+			fqcrPayHistory = new FqcrPayHistory();
+			JSONObject amitObj = jsonArray.getJSONObject(i);		
+			fqcrPayHistory.setId(ScfUUID.generate());
+			if(StringUtils.isNotEmpty(amitObj.getString("batchId")))
+			{
+				fqcrPayHistory.setBatchId(amitObj.getString("batchId"));
+			}
+			if(StringUtils.isNotEmpty(amitObj.getString("payDate")))
+			{
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+				
+					fqcrPayHistory.setPayDate(sdf.parse(amitObj.getString("payDate")));
+			
+			}
+			if(StringUtils.isNotEmpty(amitObj.getString("payAmt")))
+			{
+				fqcrPayHistory.setPayAmt(new BigDecimal(amitObj.getString("payAmt")));
+				
+			}
+			if(StringUtils.isNotEmpty(amitObj.getString("payWay")))
+			{
+			
+				fqcrPayHistory.setPayWay(amitObj.getString("payWay"));
+			}
+			if(StringUtils.isNotEmpty(amitObj.getString("note")))
+			{
+			
+				fqcrPayHistory.setNote(amitObj.getString("note"));
+			}
+			int insertNum=fqcrPayHistoryMapper.insertSelective(fqcrPayHistory);
+			if (insertNum < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+			
+			com.alibaba.fastjson.JSONObject jsonObject=new 	com.alibaba.fastjson.JSONObject();
+			jsonObject.put("batch_id", amitObj.getString("batchId"));
+	        DecimalFormat df1 = new DecimalFormat("0");
+			jsonObject.put("payment", df1.format((new BigDecimal(amitObj.getString("payAmt"))).multiply(new BigDecimal(100))));
+			jsonObject.put("paid_time", amitObj.getString("payDate"));
+			jsonObject.put("serial_number", amitObj.getString("payWay"));
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("batch_id", amitObj.getString("batchId"));
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			Date payTime = sdf.parse(amitObj.getString("payDate"));
+			int paid_time = (int)(payTime.getTime() / 1000);
+			map.put("paid_time", paid_time);
+			map.put("serial_number", amitObj.getString("payWay"));
+			BigDecimal a = (new BigDecimal(amitObj.getString("payAmt"))).multiply(new BigDecimal(100));
+			int payment = a.intValue();
+			map.put("payment", payment);
+			com.alibaba.fastjson.JSONObject object = SignUtil.requestInterface(map, SignUtil.loanNotify);
+			System.out.println(object);
+		}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return respBean;
+	}
+}

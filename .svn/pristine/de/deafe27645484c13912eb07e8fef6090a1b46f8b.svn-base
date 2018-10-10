@@ -1,0 +1,103 @@
+$(document).ready(function() {
+    CloudUtils.getMenuNames("nav");    
+  
+});
+
+
+
+function interFaceOperateOrderByDate () {
+	if($("#interDate").val()==""||$("#interDate").val()==null){
+		bootbox.alert("请填写日期");
+		return false;
+	}
+	 var jsonData = { executeTime: $("#interDate").val(),
+			 			className:"interfaceSyncJob",
+			 				methodName:"orderInfoSyncBatch",
+	 				};
+	var options = {
+			url : '../../../batch/doBatch',
+			 data: JSON.stringify(jsonData),
+			callBackFun : function(data) {
+				if(data.result==0){
+					bootbox.alert(data.resultNote);
+				}else{
+					bootbox.alert(data.resultNote);
+					return false;
+				}
+			},
+			errorCallback:function(data){
+				bootbox.alert("error");
+			}
+	};
+	CloudUtils.ajax(options);
+}
+function interFaceOperateOrderByBatchId () {
+	 var jsonData = { BatchId: $("#interBatchId").val(),
+	 			className:"interfaceSyncJob",
+	 				methodName:"orderInfoSyncBatch",
+			};
+	var options = {
+			url : '../../../batch/doBatch',
+			data : JSON.stringify(jsonData),
+			callBackFun : function(data) {
+				if(data.result==0){
+					bootbox.alert(data.resultNote);
+				}else{
+					bootbox.alert(data.resultNote);
+					return false;
+				}
+			},
+			errorCallback:function(data){
+				bootbox.alert("error");
+			}
+	};
+	CloudUtils.ajax(options);
+}
+function interFaceOperateRepayByBatchId () {
+	 var jsonData = { BatchId: $("#interBatchId2").val(),
+	 			className:"interfaceSyncJob",
+	 				methodName:"RepaymentPlanSyncBatch",
+			};
+	var options = {
+			url : '../../../batch/doBatch',
+			data : JSON.stringify(row),
+			callBackFun : function(jsonData) {
+				if(data.result==0){
+					bootbox.alert(data.resultNote);
+				}else{
+					bootbox.alert(data.resultNote);
+					return false;
+				}
+			},
+			errorCallback:function(data){
+				bootbox.alert("error");
+			}
+	};
+	CloudUtils.ajax(options);
+}
+function interFaceOperateRepayByOrderId () {
+	$("#setIndex").show();
+	 var jsonData = { BatchId: $("#interOrderId").val(),
+	 			className:"interfaceSyncJob",
+	 				methodName:"RepaymentPlanSyncOrderId",
+			};
+	var options = {
+			url : '../../../batch/doBatch',
+			data : JSON.stringify(jsonData),
+			callBackFun : function(data) {
+				if(data.result==0){
+					$("#setIndex").hide();
+					bootbox.alert(data.resultNote);
+				}else{
+					$("#setIndex").hide();
+					bootbox.alert(data.resultNote);
+					return false;
+				}
+			},
+			errorCallback:function(data){
+				$("#setIndex").hide();
+				bootbox.alert("error");
+			}
+	};
+	CloudUtils.ajax(options);
+}

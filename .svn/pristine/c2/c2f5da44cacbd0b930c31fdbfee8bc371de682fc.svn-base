@@ -1,0 +1,51 @@
+package com.ut.scf.service.test.pub;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.reqbean.pub.StuDetailListReqBean;
+import com.ut.scf.reqbean.pub.StuInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.pub.IStuManagerService;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = {
+        "classpath:spring-mybatis-test.xml" })
+public class StuManagerServiceTest {
+	private static final Logger log = LoggerFactory.getLogger(StuManagerServiceTest.class);
+	
+	@Autowired
+	private IStuManagerService stuManagerService;
+	
+	@Test
+	public void StuInfoListTest(){
+		log.info("**********************************StuInfoListTest start*********************************");
+		StuInfoListReqBean stuInfoListReqBean = new StuInfoListReqBean();
+		stuInfoListReqBean.setStuName("魏仪");
+		stuInfoListReqBean.setMobilePhone("17761295270");
+		stuInfoListReqBean.setIdNum("513701199802204119");
+		stuInfoListReqBean.setPageNumber(1);
+		stuInfoListReqBean.setPageSize(5);
+		BaseRespBean respBean = stuManagerService.getStuInfoList(stuInfoListReqBean);
+		log.info("StuInfoList"+respBean);
+		Assert.assertNotNull(respBean);
+		log.info("**********************************StuInfoListTest end*********************************");
+	}
+	
+	@Test
+	public void StuDetailListTest(){
+		log.info("**********************************StuDetailListTest start*********************************");
+		StuDetailListReqBean stuDetailListReqBean = new StuDetailListReqBean();
+		stuDetailListReqBean.setStuId("2c9984915ce93e6d7c66e93e6d210000");
+		BaseRespBean respBean = stuManagerService.getStuDetailList(stuDetailListReqBean);
+		log.info("StuDetailList"+respBean);
+		Assert.assertNotNull(respBean);
+		log.info("**********************************StuDetailListTest end*********************************");
+	}
+}

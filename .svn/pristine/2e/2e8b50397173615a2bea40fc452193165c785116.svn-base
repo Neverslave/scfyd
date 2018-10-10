@@ -1,0 +1,46 @@
+package com.ut.scf.service.tradfact.impl;
+
+import com.ut.scf.dao.auto.TfNoticeInfoMapper;
+import com.ut.scf.dao.tradfact.ILoanApplicationDao;
+import com.ut.scf.pojo.auto.TfNoticeInfo;
+import com.ut.scf.service.tradfact.INoticeService;
+import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Map;
+
+@Service
+public class NoticeServiceImpl implements INoticeService {
+    @Resource
+    private TfNoticeInfoMapper noticeInfoMapper;
+
+
+    @Resource
+    private ILoanApplicationDao loanApplicationDao;
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getMaxNoticeNo() {
+        Map<String, Object> resultMap = loanApplicationDao.findNoticeNoMax(null);
+        String noticeNo = resultMap == null ? "" : (String) resultMap.get("noticeNo");
+        if (StringUtils.isBlank(noticeNo)) {
+            return String.format("%04d", 1);
+        } else if (!noticeNo.substring(4, 8).equals(String.valueOf(DateTime.now().getYear()))) {
+            return String.format("%04d", 1);
+        } else {
+            noticeNo = noticeNo.substring(noticeNo.length() - 4, noticeNo.length());
+            int tempNo = Integer.parseInt(noticeNo);
+            return String.format("%04d", tempNo + 1);
+        }
+    }
+
+    public void addNotice(TfNoticeInfo noticeInfo) {
+        noticeInfoMapper.insert(noticeInfo);
+    }
+
+
+}

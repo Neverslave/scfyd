@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.pub.IBusinessHallDao">
+
+
+	<select id="getBusinessHallPageList" resultType="hashmap" parameterType="hashmap">
+		
+		select temp.*from
+		(SELECT 
+		store_id storeId,
+		fullname fullname,
+		seller_type sellerType,
+		address address,
+		contact contact,
+		contact_mobile contactMobile,
+		store_city storeCity,
+		bank bank,
+		account account,
+		card card
+		from 
+		business_hall
+		where 1=1
+		<if test="storeId != null and storeId != ''">
+			and store_id LIKE CONCAT(CONCAT('%', #{storeId}),'%')
+		</if>
+		<if test="fullname != null and fullname != ''">
+			and fullname LIKE CONCAT(CONCAT('%', #{fullname}),'%')
+		</if>
+		<if test="sellerType != null and sellerType != ''">
+			and seller_type LIKE CONCAT(CONCAT('%', #{sellerType}),'%')
+		</if>
+		<if test="address != null and address != ''">
+			and address LIKE CONCAT(CONCAT('%', #{address}),'%')
+		</if>
+		<if test="contact != null and contact != ''">
+			and contact LIKE CONCAT(CONCAT('%', #{contact}),'%')
+		</if>
+		<if test="contactMobile != null and contactMobile != ''">
+			and contact_mobile LIKE CONCAT(CONCAT('%', #{contactMobile}),'%')
+		</if>
+		
+		<if test="storeCity != null and storeCity != ''">
+			and store_city LIKE CONCAT(CONCAT('%', #{storeCity}),'%')
+		</if>
+		<if test="bank != null and bank != ''">
+			and bank LIKE CONCAT(CONCAT('%', #{bank}),'%')
+		</if>
+		<if test="account != null and account != ''">
+			and account LIKE CONCAT(CONCAT('%', #{account}),'%')
+		</if>
+		<if test="card != null and card != ''">
+			and card LIKE CONCAT(CONCAT('%', #{card}),'%')
+		</if>)temp
+		
+	 	<if test="orderBy =='desc'">
+		 ORDER BY ${orderByName} desc
+		</if>
+		<if test="orderBy =='asc'">
+		 ORDER BY ${orderByName} asc
+		</if>
+	</select>
+
+
+
+</mapper>

@@ -1,0 +1,24 @@
+package com.ut.scf.web.controller.wechat;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.ut.scf.reqbean.tradfact.ProjectAdjustDetailReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.web.controller.ActivitiController;
+
+@Controller
+@RequestMapping("/wechat/projectAdjust")
+public class ProjectAdjustWeChatBpmController extends ActivitiController<ProjectAdjustDetailReqBean>{
+
+	@Resource(name = "projectAdjustBpmService")
+	private IActivitiService<ProjectAdjustDetailReqBean> activitiService;
+	
+	@Override
+	protected IActivitiService<ProjectAdjustDetailReqBean> getBpmProcessService() {
+		
+		return activitiService;
+  }
+}

@@ -1,0 +1,946 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+	 dateload();
+    initTable();
+   getBaogaoForm();
+    getDYKOccupyMoneyInfo();
+    dykCashHistoryTable();
+});
+
+function searchFun() {
+    initTable();
+    
+}
+function searchFun1() {
+	dykCashHistoryTable();
+	getDYKOccupyMoneyInfo();
+}
+function dateload() {
+$('#firTime').datetimepicker({
+    format: 'yyyy-mm',
+    autoclose: true,
+    todayBtn: true,
+    startView: 'year',
+    minView:'year',
+    maxView:'decade',
+    language:  'zh-CN',
+     // 日期时间选择器所能够提供的最精确的时间选择视图。
+    initialDate: new Date()
+});
+//$('#cprYear').val(new Date().getFullYear());
+$('#secTime').datetimepicker({
+    format: 'yyyy-mm',
+    autoclose: true,
+    todayBtn: true,
+    startView: 'year',
+    minView:'year',
+    maxView:'decade',
+    language:  'zh-CN',
+     // 日期时间选择器所能够提供的最精确的时间选择视图。
+    initialDate: new Date()
+});
+//$('#cprYear2').val(new Date().getFullYear());
+$('#firTime1').datetimepicker({
+    format: 'yyyy-mm-dd',
+    autoclose: true,
+    todayBtn: true,
+    startView: 'month',
+    minView:'month',
+    maxView:'decade',
+    language:  'zh-CN',
+     // 日期时间选择器所能够提供的最精确的时间选择视图。
+    initialDate: new Date()
+});
+//$('#cprYear').val(new Date().getFullYear());
+$('#secTime1').datetimepicker({
+    format: 'yyyy-mm-dd',
+    autoclose: true,
+    todayBtn: true,
+    
+    startView: 'month',
+    minView:'month',
+    maxView:'decade',
+    language:  'zh-CN',
+     // 日期时间选择器所能够提供的最精确的时间选择视图。
+    initialDate: new Date()
+});
+//$('#cprYear2').val(new Date().getFullYear());
+}
+
+function getBaogaoForm(){
+
+	var firTime=$("#firTime").val();
+	var secTime=$("#secTime").val();
+	if(firTime==null || firTime == '' || secTime ==null || secTime ==''){
+		var date = new Date();
+		var year=date.getFullYear();
+		 var mon=date.getMonth()+1;
+		 mon =(mon<10 ? "0"+mon:mon); 
+		firTime='2017-04';
+		secTime=year+'-'+mon;
+	}
+	
+	
+	var data = CloudUtils.convertStringJson('searchForm1');
+	var jsonData = eval("(" + data + ")");
+	if(jsonData.firTime==null || jsonData.firTime == '' || jsonData.secTime ==null || jsonData.secTime ==''){
+		var date = new Date();
+		var year=date.getFullYear();
+		 var mon=date.getMonth()+1;
+		 mon =(mon<10 ? "0"+mon:mon); 
+		 jsonData.firTime='2017-04';
+		 jsonData.secTime=year+'-'+mon;
+	}
+	var options = {
+		url : "../finance/getDYKFinancePayAndRepayList",
+		data : JSON.stringify(jsonData),
+		callBackFun : function(data) {
+			if(data.result==0){
+				var payAmtSum=0;
+				var returnedSum=0;
+				var guaranteeBalanceSum=0;
+				var payAmtSum1=0;
+				var returnedSum1=0;
+				var guaranteeBalanceSum1=0;
+				var data=data.dataList;
+				for(i=0;i<data.length;i++){
+					  if(data[i].payAmtSum==null){
+	    	    		   data[i].payAmtSum=0;
+	    	    	   }
+					  if(data[i].returnedSum==null){
+	    	    		   data[i].returnedSum=0;
+	    	    	   }
+					  if(data[i].guaranteeBalanceSum==null){
+	    	    		   data[i].guaranteeBalanceSum=0;
+	    	    	   }
+					  if(data[i].payAmtSum1==null){
+	    	    		   data[i].payAmtSum1=0;
+	    	    	   }
+					  if(data[i].returnedSum1==null){
+	    	    		   data[i].returnedSum1=0;
+	    	    	   }
+					  if(data[i].guaranteeBalanceSum1==null){
+	    	    		   data[i].guaranteeBalanceSum1=0;
+	    	    	   }
+					  payAmtSum+=parseInt(data[i].payAmtSum);
+					  returnedSum+=parseInt(data[i].returnedSum);
+					  guaranteeBalanceSum+=parseInt(data[i].guaranteeBalanceSum);
+					  payAmtSum1+=parseInt(data[i].payAmtSum1);
+					  returnedSum1+=parseInt(data[i].returnedSum1);
+					  guaranteeBalanceSum1+=parseInt(data[i].guaranteeBalanceSum1);
+				}
+				 $("#lsljPay").text($.number(payAmtSum,2));
+				 $("#lsljHuikuan").text($.number(returnedSum,2));
+				 $("#lsljBaozhengjin").text($.number(guaranteeBalanceSum,2));
+				 $("#dzljPay").text($.number(payAmtSum1,2));
+				 $("#dzljHuikuan").text($.number(returnedSum1,2));
+				 $("#dzljBaozhengjin").text($.number(guaranteeBalanceSum1,2));
+				
+			}else{
+				bootbox.alert(data.resultNote);
+				return false;
+			}
+		},
+		errorCallback:function(data){
+			bootbox.alert("error");
+		}
+	};
+	CloudUtils.ajax(options);
+	
+/*	$.ajax({
+		url:"../finance/getDYKFinancePayAndRepayList",
+		data:{firTime:firTime,secTime:secTime},
+		type:"post",
+		dataType:"json",
+		contentType:"application/json;charset=UTF-8",
+		success:function(res) {
+			if(res.result == 0){
+				var payAmtSum=0;
+				var returnedSum=0;
+				var guaranteeBalanceSum=0;
+				var payAmtSum1=0;
+				var returnedSum1=0;
+				var guaranteeBalanceSum1=0;
+				var data=res.dataList;
+				for(i=0;i<data.length;i++){
+					  if(data[i].payAmtSum==null){
+	    	    		   data[i].payAmtSum=0;
+	    	    	   }
+					  if(data[i].returnedSum==null){
+	    	    		   data[i].returnedSum=0;
+	    	    	   }
+					  if(data[i].guaranteeBalanceSum==null){
+	    	    		   data[i].guaranteeBalanceSum=0;
+	    	    	   }
+					  if(data[i].payAmtSum1==null){
+	    	    		   data[i].payAmtSum1=0;
+	    	    	   }
+					  if(data[i].returnedSum1==null){
+	    	    		   data[i].returnedSum1=0;
+	    	    	   }
+					  if(data[i].guaranteeBalanceSum1==null){
+	    	    		   data[i].guaranteeBalanceSum1=0;
+	    	    	   }
+					  payAmtSum+=parseInt(data[i].payAmtSum);
+					  returnedSum+=parseInt(data[i].returnedSum);
+					  guaranteeBalanceSum+=parseInt(data[i].guaranteeBalanceSum);
+					  payAmtSum1+=parseInt(data[i].payAmtSum1);
+					  returnedSum1+=parseInt(data[i].returnedSum1);
+					  guaranteeBalanceSum1+=parseInt(data[i].guaranteeBalanceSum1);
+				}
+				 $("#lsljPay").text($.number(payAmtSum,2));
+				 $("#lsljHuikuan").text($.number(returnedSum,2));
+				 $("#lsljBaozhengjin").text($.number(guaranteeBalanceSum,2));
+				 $("#dzljPay").text($.number(payAmtSum1,2));
+				 $("#dzljHuikuan").text($.number(returnedSum1,2));
+				 $("#dzljBaozhengjin").text($.number(guaranteeBalanceSum1,2));
+				
+			}else{
+				bootbox.alert(res.resultNote);
+			}
+		},
+		error : function() {
+			bootbox.alert(res.resultNote);
+		}
+		});*/
+	
+}
+function initTable() {
+    $('#ARInfoListTable').bootstrapTable('destroy');
+    $("#ARInfoListTable").bootstrapTable({
+        method: "post",
+        contentType:"application/json;charset=UTF-8",
+        url: "../finance/getDYKFinancePayAndRepayList",
+        striped: true, //表格显示条纹  
+        pagination: false, //启动分页  
+        showFooter:false,
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+        	var param = {              
+        			firTime: jsonData.firTime,
+        			secTime: jsonData.secTime
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+            	var data=res.dataList;
+            	
+            	var lastYear=data[data.length-1].cprYear;
+    	        var lastMonth=data[data.length-1].cprMonth;
+            	var lastDay=getLastDay(lastYear,lastMonth);
+            	
+            	var carSum=0;
+            	var payAmtSum=0;
+            	var corpSum=0;
+            	var guaranteeBalanceSum=0;
+            	var returnedSum=0;
+            	var carSum1=0;
+            	var payAmtSum1=0;
+            	var corpSum1=0;
+            	var guaranteeBalanceSum1=0
+            	var dzbgBaozhengjin=0;
+            	var returnedSum1=0;
+    	       for(var i=0;i<data.length;i++){
+    	    	   if(data[i].carSum==null){
+    	    		   data[i].carSum=0;
+    	    	   }
+    	    	   if(data[i].payAmtSum==null){
+    	    		   data[i].payAmtSum=0;
+    	    	   }
+    	    	   if(data[i].corpSum==null){
+    	    		   data[i].corpSum=0;
+    	    	   }
+    	    	   if(data[i].guaranteeBalanceSum==null){
+    	    		   data[i].guaranteeBalanceSum=0;
+    	    	   }
+    	    	   if(data[i].returnedSum==null){
+    	    		   data[i].returnedSum=0;
+    	    	   }
+    	    	   if(data[i].carSum1==null){
+    	    		   data[i].carSum1=0;
+    	    	   }
+    	    	   if(data[i].payAmtSum1==null){
+    	    		   data[i].payAmtSum1=0;
+    	    	   }
+    	    	   if(data[i].corpSum1==null){
+    	    		   data[i].corpSum1=0;
+    	    	   }
+    	    	   if(data[i].guaranteeBalanceSum1==null){
+    	    		   data[i].guaranteeBalanceSum1=0;
+    	    	   }
+    	    	   if(data[i].returnedSum1==null){
+    	    		   data[i].returnedSum1=0;
+    	    	   }
+    	    	   carSum+=parseInt(data[i].carSum);
+    	    	   payAmtSum+=data[i].payAmtSum;
+    	    	   corpSum+=parseInt(data[i].corpSum);
+    	    	   guaranteeBalanceSum+=parseInt(data[i].guaranteeBalanceSum);
+    	    	   returnedSum+=parseInt(data[i].returnedSum);
+    	    	   carSum1+=parseInt(data[i].carSum1);
+    	    	   payAmtSum1+=data[i].payAmtSum1;
+    	    	   corpSum1+=parseInt(data[i].corpSum1);
+    	    	   guaranteeBalanceSum1+=parseInt(data[i].guaranteeBalanceSum1);
+    	    	   returnedSum1+=parseInt(data[i].returnedSum1);
+    	    	   
+    	        }
+    	       //零售
+    	       $("#lsYear").text(data[0].cprYear);
+    	       $("#lsMonth").text(data[0].cprMonth);
+    	       $("#lsDay").text('01');
+    	       $("#lsYear1").text(lastYear);
+    	       $("#lsMonth1").text(lastMonth);
+    	       $("#lsDay1").text(lastDay);
+    	       $("#lsCar").text(carSum);
+    	       $("#lsMoney").text($.number(payAmtSum, 2));
+    	       $("#lsCorp").text(corpSum);
+    	       //大宗
+    	       $("#dzYear").text(data[0].cprYear);
+    	       $("#dzMonth").text(data[0].cprMonth);
+    	       $("#dzDay").text('01');
+    	       $("#dzYear1").text(lastYear);
+    	       $("#dzMonth1").text(lastMonth);
+    	       $("#dzDay1").text(lastDay);
+    	       $("#dzCar").text(carSum1);
+    	       $("#dzMoney").text($.number(payAmtSum1, 2));
+    	       $("#dzCorp").text(corpSum1);
+    	       
+    	       //报告期间内零售
+    	       $("#lsbgCorp").text(corpSum);
+    	       $("#lsbgPay").text($.number(payAmtSum, 2));
+    	       $("#lsbgHuikuan").text($.number(returnedSum, 2));
+    	       $("#lsbgBaozhengjin").text($.number(guaranteeBalanceSum,2));
+    	       //累计零售
+    	       $("#lsljPay").text();
+    	       $("#lsljHuikuan").text();
+    	       $("#lsljBaozhengjin").text();
+    	       //报告期间内大宗
+    	       $("#dzbgCorp").text(corpSum1);
+    	       $("#dzbgPay").text($.number(payAmtSum1, 2));
+    	       $("#dzbgHuikuan").text($.number(returnedSum1, 2));
+    	       $("#dzbgBaozhengjin").text($.number(guaranteeBalanceSum1,2));
+    	       //累计大宗
+    	       $("#dzljPay").text();
+    	       $("#dzljHuikuan").text();
+    	       $("#dzljBaozhengjin").text();
+    	       
+    	       
+            	
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [[{
+            field: 'numbei',
+            title: '</br>序号</br></br></br>',
+            align: 'center',
+            valign: 'middle',
+            rowspan:2,
+            width:80,
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'cprYear',
+            title: '</br>合作</br>年度</br></br>',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            rowspan:2,
+            formatter: function(value) {
+                return value+'年';
+            }
+        },{
+            field: 'cprMonth',
+            title: '</br>合作</br>月份</br></br>',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            rowspan:2
+        },{
+            title: '零售私家车业务',
+            align: 'center',
+            valign: 'middle',
+            colspan:7
+        },{
+            title: '大宗业务',
+            align: 'center',
+            valign: 'middle',
+            colspan:8
+        }],[{
+  	        field: 'corpSum',
+  	        title: '合作经销</br>商数量',
+  	        align: 'center',
+  	        width:80,
+            valign: 'middle'
+  	    },{
+  	        field: 'carSum',
+  	        title: '管理车</br>辆数',
+  	        align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return value;
+            	}
+            }
+  	    },{
+  	        field: 'payAmtSum',
+  	        title: '付款函金</br>额',
+  	        align: 'center',
+            valign: 'middle',
+            width:130,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+  	    },{
+  	        field: 'returnedSum',
+  	        title: '零售业务回款情况（对应</br>车辆赎证情况+保证金余额）',
+  	        align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else if(value == '已结清'){
+                return value;
+            	}else{
+                return $.number(value, 2);
+            	}
+            }
+  	    },{
+  	        field: 'bfb',
+  	        title: '零售业务</br>回款比例',
+  	        align: 'center',
+  	        width:80,
+            valign: 'middle'
+  	    },{
+  	        title: '零售未还</br>金额',
+  	        align: 'center',
+            valign: 'middle',
+            width:130,
+            formatter: function(value,row,index) {
+            	var res=0;
+            	res=Number(row.payAmtSum)-Number(row.returnedSum);
+            	if(row.returnedSum == '已结清'){
+            		return '-';
+            	}else{
+            	  	if(res == 0 || res == ''){
+                		return '-';
+                	}else{
+                		return $.number(res, 2);;
+                	}
+            	}
+            }
+  	    },{
+  	        field: 'carNotSum',
+  	        title: '零售未还</br>台数',
+  	        align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return value;
+            	}
+            }
+  	    },
+  	    {
+  	        field: 'guaranteeBalanceSum',
+  	        title: '保证金余额',
+  	        align: 'center',
+            valign: 'middle',
+            visible:false
+  	    },{
+  	        field: 'corpSum1',
+  	        title: '合作经销</br>商数量',
+  	        align: 'center',
+  	      width:80,
+            valign: 'middle'
+  	    },{
+  	        field: 'carSum1',
+  	        title: '管理车</br>辆数',
+  	        align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return value;
+            	}
+            }
+  	    },{
+  	        field: 'payAmtSum1',
+  	        title: '付款函金</br>额',
+  	        align: 'center',
+            valign: 'middle',
+            width:130,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+                return $.number(value, 2);
+            	}
+            }
+  	    },{
+  	        field: 'returnedSum1',
+  	        title: '大宗业务回款情况（对应</br>车辆赎证情况+保证金余额）',
+  	        align: 'center',
+  	        width:150,
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else if(value == '已结清'){
+                return value;
+            	}else{
+                return $.number(value, 2);
+            	}
+            }
+  	    },{
+  	        field: 'bfb1',
+  	        title: '大宗业务</br>回款比例',
+  	        align: 'center',
+  	      width:80,
+            valign: 'middle'
+  	    },{
+  	        title: '大宗未还</br>金额',
+  	        align: 'center',
+  	      width:130,
+            valign: 'middle',
+            formatter: function(value,row,index) {
+            	var res=0;
+            	res=Number(row.payAmtSum1)-Number(row.returnedSum1);
+            	
+            	if(row.returnedSum1 == '已结清'){
+            		return '-';
+            	}else{
+            		if(res == 0 || res == ''){
+                		return '-';
+                	}else{
+                		return $.number(res, 2);
+                	}
+            	}
+            }
+  	    },{
+  	        field: 'carNotSum1',
+  	        title: '大宗未还</br>台数',
+  	        align: 'center',
+  	      width:80,
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return value;
+            	}
+            }
+  	    },{
+  	        field: 'guaranteeBalanceSum1',
+  	        title: '保证金余额',
+  	        align: 'center',
+            valign: 'middle',
+            visible:false
+  	    },
+         ] 
+        ],
+        onLoadSuccess : function(data) {                                
+        	var data = $('#ARInfoListTable').bootstrapTable('getData', true);
+        	                   // 合并单元格
+        	var fieldList=["cprYear"];
+        	        mergeCells(data, "cprYear", 1, $('#ARInfoListTable'),fieldList);
+        	        //默认加载管理车辆数—柱状图
+        	        dropdownMenu(1);
+        	}
+    });
+}
+
+/**
+ * 合并单元格
+ * 
+ * @param data
+ *            原始数据（在服务端完成排序）
+ * @param fieldName
+ *            合并参照的属性名称
+ * @param colspan
+ *            合并开始列
+ * @param target
+ *            目标表格对象	 
+ * @param fieldList
+ *            要合并的字段集合
+ */
+function mergeCells(data,fieldName,colspan,target,fieldList){	
+// 声明一个map计算相同属性值在data对象出现的次数和
+var sortMap = {};
+for(var i = 0 ; i < data.length ; i++){
+    for(var prop in data[i]){
+    	//例如people.unit.name
+    	var fieldArr=fieldName.split(".");		        
+    	getCount(data[i],prop,fieldArr,0,sortMap);
+    }
+}	  
+var index = 0;    
+for(var prop in sortMap){
+    var count = sortMap[prop];
+    for(var i = 0 ; i < fieldList.length ; i++){
+    	$(target).bootstrapTable('mergeCells',{index:index, field:fieldList[i], colspan: colspan, rowspan: count});   
+	        }
+	        index += count;        
+	    }
+}
+
+/**
+ * 递归到最后一层 统计数据重复次数
+ * 比如例如people.unit.name 就一直取到name
+ * 类似于data["people"]["unit"]["name"]
+ */
+function getCount(data,prop,fieldArr,index,sortMap){	
+	if(index == fieldArr.length-1){			
+		if(prop == fieldArr[index]){
+            var key = data[prop];            
+            if(sortMap.hasOwnProperty(key)){
+                sortMap[key] = sortMap[key]+ 1;
+            } else {
+                sortMap[key] = 1;
+            } 
+	    }        
+		return;
+	}		
+    if(prop == fieldArr[index]){
+        var sdata = data[prop];	   
+        index=index+1;
+        getCount(sdata,fieldArr[index],fieldArr,index,sortMap);
+    } 
+    
+}
+
+
+function dropdownMenu(value){
+       	var data = $('#ARInfoListTable').bootstrapTable('getData');
+       	showEchart(data,value);
+}
+
+
+function showEchart(data,value){
+	//document.getElementById('echartShow').style.display="none"
+	document.getElementById('echartShow').style.display="block"
+	//echarts.dispose(document.getElementById('echartShow'));
+	// 基于准备好的dom，初始化echarts实例
+	var myChart = echarts.init(document.getElementById('echartShow'));
+	var xAxisData = [];
+	var data1 = [];
+	var data2 = [];
+	var titleText ='';
+	var dataTitle1 ='';
+	var dataTitle2 ='';
+	var typeName ='';
+	if(value == 1){
+		titleText='管理车辆数—柱状图';
+		dataTitle1='零售(辆)';
+		dataTitle2='大宗(辆)';
+		typeName='bar';
+		for (var i = 0; i < data.length; i++) {
+		    xAxisData.push(data[i].cprYear + '.' + data[i].cprMonth);
+		    data1.push(data[i].carSum);
+		    data2.push(data[i].carSum1);
+		}
+	}else if(value == 2){
+		titleText='付款函金额—柱状图';
+		dataTitle1='零售';
+		dataTitle2='大宗';
+		typeName='bar';
+		for (var i = 0; i < data.length; i++) {
+		    xAxisData.push(data[i].cprYear + '.' + data[i].cprMonth);
+		    data1.push(data[i].payAmtSum);
+		    data2.push(data[i].payAmtSum1);
+		}
+	}else if(value == 3){
+		titleText='管理车辆数—折线图';
+		dataTitle1='零售(辆)';
+		dataTitle2='大宗(辆)';
+		typeName='line';
+		for (var i = 0; i < data.length; i++) {
+		    xAxisData.push(data[i].cprYear + '.' + data[i].cprMonth);
+		    data1.push(data[i].carSum);
+		    data2.push(data[i].carSum1);
+		}
+	}else if(value == 4){
+		titleText='付款函金额—折线图';
+		dataTitle1='零售';
+		dataTitle2='大宗';
+		typeName='line';
+		for (var i = 0; i < data.length; i++) {
+		    xAxisData.push(data[i].cprYear + '.' + data[i].cprMonth);
+		    data1.push(data[i].payAmtSum);
+		    data2.push(data[i].payAmtSum1);
+		}
+	}else{
+		return;
+	}
+	
+	// 指定图表的配置项和数据
+	var option = {
+	 title: {
+	     text: titleText
+	 },
+	 backgroundColor: 'white',
+	 tooltip: {
+		   trigger: 'axis',
+	 },
+	 legend: {
+		    data: [dataTitle1, dataTitle2,],
+	        align: 'right'
+	 },
+     toolbox: {
+         show: true,
+         feature: {
+             mark: { show: true },
+             // dataView: { show: true, readOnly: false },
+             magicType: { show: true, type: ['line', 'bar'] },
+             restore: { show: true },
+             saveAsImage: { show: true }
+         }
+     },
+	 xAxis: {
+	     data: xAxisData,
+	     name: '年月',
+	 },
+	 yAxis: {},
+	    series: [
+	             {
+	                 name: dataTitle1,
+	                 type: typeName,
+	                 stack: 'one',
+	                 data: data1
+	             },
+	             {
+	                 name: dataTitle2,
+	                 type: typeName,
+	                 stack: 'one',
+	                 data: data2
+	             }
+	         ]
+	};
+
+	// 使用刚指定的配置项和数据显示图表。
+	myChart.setOption(option);
+}
+
+function getDYKOccupyMoneyInfo(){
+/*	$.ajax({
+		url:"../finance/getDYKOccupyMoneyInfo",
+		data:$("#searchForm1").serialize(),
+		type:"post",
+		dataType:"json",
+		 contentType:"application/json;charset=UTF-8",
+		success:function(res) {
+			if(res.result == 0){
+				showEchart1(res.dataList);
+				var sumDykCashHistory=0;
+				for(var i=0;i<res.dataList.length;i++){
+					sumDykCashHistory+=res.dataList[i].amtTrend;
+				}
+				sumDykCashHistory=sumDykCashHistory/res.dataList.length/100000000;
+			 	$("#sumDykCashHistory").text($.number(sumDykCashHistory, 2));
+			}else{
+				bootbox.alert(res.resultNote);
+			}
+		},
+		error : function() {
+			bootbox.alert(res.resultNote);
+		}
+		});*/
+	
+	var data = CloudUtils.convertStringJson('searchForm1');
+	var jsonData = eval("(" + data + ")");
+	var options = {
+		url : "../finance/getDYKOccupyMoneyInfo",
+		data : JSON.stringify(jsonData),
+		callBackFun : function(data) {
+			if(data.result==0){
+				showEchart1(data.dataList);
+				var sumDykCashHistory=0;
+				for(var i=0;i<data.dataList.length;i++){
+					sumDykCashHistory+=data.dataList[i].amtTrend;
+				}
+				sumDykCashHistory=sumDykCashHistory/data.dataList.length/100000000;
+			 	$("#sumDykCashHistory").text($.number(sumDykCashHistory, 2));
+			}else{
+				bootbox.alert(data.resultNote);
+				return false;
+			}
+		},
+		errorCallback:function(data){
+			bootbox.alert("error");
+		}
+	};
+	CloudUtils.ajax(options);
+	
+}
+function showEchart1(data){
+	document.getElementById('echartShow1').style.display="block"
+	echarts.dispose(document.getElementById('echartShow1'));
+	// 基于准备好的dom，初始化echarts实例
+	var myChart = echarts.init(document.getElementById('echartShow1'));
+	var xAxisData = [];
+	var data1 = [];
+	var titleText ='';
+	var dataTitle1 ='';
+		titleText='占用DYK资金趋势';
+		dataTitle1='单位(万元)';
+		for (var i = 0; i < data.length; i++) {
+		    xAxisData.push(data[i].everyDate);
+		    data1.push(data[i].amtTrend/10000);
+		}
+	
+	// 指定图表的配置项和数据
+	var option = {
+	 title: {
+	     text: titleText
+	 },
+	 backgroundColor: 'white',
+	 tooltip: {},
+	 legend: {
+		    data: [dataTitle1,],
+	        align: 'right',
+	        right:200
+	 },
+	 xAxis: {
+	     data: xAxisData,
+	     name: '年月日',
+	 },
+	 yAxis: {},
+	    series: [
+	             {
+	                 name: dataTitle1,
+	                 type: 'line',
+	                 data: data1
+	             }
+	         ]
+	};
+
+	// 使用刚指定的配置项和数据显示图表。
+	myChart.setOption(option);
+}
+
+function dykCashHistoryTable() {
+    $('#dykCashHistoryTable').bootstrapTable('destroy');
+    $("#dykCashHistoryTable").bootstrapTable({
+        method: "post",
+        contentType:"application/json;charset=UTF-8",
+        url: "../finance/getDykCashHistoryList",
+        striped: true, //表格显示条纹  
+        pagination: false, //启动分页  
+        showFooter:false,
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm1');
+            var jsonData = eval("(" + dataTemp + ")");
+        	var param = {              
+        			firTime: jsonData.firTime,
+        			secTime: jsonData.secTime
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'numbei',
+            title: '序号',
+            align: 'center',
+            valign: 'middle',
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'duifuDay',
+            title: '兑付日期',
+            align: 'center',
+            valign: 'middle',
+        },{
+            field: 'payAmitSum',
+            title: '零售实际兑付款项',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },{
+        	field: 'payAmitSum1',
+            title: '大宗实际兑付款项',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        }],
+    });
+}
+
+function getLastDay(year,month)   
+{   
+ var new_year = year;  //取当前的年份   
+ var new_month = month++;//取下一个月的第一天，方便计算（最后一天不固定）   
+ if(month>12)      //如果当前大于12月，则年份转到下一年   
+ {   
+ new_month -=12;    //月份减   
+ new_year++;      //年份增   
+ }   
+ var newnew_date = new Date(new_year,new_month,1);        //取当年当月中的第一天   
+ return (new Date(newnew_date.getTime()-1000*60*60*24)).getDate();//获取当月最后一天日期   
+}
+
+
+

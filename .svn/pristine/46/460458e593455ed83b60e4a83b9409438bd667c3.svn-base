@@ -1,0 +1,15 @@
+package com.ut.scf.service.statistics;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IAccountsReceivableService {
+	BaseRespBean AccountsReceivableList(Map<String, Object> paramMap,
+			PageInfoBean page);
+	
+	BaseRespBean AccountsReceivableList(Map<String, Object> paramMap);
+	
+	BaseRespBean AccountsFinancePayAndRepayList(Map<String, Object> paramMap);
+}

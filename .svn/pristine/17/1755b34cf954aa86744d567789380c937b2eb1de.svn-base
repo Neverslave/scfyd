@@ -1,0 +1,410 @@
+package com.ut.scf.service.project.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.util.json.JSONArray;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.FactorContractFileInfoMapper;
+import com.ut.scf.dao.auto.FactorContractInfoMapper;
+import com.ut.scf.dao.auto.ProcessRepeatCheckMapper;
+import com.ut.scf.dao.auto.ChaorenContractMapper;
+import com.ut.scf.dao.project.IFactorContractInfoDao;
+import com.ut.scf.dao.project.IMainContractInfoDao;
+import com.ut.scf.pojo.auto.ChaorenContract;
+import com.ut.scf.pojo.auto.ContractMain;
+import com.ut.scf.pojo.auto.FactorContractFileInfo;
+import com.ut.scf.pojo.auto.FactorContractFileInfoExample;
+import com.ut.scf.pojo.auto.FactorContractFileInfoExample.Criteria;
+import com.ut.scf.pojo.auto.FactorContractInfo;
+import com.ut.scf.pojo.auto.FactorContractInfoExample;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.pojo.auto.ProcessRepeatCheckExample;
+import com.ut.scf.reqbean.project.ContractFileReqBean;
+import com.ut.scf.reqbean.project.ContractReqBean;
+import com.ut.scf.reqbean.project.ContractUpdateReqBean;
+import com.ut.scf.reqbean.query.ChaorenContractInfoListReqBeanNew;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.ListRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IContractManagerService;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.sys.ISequenceService;
+
+@Service("contractManagerService")
+public class ContractManagerServiceImpl implements IContractManagerService {
+
+	Logger log = LoggerFactory.getLogger(this.getClass());
+
+	@Resource
+	private FactorContractInfoMapper factorContractInfoMapper;
+	@Resource
+	private IMainContractInfoDao contractDao;
+	@Resource
+	private FactorContractFileInfoMapper factorContractFileInfoMapper;
+	@Resource
+	private IFactorContractInfoDao factorContractInfoDao;
+	@Resource
+	private ISequenceService iSequenceService;
+	@Resource
+	private IActivitiService iActivitiService;
+	@Resource
+	private ProcessEngine processEngine;
+	@Resource
+	private ChaorenContractMapper chaorenMapper;
+	@Resource
+	private TaskService taskService;
+	@Resource
+	private IProcessRepeatChkService iProcessRepeatChkService;
+	@Resource
+	private ProcessRepeatCheckMapper processRepeatCheckMapper;
+	@Resource
+	private FactorContractFileInfoMapper fileMapper;
+	@Override
+	public BaseRespBean startProcess(JSONObject jsonObject) {
+
+		BaseRespBean respBean = new BaseRespBean();
+		String userName = (String) jsonObject.get("userId");
+		String key = (String) jsonObject.get("activitiKey");
+		// 加上当前用户
+		ProcessInstance pi = processEngine.getRuntimeService()// 管理流程实例和执行对象，也就是表示正在执行的操作
+				.startProcessInstanceByKey(key);
+		Task task = taskService.createTaskQuery().processInstanceId(pi.getId())
+				.singleResult();
+		// 拾取用户
+		taskService.claim(task.getId(), userName);
+		// 设置变量
+		taskService.setVariable(task.getId(), "launchUser", userName);// 发起者
+		taskService.setVariableLocal(task.getId(), "agencyJson",
+				jsonObject.toString());
+		// 完成节点
+		taskService.complete(task.getId());
+		insertProcessCheck(jsonObject.get("agencyCorpId").toString(),
+				pi.getProcessInstanceId());
+		return respBean;
+
+	}
+
+	private void insertProcessCheck(String agencyCorpId, String processId) {
+		ProcessRepeatCheck processRepeatCheck = new ProcessRepeatCheck();
+		processRepeatCheck.setItemKey("AGENCY_CORPID");
+		processRepeatCheck.setItemValue(agencyCorpId);
+		processRepeatCheck.setProcessKey("contractManager");
+		processRepeatCheck.setRecUid(ScfUUID.generate());
+		processRepeatCheck.setProcInstId(processId);
+		iProcessRepeatChkService.insert(processRepeatCheck);
+	}
+
+	// 添加 保理合同
+	// 带流程
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean addFactorContract(Map<String, Object> map,
+			JSONObject jsonObject) {
+
+		iActivitiService.doAgree(jsonObject);
+		return addFactorContract(map);
+	}
+
+	// 先删后插 以后一次的合同为准
+	@Override
+	@Transactional
+	public BaseRespBean addFactorContract(Map<String, Object> map) {
+		BaseRespBean baseRespBean = new BaseRespBean();
+		List<Map<String, Object>> list = (List<Map<String, Object>>) map.get("contractMainList");
+		JSONArray jsonArray;
+		JSONArray jsonArray2;
+		ContractMain mainContract = new ContractMain();
+		BeanUtil.mapToBean(map, mainContract);
+		mainContract.setId(ScfUUID.generate());
+		SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String createTime = sdf.format(new Date());
+		mainContract.setCreateTime(createTime);
+		mainContract.setStatus(0);
+		int result = contractDao.insert(mainContract);
+
+		if (list != null && list.size() >0) {
+			FactorContractFileInfo factorContractFileInfo;
+			for (int i = 0; i < list.size(); i++) {
+				Map<String, Object> fileMap = list.get(i);
+				factorContractFileInfo = new FactorContractFileInfo();
+				factorContractFileInfo.setContractNo(mainContract.getId());
+				factorContractFileInfo.setFileName((String)fileMap.get("fileName"));
+				factorContractFileInfo.setFilePath((String)fileMap.get("fileUrl"));
+				factorContractFileInfo.setFileSize(fileMap.get("fileSize")+"");
+				factorContractFileInfo.setFileType((String)fileMap.get("fileType"));
+				
+				factorContractFileInfoMapper.insert(factorContractFileInfo);
+			}
+			
+		}
+		if (result < 1) {
+			baseRespBean.setResult(ErrorCodeEnum.FAILED);
+		}
+		return baseRespBean;
+	}
+	
+	@Override
+	@Transactional
+	public BaseRespBean addFactorContract2(Map<String, Object> map) {
+		BaseRespBean baseRespBean = new BaseRespBean();
+		List<Map<String, Object>> list = (List<Map<String, Object>>) map.get("contractFileList");
+		ChaorenContract chaorenContract =  new ChaorenContract();
+		BeanUtil.mapToBean(map, chaorenContract);
+		chaorenContract.setId(ScfUUID.generate());
+		chaorenContract.setStatus("0");
+		if(chaorenContract.getContractType() != null || chaorenContract.getContractType() != ""){
+			//插入之前，先把数据库里面相同类型的数据状态设为1 不显示
+			chaorenMapper.updateOtherType(chaorenContract);
+		}
+		int result = chaorenMapper.insertSelective(chaorenContract);
+		
+		if (list != null && list.size() >0) {
+			FactorContractFileInfo factorContractFileInfo;
+			for (int i = 0; i < list.size(); i++) {
+				Map<String, Object> fileMap = list.get(i);
+				factorContractFileInfo = new FactorContractFileInfo();
+				factorContractFileInfo.setContractNo(chaorenContract.getId());
+				factorContractFileInfo.setFileName((String)fileMap.get("fileName"));
+				factorContractFileInfo.setFilePath((String)fileMap.get("fileUrl"));
+				factorContractFileInfo.setFileSize(fileMap.get("fileSize")+"");
+				factorContractFileInfo.setFileType((String)fileMap.get("fileType"));
+				
+				factorContractFileInfoMapper.insert(factorContractFileInfo);
+			}
+			
+		}
+		if (result < 1) {
+			baseRespBean.setResult(ErrorCodeEnum.FAILED);
+		}
+		return baseRespBean;
+	}
+
+	private int inserFileInfo(JSONArray jsonArray, String contractNo) {
+		int resultFile = 0;
+
+		FactorContractFileInfo factorContractFileInfo;
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject jsonObject = (JSONObject) jsonArray.get(i);
+			factorContractFileInfo = new FactorContractFileInfo();
+			factorContractFileInfo.setContractNo(contractNo);
+			factorContractFileInfo
+					.setFileName(jsonObject.getString("fileName"));
+			factorContractFileInfo.setFilePath(jsonObject.getString("fileUrl"));
+			factorContractFileInfo
+					.setFileSize(jsonObject.getString("fileSize"));
+			factorContractFileInfo
+					.setFileType(jsonObject.getString("fileType"));
+			if (jsonObject.has("fileClass")) {
+				factorContractFileInfo.setFileClass(jsonObject
+						.getString("fileClass"));
+			}
+
+			resultFile += factorContractFileInfoMapper
+					.insert(factorContractFileInfo);
+		}
+		return resultFile;
+	}
+
+	// 修改
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean modFactorContract(ContractUpdateReqBean reqBean) {
+		BaseRespBean baseRespBean = new BaseRespBean();
+		try {
+
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+			// 删除附件
+			FactorContractFileInfoExample example = new FactorContractFileInfoExample();
+			Criteria criteria = example.createCriteria();
+			criteria.andContractNoEqualTo(reqBean.getContractNo());
+			factorContractFileInfoMapper.deleteByExample(example);
+
+			JSONArray jsonArray = new JSONArray(reqBean.getFileInfo());
+
+			FactorContractInfo factorContractInfo = new FactorContractInfo();
+			factorContractInfo.setContractNo(reqBean.getContractNo());
+			factorContractInfo.setSignDate(sdf.parse(reqBean.getSignDate()));
+			factorContractInfo.setContractDueDate(sdf.parse(reqBean
+					.getContractDueDate()));
+			factorContractInfo.setContractType((byte) 0);
+			factorContractInfo.setContractValDate(sdf.parse(reqBean
+					.getContractValDate()));
+			int result = factorContractInfoMapper
+					.updateByPrimaryKeySelective(factorContractInfo);
+
+			int resultFile = 0;
+
+			FactorContractFileInfo factorContractFileInfo;
+			for (int i = 0; i < jsonArray.length(); i++) {
+				JSONObject jsonObject = (JSONObject) jsonArray.get(i);
+				factorContractFileInfo = new FactorContractFileInfo();
+				factorContractFileInfo.setContractNo(reqBean.getContractNo());
+				factorContractFileInfo.setFileName(jsonObject
+						.getString("fileName"));
+				factorContractFileInfo.setFilePath(jsonObject
+						.getString("fileUrl"));
+				factorContractFileInfo.setFileSize(jsonObject
+						.getString("fileSize"));
+				factorContractFileInfo.setFileType(jsonObject
+						.getString("fileType"));
+
+				resultFile += factorContractFileInfoMapper
+						.insert(factorContractFileInfo);
+			}
+			if (result < 1 || resultFile < 1) {
+				baseRespBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		return baseRespBean;
+	}
+
+	@Override
+	public BaseRespBean factorContractList(ContractReqBean reqBean) {
+
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		List<Map<String, Object>> resultList = factorContractInfoDao
+				.contractList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(resultList);
+		return respBean;
+	}
+	
+	@Override
+	public BaseRespBean getContractList(ContractReqBean reqBean) {
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		List<Map<String, Object>> resultList = chaorenMapper.selectAllContract();
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(resultList);
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean factorContractFileList(ContractFileReqBean reqBean) {
+
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		List<Map<String, Object>> resultList = factorContractInfoDao
+				.contractFileList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(resultList);
+		return respBean;
+	}
+
+	// 验证是否有保理合同 传入 产品类型
+	@Override
+	public BaseRespBean checkFactorContact(ContractReqBean reqBean) {
+		BaseRespBean baseRespBean = new BaseRespBean();
+		FactorContractInfoExample example = new FactorContractInfoExample();
+		com.ut.scf.pojo.auto.FactorContractInfoExample.Criteria criteria = example
+				.createCriteria();
+		criteria.andContractTypeEqualTo((byte) 0);
+		criteria.andProductTypeEqualTo(reqBean.getProductType());
+		List<FactorContractInfo> list = factorContractInfoMapper
+				.selectByExample(example);
+		if (list.size() > 0) {
+			baseRespBean.setResult(ErrorCodeEnum.FACTOR_CONTRACT_INFO);
+		}
+		return baseRespBean;
+	}
+
+	// 验证是否有Dyk保理合同 传入 产品类型
+	@Override
+	public BaseRespBean checkFactorContactDYK(ContractReqBean reqBean) {
+		String contractNo = iSequenceService.getNextSequence(
+				reqBean.getAgencyCorpId(),"", "yw");
+		BaseRespBean baseRespBean = new BaseRespBean();
+		FactorContractInfo factorContractInfo = factorContractInfoMapper
+				.selectByPrimaryKey(contractNo);
+		if (factorContractInfo != null) {
+			baseRespBean.setResult(ErrorCodeEnum.FACTOR_CONTRACT_INFO);
+		}
+		return baseRespBean;
+	}
+
+	// 验证是否存在
+	@Override
+	public BaseRespBean checkProcess(String corpId) {
+		BaseRespBean baseRespBean = new BaseRespBean();
+		ProcessRepeatCheckExample example = new ProcessRepeatCheckExample();
+		com.ut.scf.pojo.auto.ProcessRepeatCheckExample.Criteria criteria = example
+				.createCriteria();
+		criteria.andItemKeyEqualTo("AGENCY_CORPID");
+		criteria.andItemValueEqualTo(corpId);
+		criteria.andProcessKeyEqualTo("contractManager");
+		List<ProcessRepeatCheck> processRepeatChecks = processRepeatCheckMapper
+				.selectByExample(example);
+
+		if (processRepeatChecks != null && processRepeatChecks.size() > 0) {
+			baseRespBean.setResult(ErrorCodeEnum.DYK_CONTRACT_INFO);
+		}
+		return baseRespBean;
+
+	}
+
+	@Override
+	public BaseRespBean isContractNumExit(String contractNo) {
+		BaseRespBean respBean = new BaseRespBean();
+		ChaorenContract chaorenContract = new ChaorenContract();
+		chaorenContract.setContractNo(contractNo);
+		List<ContractMain> list=chaorenMapper.selectByContractNo(chaorenContract);
+		if (list.size() > 0) {
+			respBean.setResult(1);
+		}else{
+			respBean.setResult(0);
+		}
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean getContractFile(ChaorenContractInfoListReqBeanNew reqBean) {
+		FactorContractFileInfoExample example = new FactorContractFileInfoExample();
+		Criteria criteria = example.createCriteria();
+		criteria.andContractNoEqualTo(reqBean.getId());
+		List<FactorContractFileInfo> listInfo = fileMapper.selectByExample(example);
+		ListRespBean respBean = new ListRespBean();
+		respBean.setDataList(listInfo);
+		return respBean;
+	}
+
+}

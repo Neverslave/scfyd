@@ -1,0 +1,85 @@
+package com.ut.scf.service.test.project;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.ContextLoaderListener;
+
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.project.offsetDepositCarInfoReqBean;
+import com.ut.scf.reqbean.project.offsetDepositStartReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IOffsetDepositService;
+import com.ut.scf.web.controller.project.offsetDepositController;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class OffsetDepositServiceTest {
+	private static final Logger log = LoggerFactory
+			.getLogger(offsetDepositController.class);
+	
+	@Resource
+	private IOffsetDepositService offsetDepositService;
+	
+	@Before
+	public void getContext(){
+		MockServletContext sc = new MockServletContext("");
+		sc.addInitParameter(ContextLoader.CONFIG_LOCATION_PARAM, "/spring-mybatis-test.xml");
+		ServletContextListener listener = new ContextLoaderListener();
+		ServletContextEvent event = new ServletContextEvent(sc);
+		listener.contextInitialized(event);
+	}
+
+	
+	@Test
+	public void getCarInfoTest(){
+		log.info("=============================getCarInfo start=============================");
+		try {
+
+			offsetDepositCarInfoReqBean reqBean = new offsetDepositCarInfoReqBean();
+			reqBean.setFinanceId("YDBL2017RZ0017-07-02");
+			BaseRespBean respBean = new BaseRespBean();
+			Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+			respBean=offsetDepositService.getCarInfo(paramMap);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================getCarInfo end=============================");
+	}
+	
+	@Test
+	public void startProcess(){
+		log.info("=============================getCarInfo start=============================");
+		try {
+
+			BaseRespBean respBean = new BaseRespBean();
+			offsetDepositStartReqBean reqBean = new offsetDepositStartReqBean();
+			reqBean.setUserId("jxs");
+			reqBean.setActivitiKey("OffsetDeposit");
+			JSONObject reqBeanStr = new JSONObject(reqBean);
+			offsetDepositService.startProcess(reqBeanStr);
+			
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================getCarInfo end=============================");
+	}
+	
+}

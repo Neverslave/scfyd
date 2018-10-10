@@ -1,0 +1,453 @@
+package com.ut.scf.web.scheduled;
+
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Map;
+import java.util.Random;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.util.IdCardUtil;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.OrderBatchInfoMapper;
+import com.ut.scf.dao.auto.OrderInfoMapper;
+import com.ut.scf.dao.auto.StuInfoMapper;
+import com.ut.scf.pojo.auto.OrderBatchInfo;
+import com.ut.scf.pojo.auto.OrderInfo;
+import com.ut.scf.pojo.auto.StuInfo;
+import com.ut.scf.reqbean.project.OrderManagerReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IOrderManagerService;
+
+@Component
+@Lazy(value = false)
+public class InterfaceSyncJobTest {
+	private static final Logger log = LoggerFactory.getLogger(InterfaceSyncJobTest.class);
+	@Resource
+	private OrderInfoMapper orderInfoMapper;
+	@Resource
+	private StuInfoMapper stuInfoMapper;
+	@Resource
+	private IOrderManagerService iOrderManagerService;
+	@Resource
+	private IActivitiService activitiService;
+	@Resource
+	private OrderBatchInfoMapper orderBatchInfoMapper;
+
+	String[] sName = new String[95];
+	String[] Name = new String[79];
+
+	// 发起流程
+	private BaseRespBean startProcess(String batchId) throws Exception {
+		// 发起流程
+		BaseRespBean respBean = new BaseRespBean();
+		OrderManagerReqBean reqBean = new OrderManagerReqBean();
+		// 获取当前用户
+		reqBean.setBatchId(batchId);
+		reqBean.setUserId("sys");
+		reqBean.setActivitiKey("orderManagerProcess");
+		JSONObject contactInfo = new JSONObject(reqBean);
+		log.debug("contactInfo: {}", contactInfo);
+		activitiService.startProcess(contactInfo);
+		return respBean;
+	}
+
+	@Transactional
+	private void insertBatchInfo(int num, String baString) throws Exception {
+		BigDecimal bigDecimal = new BigDecimal(500)
+				.multiply(new BigDecimal(num));
+
+		OrderBatchInfo batchInfo = new OrderBatchInfo();
+		/*batchInfo.setOrderBatchId(baString); // 订单批次号
+		batchInfo.setOrderTotalNum(num); // 订单总数
+		batchInfo.setOrderTotalAmt(bigDecimal);*/
+		batchInfo.setRecOrderNum(num);
+		batchInfo.setRecOrderAmt(bigDecimal);
+		batchInfo.setRejOrderNum(0);
+		batchInfo.setRejOrderAmt(BigDecimal.ZERO);
+		batchInfo.setCrReqTotalAmt(new BigDecimal(50).multiply(new BigDecimal(
+				num)));
+		batchInfo.setSyncDate(new Date());
+		orderBatchInfoMapper.insert(batchInfo);
+		startProcess(baString);
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void createOrderInfo() throws Exception {
+		log.info("-----------------createOrderInfo start-----------");
+		Random rand = new Random();
+		String baString = ScfUUID.generate();
+		int num = rand.nextInt(15) + 5;
+		for (int i = 0; i < num; i++) {
+			String stuId = ScfUUID.generate();// 学生信息id
+			String orderId = ScfUUID.generate();
+			createStuInfo(stuId);
+			OrderInfo orderInfo = new OrderInfo();
+		/*	orderInfo.setOrderId(orderId);
+			orderInfo.setOrderBatchId(baString);
+			orderInfo.setProductId("0");
+			orderInfo.setProductName("学生测试宽带5期*100元");
+			orderInfo.setProductAmt(new BigDecimal(500));
+			orderInfo.setPeriod((byte) (rand.nextInt(15) + 5));
+			orderInfo.setLoan(new BigDecimal(500));
+			orderInfo.setSellerId("9527");
+			orderInfo.setSellerName("天翼宽带");
+			orderInfo.setCrReqAmt(new BigDecimal(50));
+			orderInfo.setStartPayAmt(new BigDecimal(100));
+			orderInfo.setPayM(new BigDecimal(100));
+			orderInfo.setStartPayDay(new Date());
+			orderInfo.setOrderStatus((byte) 1);
+			orderInfo.setStuId(stuId);*/
+			orderInfoMapper.insert(orderInfo);
+		}
+		insertBatchInfo(num, baString);
+		log.info("-----------------createOrderInfo end-----------");
+	}
+
+	public String getOrderList()
+	{
+		Random rand = new Random();
+	String date="{\"batch_id\":\""+ScfUUID.generate()+"\",\"name\":\"批次01\",\"total_price\":\"5000\",\"people_type\":\"1\",\"order_list\":[";
+		int num = rand.nextInt(5) + 5;
+		for (int i = 0; i < num; i++) {
+			String idCard = getRandomID();
+			Map<String, String> map = IdCardUtil.idcardInfoExtractor(idCard);
+			
+			String order="\"order_id\":\""+ScfUUID.generate()+"\","+
+					"\"name\":\""+getName()+"\","+
+					"\"sex\":\""+new Byte(map.get("age"))+"\","+
+					"\"id_card\":\""+idCard+"\","+
+					"\"nation\":\""+"汉"+"\","+
+					"\"mobile\":\""+getTel()+"\","+
+					"\"idcard_birthday\":\""+map.get("birthday")+"\","+
+					"\"t_univs_name\":\""+"加里敦大学"+"\","+
+					"\"t_univs_grade\":\""+"2"+"\","+
+					"\"t_univs_finishtime\":\""+"2020"+"\","+
+					"\"age\":\""+map.get("age")+"\","+
+					"\"t_univs_room\":\""+"3308"+"\","+
+					"\"goods_name\":\""+"学生测试宽带5期*100元"+"\","+
+					"\"umm_truename\":\""+getName()+"\","+
+					"\"pics\":\""+""+"\","+
+					"\"total_price\":\""+new BigDecimal(500)+"\","+
+					"\"paytime\":\""+new Date()+"\","+
+					"\"finance_period\":\""+(byte) (rand.nextInt(15) + 5)+"\","+
+					"\"paid_period\":\""+(byte) (rand.nextInt(5))+"\","+
+					"\"tongdun_res\":\""+60+"\","+
+					"\"needmoney\":\""+new BigDecimal(400)+"\","+
+					"\"service_money\":\""+new BigDecimal(0)+"\","+
+					"\"ensure_money\":\""+new BigDecimal(50)+"\","+
+					"\"loan_money\":\""+new BigDecimal(450)+"\","+
+					"\"store_id\":\""+ScfUUID.generate()+"\","+
+					"\"fullname\":\""+"经销商001"+"\","+
+					"\"seller_type\":\""+"电信"+"\","+
+					"\"address\":\""+"地址002"+"\","+
+					"\"contact\":\""+getTel()+"\","+
+					"\"contact_mobile\":\""+getTel()+"\","+
+					"\"store_city\":\""+"盐城"+"\","+
+					"\"bank\":\""+"中国银行"+"\","+
+					"\"account\":\""+getName()+"\","+
+					"\"card\":\""+"123456789"+"\","+
+					"\"contract\":\""+""+"\","+
+					"\"state\":\""+""+"\"";
+
+			if(i<num-1)
+			{
+				date=date+"{"+order+"},";
+			}
+			else
+			{date=date+"{"+order+"}]}";}
+			
+		}
+		return date;
+	}
+	
+	@Transactional
+	private void createStuInfo(String stuId) {
+		String idCard = getRandomID();
+		Map<String, String> map = IdCardUtil.idcardInfoExtractor(idCard);
+		StuInfo stuInfo = new StuInfo();
+		/*stuInfo.setStuId(stuId);
+		stuInfo.setStuName(getName());
+		stuInfo.setNation("汉");
+		stuInfo.setMobilePhone(getTel());
+		stuInfo.setSchoolName("加里敦大学");
+		stuInfo.setGraduateDate("2020");
+		stuInfo.setDorm("3308");
+		stuInfo.setGrade("2");
+		stuInfo.setIdCard(idCard);
+		stuInfo.setAge(new Byte(map.get("age")));
+		stuInfo.setBirthDate(map.get("birthday"));
+		stuInfo.setGender(map.get("gender"));*/
+		stuInfoMapper.insertSelective(stuInfo);
+	}
+
+	public InterfaceSyncJobTest() {
+		sName[0] = "白|bai";
+		sName[1] = "白|bai";
+		sName[2] = "蔡|cai";
+		sName[3] = "曹|cao";
+		sName[4] = "陈|chen";
+		sName[5] = "戴|dai";
+		sName[6] = "窦|dou";
+		sName[7] = "邓|deng";
+		sName[8] = "狄|di";
+		sName[9] = "杜|du";
+		sName[10] = "段|duan";
+		sName[11] = "范|fan";
+		sName[12] = "樊|fan";
+		sName[13] = "房|fang";
+		sName[14] = "风|feng";
+		sName[15] = "符|fu";
+		sName[16] = "福|fu";
+		sName[17] = "高|gao";
+		sName[18] = "古|gu";
+		sName[19] = "关|guan";
+		sName[20] = "郭|guo";
+		sName[21] = "毛|mao";
+		sName[22] = "韩|han";
+		sName[23] = "胡|hu";
+		sName[24] = "花|hua";
+		sName[25] = "洪|hong";
+		sName[26] = "侯|hou";
+		sName[27] = "黄|huang";
+		sName[28] = "贾|jia";
+		sName[29] = "蒋|jiang";
+		sName[30] = "金|jin";
+		sName[31] = "廖|liao";
+		sName[32] = "梁|liang";
+		sName[33] = "李|li";
+		sName[34] = "林|lin";
+		sName[35] = "刘|liu";
+		sName[36] = "龙|long";
+		sName[37] = "陆|lu";
+		sName[38] = "卢|lu";
+		sName[39] = "罗|luo";
+		sName[40] = "马|ma";
+		sName[41] = "牛|niu";
+		sName[42] = "庞|pang";
+		sName[43] = "裴|pei";
+		sName[44] = "彭|peng";
+		sName[45] = "戚|qi";
+		sName[46] = "齐|qi";
+		sName[47] = "钱|qian";
+		sName[48] = "乔|qiao";
+		sName[49] = "秦|qin";
+		sName[50] = "邱|qiu";
+		sName[51] = "裘|qiu";
+		sName[52] = "仇|qiu";
+		sName[53] = "沙|sha";
+		sName[54] = "商|shang";
+		sName[55] = "尚|shang";
+		sName[56] = "邵|shao";
+		sName[57] = "沈|shen";
+		sName[58] = "师|shi";
+		sName[59] = "施|shi";
+		sName[60] = "宋|song";
+		sName[61] = "孙|sun";
+		sName[62] = "童|tong";
+		sName[63] = "万|wan";
+		sName[64] = "王|wang";
+		sName[65] = "魏|wei";
+		sName[66] = "卫|wei";
+		sName[67] = "吴|wu";
+		sName[68] = "武|wu";
+		sName[69] = "萧|xiao";
+		sName[70] = "肖|xiao";
+		sName[71] = "项|xiang";
+		sName[72] = "许|xu";
+		sName[73] = "徐|xu";
+		sName[74] = "薛|xue";
+		sName[75] = "杨|yang";
+		sName[76] = "羊|yang";
+		sName[77] = "阳|yang";
+		sName[78] = "易|yi";
+		sName[79] = "尹|yin";
+		sName[80] = "俞|yu";
+		sName[81] = "赵|zhao";
+		sName[82] = "钟|zhong";
+		sName[83] = "周|zhou";
+		sName[84] = "郑|zheng";
+		sName[85] = "朱|zhu";
+		sName[86] = "东方|dongfang";
+		sName[87] = "独孤|dugu";
+		sName[88] = "慕容|murong";
+		sName[89] = "欧阳|ouyang";
+		sName[90] = "司马|sima";
+		sName[91] = "西门|ximen";
+		sName[92] = "尉迟|yuchi";
+		sName[93] = "长孙|zhangsun";
+		sName[94] = "诸葛|zhuge";
+
+		Name[0] = "ai|皑艾哀";
+		Name[1] = "an|安黯谙";
+		Name[2] = "ao|奥傲敖骜翱";
+		Name[3] = "ang|昂盎";
+		Name[4] = "ba|罢霸";
+		Name[5] = "bai|白佰";
+		Name[6] = "ban|斑般";
+		Name[7] = "bang|邦";
+		Name[8] = "bei|北倍贝备";
+		Name[9] = "biao|表标彪飚飙";
+		Name[10] = "bian|边卞弁忭";
+		Name[11] = "bu|步不";
+		Name[12] = "cao|曹草操漕";
+		Name[13] = "cang|苍仓";
+		Name[14] = "chang|常长昌敞玚";
+		Name[15] = "chi|迟持池赤尺驰炽";
+		Name[16] = "ci|此次词茨辞慈";
+		Name[17] = "du|独都";
+		Name[18] = "dong|东侗";
+		Name[19] = "dou|都";
+		Name[20] = "fa|发乏珐";
+		Name[21] = "fan|范凡反泛帆蕃";
+		Name[22] = "fang|方访邡昉";
+		Name[23] = "feng|风凤封丰奉枫峰锋";
+		Name[24] = "fu|夫符弗芙";
+		Name[25] = "gao|高皋郜镐";
+		Name[26] = "hong|洪红宏鸿虹泓弘";
+		Name[27] = "hu|虎忽湖护乎祜浒怙";
+		Name[28] = "hua|化花华骅桦";
+		Name[29] = "hao|号浩皓蒿浩昊灏淏";
+		Name[30] = "ji|积极济技击疾及基集记纪季继吉计冀祭际籍绩忌寂霁稷玑芨蓟戢佶奇诘笈畿犄";
+		Name[31] = "jian|渐剑见建间柬坚俭";
+		Name[32] = "kan|刊戡";
+		Name[33] = "ke|可克科刻珂恪溘牁";
+		Name[34] = "lang|朗浪廊琅阆莨";
+		Name[35] = "li|历离里理利立力丽礼黎栗荔沥栎璃";
+		Name[36] = "lin|临霖林琳";
+		Name[37] = "ma|马";
+		Name[38] = "mao|贸冒貌冒懋矛卯瑁";
+		Name[39] = "miao|淼渺邈";
+		Name[40] = "nan|楠南";
+		Name[41] = "pian|片翩";
+		Name[42] = "qian|潜谦倩茜乾虔千";
+		Name[43] = "qiang|强羌锖玱";
+		Name[44] = "qin|亲琴钦沁芩矜";
+		Name[45] = "qing|清庆卿晴";
+		Name[46] = "ran|冉然染燃";
+		Name[47] = "ren|仁刃壬仞";
+		Name[48] = "sha|沙煞";
+		Name[49] = "shang|上裳商";
+		Name[50] = "shen|深审神申慎参莘";
+		Name[51] = "shi|师史石时十世士诗始示适炻";
+		Name[52] = "shui|水";
+		Name[53] = "si|思斯丝司祀嗣巳";
+		Name[54] = "song|松颂诵";
+		Name[55] = "tang|堂唐棠瑭";
+		Name[56] = "tong|统通同童彤仝";
+		Name[57] = "tian|天田忝";
+		Name[58] = "wan|万宛晚";
+		Name[59] = "wei|卫微伟维威韦纬炜惟玮为";
+		Name[60] = "wu|吴物务武午五巫邬兀毋戊";
+		Name[61] = "xi|西席锡洗夕兮熹惜";
+		Name[62] = "xiao|潇萧笑晓肖霄骁校";
+		Name[63] = "xiong|熊雄";
+		Name[64] = "yang|羊洋阳漾央秧炀飏鸯";
+		Name[65] = "yi|易意依亦伊夷倚毅义宜仪艺译翼逸忆怡熠沂颐奕弈懿翊轶屹猗翌";
+		Name[66] = "yin|隐因引银音寅吟胤訚烟荫";
+		Name[67] = "ying|映英影颖瑛应莹郢鹰";
+		Name[68] = "you|幽悠右忧猷酉";
+		Name[69] = "yu|渔郁寓于余玉雨语预羽舆育宇禹域誉瑜屿御渝毓虞禺豫裕钰煜聿";
+		Name[70] = "zhi|制至值知质致智志直治执止置芝旨峙芷挚郅炙雉帜";
+		Name[71] = "zhong|中忠钟衷";
+		Name[72] = "zhou|周州舟胄繇昼";
+		Name[73] = "zhu|竹主驻足朱祝诸珠著竺";
+		Name[74] = "zhuo|卓灼灼拙琢濯斫擢焯酌";
+		Name[75] = "zi|子资兹紫姿孜梓秭";
+		Name[76] = "zong|宗枞";
+		Name[77] = "zu|足族祖卒";
+		Name[78] = "zuo|作左佐笮凿";
+	}
+
+	public String getName() {
+		Random random = new Random();
+		int i = random.nextInt(94);
+		String mName = sName[i].split("[|]")[0];
+		mName += getNameKey();
+		if (random.nextInt(2) == 1) {
+			mName += getNameKey();
+		}
+		return mName;
+	}
+
+	private String getNameKey() {
+		Random random = new Random();
+		int i = random.nextInt(78);
+		return getKey(Name[i].split("[|]")[1]);
+	}
+
+	private String getKey(String name) {
+		if (name == null)
+			return null;
+		int counti = name.length();
+		Random random = new Random();
+		int i = random.nextInt(counti);
+		return name.substring(i, i + 1);
+	}
+
+	/**
+	 * 返回手机号码
+	 */
+	private static String[] telFirst = "134,135,136,137,138,139,150,151,152,157,158,159,130,131,132,155,156,133,153"
+			.split(",");
+
+	private String getTel() {
+		int index = getNum(0, telFirst.length - 1);
+		String first = telFirst[index];
+		String second = String.valueOf(getNum(1, 888) + 10000).substring(1);
+		String thrid = String.valueOf(getNum(1, 9100) + 10000).substring(1);
+		return first + second + thrid;
+	}
+
+	public int getNum(int start, int end) {
+		return (int) (Math.random() * (end - start + 1) + start);
+	}
+
+	public String getRandomID() {
+		String id = "";
+		// 随机生成省、自治区、直辖市代码 1-2
+		String provinces[] = { "11", "12", "13", "14", "15", "21", "22", "23",
+				"31", "32", "33", "34", "35", "36", "37", "41", "42", "43",
+				"44", "45", "46", "50", "51", "52", "53", "54", "61", "62",
+				"63", "64", "65", "71", "81", "82" };
+		String province = provinces[new Random().nextInt(provinces.length - 1)];
+		// 随机生成地级市、盟、自治州代码 3-4
+		String citys[] = { "01", "02", "03", "04", "05", "06", "07", "08",
+				"09", "10", "21", "22", "23", "24", "25", "26", "27", "28" };
+		String city = citys[new Random().nextInt(citys.length - 1)];
+		// 随机生成县、县级市、区代码 5-6
+		String countys[] = { "01", "02", "03", "04", "05", "06", "07", "08",
+				"09", "10", "21", "22", "23", "24", "25", "26", "27", "28",
+				"29", "30", "31", "32", "33", "34", "35", "36", "37", "38" };
+		String county = countys[new Random().nextInt(countys.length - 1)];
+		// 随机生成出生年月 7-14
+		SimpleDateFormat dft = new SimpleDateFormat("yyyyMMdd");
+		Date beginDate = new Date();
+		Calendar date = Calendar.getInstance();
+		date.setTime(beginDate);
+		date.set(Calendar.DATE,
+				date.get(Calendar.DATE) - new Random().nextInt(365 * 100));
+		String birth = dft.format(date.getTime());
+		// 随机生成顺序号 15-17
+		int no = new Random().nextInt(999);
+		String no1 = String.format("%03d", no);
+		// 随机生成校验码 18
+		String checks[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+				"X" };
+		String check = checks[new Random().nextInt(checks.length - 1)];
+		// 拼接身份证号码
+		id = province + city + county + birth + no1 + check;
+		return id;
+	}
+}

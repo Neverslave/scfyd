@@ -1,0 +1,141 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.TfProjectFilesMapper;
+import com.ut.scf.dao.auto.TfProjectInfoMapper;
+import com.ut.scf.dao.auto.TfProjectReplyInfoMapper;
+import com.ut.scf.dao.tradfact.IProjectReplyDao;
+import com.ut.scf.pojo.auto.TfProjectFiles;
+import com.ut.scf.pojo.auto.TfProjectInfo;
+import com.ut.scf.pojo.auto.TfProjectReplyInfo;
+import com.ut.scf.pojo.auto.TfProjectReplyInfoExample;
+import com.ut.scf.reqbean.tradfact.ProjectReplyReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.ICommonService;
+import com.ut.scf.service.tradfact.IProjectReplyService;
+
+@Service("projectReplyService")
+public class ProjectReplyServiceImpl implements IProjectReplyService {
+
+	private static final Logger log = LoggerFactory.getLogger(ProjectReplyServiceImpl.class);
+
+	// 批复推送对象：项目经理、业务负责人、业务分管领导、风险经理、风险部长、风险分管领导、总经理
+	private static List<String> TARGET_ROLE_IDS_REPLY = Arrays.asList("ROLE000016", "ROLE000008", "ROLE000023", "ROLE000014", "ROLE000009",
+	                                                                  "ROLE000022", "ROLE000004");
+
+	@Resource
+	private IProjectReplyDao projectReplyDao;
+
+	@Resource
+	private TfProjectReplyInfoMapper tfProjectReplyInfoMapper;
+
+	@Resource
+	private TfProjectInfoMapper tfProjectInfoMapper;
+
+	@Resource
+	private TfProjectFilesMapper projectFilesMapper;
+
+	@Resource
+	private ICommonService commonService;
+
+	@Override
+	public BaseRespBean projectReplyList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = projectReplyDao.selectProjectReplyList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean replyRemark(ProjectReplyReqBean projectReplyReqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+		String projectId = projectReplyReqBean.getProjectId();
+
+		TfProjectInfo tfProjectInfo = new TfProjectInfo();
+		String replyOpinion = projectReplyReqBean.getReplyOpinion();
+		tfProjectInfo.setProjectId(projectId);
+		if ("0".equals(replyOpinion)) {// 0:同意
+			tfProjectInfo.setProjectStatus("50");// 已批复
+		} else if ("1".equals(replyOpinion)) {// 1:再议
+			tfProjectInfo.setProjectStatus("51");// 待定
+		} else if ("2".equals(replyOpinion)) {// 2:否定
+			tfProjectInfo.setProjectStatus("52");// 已关闭
+		}
+		tfProjectInfoMapper.updateByPrimaryKeySelective(tfProjectInfo);
+
+		TfProjectReplyInfoExample tfProjectReplyInfoExample = new TfProjectReplyInfoExample();
+		com.ut.scf.pojo.auto.TfProjectReplyInfoExample.Criteria criteria = tfProjectReplyInfoExample.createCriteria();
+		criteria.andProjectIdEqualTo(projectId);
+		int exampleNum = tfProjectReplyInfoMapper.countByExample(tfProjectReplyInfoExample);
+		TfProjectReplyInfo tfProjectReplyInfo = new TfProjectReplyInfo();
+		tfProjectReplyInfo.setCreateTime(new Date());
+		tfProjectReplyInfo.setReplyOpinion(replyOpinion);
+		tfProjectReplyInfo.setRemark(projectReplyReqBean.getRemark());
+		tfProjectReplyInfo.setProjectId(projectId);
+		int insertNum = 0;
+		if (exampleNum > 0) {// 如果Id已存在，修改批复信息
+			insertNum = tfProjectReplyInfoMapper.updateByPrimaryKeySelective(tfProjectReplyInfo);
+		} else {
+			insertNum = tfProjectReplyInfoMapper.insert(tfProjectReplyInfo);
+		}
+		log.debug("insertMenuNum : {}", insertNum);
+
+		if (insertNum <= 0) {
+			throw new BizException(ErrorCodeEnum.FAILED);
+		}
+		// 插文件
+		@SuppressWarnings("unchecked")
+		List<TfProjectFiles> projectFiles = projectReplyReqBean.getReplyFiles();
+		if (projectFiles.size() > 0) {
+			for (TfProjectFiles file : projectFiles) {
+				file.setProjectId(projectId);
+				file.setMaterialClass("4");
+				file.setFileId(ScfUUID.generate());
+				file.setCreateTime(new Date());
+				projectFilesMapper.insert(file);
+			}
+		}
+
+		// 插通知
+		String explain = "";
+		if ("0".equals(replyOpinion)) {// 0:同意
+			explain = "同意";// 已批复
+		} else if ("1".equals(replyOpinion)) {// 1:再议
+			explain = "再议";// 待定
+		} else if ("2".equals(replyOpinion)) {// 2:否定
+			explain = "否定";// 已关闭
+		}
+		overdueWarningInfo("[" + projectReplyReqBean.getProjectName() + "]项目批复意见为" + explain + "，请相关部门及人员查看。");
+		return respBean;
+	}
+
+	// 推送逾期预警
+	@Transactional
+	private void overdueWarningInfo(String msg) {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("roleList", TARGET_ROLE_IDS_REPLY);
+		paramMap.put("warnType", 7);
+		paramMap.put("warnMsg", msg);
+		commonService.insertWarningInfo(paramMap);
+	}
+
+}

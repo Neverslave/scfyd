@@ -1,0 +1,153 @@
+package com.ut.scf.service.test.project;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.ContextLoaderListener;
+
+import com.ut.scf.reqbean.project.PayCommitProcessReqBean;
+import com.ut.scf.reqbean.project.PayCommitmentListReqBean;
+import com.ut.scf.reqbean.pub.TaskInfoReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IPayCommitmentService;
+import com.ut.scf.service.project.impl.PayCommitmentServiceImpl;
+
+@WebAppConfiguration
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class PayCommitmentServiceTest {
+	
+	private static final Logger log = LoggerFactory
+			.getLogger(PayCommitmentServiceImpl.class);
+	
+	@Resource
+	private IPayCommitmentService iPayCommitmentService;
+	
+	@Resource
+	private IActivitiService activitiService;
+	
+	private MockHttpServletRequest request; 
+	
+	@Before
+	public void getContext(){
+		MockServletContext sc = new MockServletContext("");
+		sc.addInitParameter(ContextLoader.CONFIG_LOCATION_PARAM, "/spring-mybatis-test.xml");
+		ServletContextListener listener = new ContextLoaderListener();
+		ServletContextEvent event = new ServletContextEvent(sc);
+		listener.contextInitialized(event);
+		request = new MockHttpServletRequest(); 
+	}
+
+	
+	@Test
+	public void getPayInfoList(){
+		log.info("=============================getPayInfoList start=============================");
+		try {
+
+			PayCommitmentListReqBean reqBean =new  PayCommitmentListReqBean();
+			BaseRespBean payInfoList = iPayCommitmentService.getPayInfoList(reqBean);
+			log.info("payInfoList:"+payInfoList.toString());
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================getPayInfoList end=============================");
+	};
+	
+	@Test
+	public void agencyFinanceList(){
+		log.info("=============================agencyFinanceList start=============================");
+		try {
+
+			PayCommitmentListReqBean reqBean =new  PayCommitmentListReqBean();
+			BaseRespBean agencyFinanceList = iPayCommitmentService.agencyFinanceList(reqBean);
+			log.info("agencyFinanceList:"+agencyFinanceList.toString());
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================agencyFinanceList end=============================");
+	}
+	
+	@Test
+	public void getCarFileInfo(){
+		log.info("=============================getCarFileInfo start=============================");
+		try {
+
+			PayCommitmentListReqBean reqBean =new  PayCommitmentListReqBean();
+			reqBean.setFinanceId("YDBL2017RZ0017-05-01");
+			BaseRespBean carFileInfo = iPayCommitmentService.getCarFileInfo(reqBean);
+			log.info("carFileInfo:"+carFileInfo.toString());
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================getCarFileInfo end=============================");
+	}
+	
+	@Test
+	public void startProcess(){
+		log.info("=============================startProcess start=============================");
+		try {
+
+			PayCommitProcessReqBean reqBean = new PayCommitProcessReqBean();
+			BaseRespBean respBean = new BaseRespBean();
+			// 获取当前用户
+			reqBean.setUserId("dyk");
+			reqBean.setLaunchRoleId("ROLE000017");
+			reqBean.setActivitiKey("payCommitment");
+			reqBean.setCarListInfo("[{'fileUrl':'/scfyd/uploadFile/common/2c9984925cc3387a4ccdc3395c370001.xlsx'}]");
+			reqBean.setFinanceId("YDBL2017RZ0017-05-01");
+			JSONObject repayInfoStr = new JSONObject(reqBean);
+			HttpSession httpSession = request.getSession();
+			//httpSession.setAttribute("realPath", "sdsdf");
+			respBean = iPayCommitmentService.startProcess(repayInfoStr, httpSession);
+			log.info("respBean:"+respBean);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================startProcess end=============================");
+	
+	}
+	
+	@Test
+	public void getDataByTaskId(){
+		log.info("=============================getDataByTaskId start=============================");
+		try {
+
+			TaskInfoReqBean reqBean = new TaskInfoReqBean();
+			BaseRespBean respBean = new BaseRespBean();
+			reqBean.setTaskId("1440003");
+			reqBean.setVarName("dykRepayment");
+			respBean = iPayCommitmentService.getDataByTaskId(reqBean);
+			log.info("respBean:"+respBean);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================getDataByTaskId end=============================");
+	
+	}
+	
+}

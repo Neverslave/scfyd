@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.project.ISignContractDao" >
+
+
+  <select id="orderInfoByBatchId" resultType="hashmap" parameterType="hashmap" >
+ 
+	   	select
+			a.order_id orderId,
+	
+			a.goods_name goodsName,
+			a.product_amt productAmt,
+			a.finance_period financePeriod,
+			a.total_price totalPrice,
+			a.contract contract,
+		
+			a.start_pay_amt startPayAmt,
+			a.people_type peopleType,
+			a.paytime paytime,
+			a.state state,
+			a.batch_id batchId,
+			a.stu_id stuId,
+			a.umm_truename ummTruename,
+			a.paid_period paidPeriod,
+			a.tongdun_res tongdunRes,
+			a.needmoney needmoney,
+			a.service_money serviceMoney,
+			a.ensure_money ensureMoney,
+			a.loan_money loanMoney,
+			a.store_id storeId,
+			a.irr irr,
+			
+			a.td_score tdScore,
+			a.quota quota,
+			a.level level,
+		
+			stu.name name,
+			stu.sex sex,
+			stu.age age,
+			stu.idcard_birthday idcardBirthday,
+			stu.id_card idCard,
+			stu.nation nation,
+			stu.mobile mobile,
+			stu.t_univs_name tUnivsName,
+			stu.t_univs_grade tUnivsGrade,
+			stu.t_univs_room tUnivsRoom,
+			stu.t_univs_finishtime tUnivsFinishtime
+			
+			
+			from
+			order_info a
+		LEFT JOIN stu_info stu ON a.stu_id = stu.stu_id
+		where 1 = 1 
+		<if test="state!=null and state!= ''">
+			and a.state = #{state} 
+		</if>
+	   
+	   	<if test="batchId!=null and batchId!= ''">
+	   		and	a.batch_id= #{batchId}
+	   	</if>
+	
+	   	<if test="orderId!=null and orderId!= ''">
+	   		and a.order_id in
+	   		 <foreach item="item" index="index" collection="orderId" open="(" separator="," close=")">  
+	 			 #{item}  
+			 </foreach>
+	   	</if>
+	   	   	<if test="storeId!=null and storeId!= ''">
+	   		and	a.store_id= #{storeId}
+	   	</if>
+	   	<if test="stuId!=null and stuId!= ''">
+	   		and	a.stu_id= #{stuId}
+	   	</if>
+	   	 <if test="orderBy =='desc'">
+		 ORDER BY ${orderByName} desc
+		</if>
+		<if test="orderBy =='asc'">
+		 ORDER BY ${orderByName} asc
+		</if>
+  
+   
+	
+	  </select>
+  
+  
+  
+  <insert id="orderCheckCatchInsert" parameterType="hashmap" >
+	 INSERT INTO order_check_catch (
+		orderId,
+		goodsName,
+		productAmt,
+		financePeriod,
+		totalPrice,
+		contract,
+		startPayAmt,
+		peopleType,
+		paytime,
+		state,
+		batchId,
+		stuId,
+		ummTruename,
+		paidPeriod,
+		tongdunRes,
+		needmoney,
+		serviceMoney,
+		ensureMoney,
+		loanMoney,
+		storeId,
+		NAME,
+		sex,
+		age,
+		idcardBirthday,
+		idCard,
+		nation,
+		mobile,
+		tUnivsName,
+		tUnivsGrade,
+		tUnivsRoom,
+		tUnivsFinishtime,
+		tdScore,
+		quota,
+		level
+	) SELECT
+		a.order_id orderId,
+		a.goods_name goodsName,
+		a.product_amt productAmt,
+		a.finance_period financePeriod,
+		a.total_price totalPrice,
+		a.contract contract,
+		a.start_pay_amt startPayAmt,
+		a.people_type peopleType,
+		a.paytime paytime,
+		a.state state,
+		a.batch_id batchId,
+		a.stu_id stuId,
+		a.umm_truename ummTruename,
+		a.paid_period paidPeriod,
+		a.tongdun_res tongdunRes,
+		a.needmoney needmoney,
+		a.service_money serviceMoney,
+		a.ensure_money ensureMoney,
+		a.loan_money loanMoney,
+		a.store_id storeId,
+		stu. NAME NAME,
+		stu.sex sex,
+		stu.age age,
+		stu.idcard_birthday idcardBirthday,
+		stu.id_card idCard,
+		stu.nation nation,
+		stu.mobile mobile,
+		stu.t_univs_name tUnivsName,
+		stu.t_univs_grade tUnivsGrade,
+		stu.t_univs_room tUnivsRoom,
+		stu.t_univs_finishtime tUnivsFinishtime,
+		a.td_score tdScore,
+			a.quota quota,
+			a.level level
+	FROM
+		order_info a
+	LEFT JOIN stu_info stu ON a.stu_id = stu.stu_id
+	WHERE	
+	1 = 1
+	<if test="batchId!=null and batchId!= ''">
+	   		and	a.batch_id= #{batchId}
+	</if> 
+	   	
+</insert>
+   <select id="selectOrderCheckCatch" resultType="hashmap" parameterType="hashmap" >
+  
+  		select 	
+  		orderId,
+		goodsName,
+		productAmt,
+		financePeriod,
+		totalPrice,
+		contract,
+		startPayAmt,
+		peopleType,
+		paytime,
+		state,
+		batchId,
+		stuId,
+		ummTruename,
+		paidPeriod,
+		tongdunRes,
+		needmoney,
+		serviceMoney,
+		ensureMoney,
+		loanMoney,
+		storeId,
+		NAME,
+		sex,
+		age,
+		idcardBirthday,
+		idCard,
+		nation,
+		mobile,
+		tUnivsName,
+		tUnivsGrade,
+		tUnivsRoom,
+		tUnivsFinishtime,
+		tdScore,
+		quota,
+		level
+   		from order_check_catch
+   		where 1=1
+   		
+   		<if test="orderId!=null and orderId!= ''">and orderId LIKE CONCAT(CONCAT('%', #{orderId}),'%')</if> 
+		<if test="goodsName!=null and goodsName!= ''">and goodsName LIKE CONCAT(CONCAT('%', #{goodsName}),'%')</if> 
+		<if test="productAmt!=null and productAmt!= ''">and productAmt LIKE CONCAT(CONCAT('%', #{productAmt}),'%')</if> 
+		<if test="financePeriod!=null and financePeriod!= ''">and financePeriod LIKE CONCAT(CONCAT('%', #{financePeriod}),'%')</if> 
+		<if test="totalPrice!=null and totalPrice!= ''">and totalPrice LIKE CONCAT(CONCAT('%', #{totalPrice}),'%')</if> 
+		<if test="contract!=null and contract!= ''">and contract LIKE CONCAT(CONCAT('%', #{contract}),'%')</if> 
+		<if test="startPayAmt!=null and startPayAmt!= ''">and startPayAmt LIKE CONCAT(CONCAT('%', #{startPayAmt}),'%')</if> 
+		<if test="peopleType!=null and peopleType!= ''">and peopleType LIKE CONCAT(CONCAT('%', #{peopleType}),'%')</if> 
+		<if test="paytime!=null and paytime!= ''">and paytime LIKE CONCAT(CONCAT('%', #{paytime}),'%')</if> 
+		<if test="state!=null and state!= ''">and state LIKE CONCAT(CONCAT('%', #{state}),'%')</if> 
+		<if test="batchId!=null and batchId!= ''">and batchId LIKE CONCAT(CONCAT('%', #{batchId}),'%')</if> 
+		<if test="stuId!=null and stuId!= ''">and stuId LIKE CONCAT(CONCAT('%', #{stuId}),'%')</if> 
+		<if test="ummTruename!=null and ummTruename!= ''">and ummTruename LIKE CONCAT(CONCAT('%', #{ummTruename}),'%')</if> 
+		<if test="paidPeriod!=null and paidPeriod!= ''">and paidPeriod LIKE CONCAT(CONCAT('%', #{paidPeriod}),'%')</if> 
+		<if test="tongdunRes!=null and tongdunRes!= ''">and tongdunRes LIKE CONCAT(CONCAT('%', #{tongdunRes}),'%')</if> 
+		<if test="needmoney!=null and needmoney!= ''">and needmoney LIKE CONCAT(CONCAT('%', #{needmoney}),'%')</if> 
+		<if test="serviceMoney!=null and serviceMoney!= ''">and serviceMoney LIKE CONCAT(CONCAT('%', #{serviceMoney}),'%')</if> 
+		<if test="ensureMoney!=null and ensureMoney!= ''">and ensureMoney LIKE CONCAT(CONCAT('%', #{ensureMoney}),'%')</if> 
+		<if test="loanMoney!=null and loanMoney!= ''">and loanMoney LIKE CONCAT(CONCAT('%', #{loanMoney}),'%')</if> 
+		<if test="storeId!=null and storeId!= ''">and storeId LIKE CONCAT(CONCAT('%', #{storeId}),'%')</if> 
+		<if test="NAME!=null and NAME!= ''">and NAME LIKE CONCAT(CONCAT('%', #{NAME}),'%')</if> 
+		<if test="sex!=null and sex!= ''">and sex LIKE CONCAT(CONCAT('%', #{sex}),'%')</if> 
+		<if test="age!=null and age!= ''">and age LIKE CONCAT(CONCAT('%', #{age}),'%')</if> 
+		
+		<if test="idcardBirthday!=null and idcardBirthday!= ''">and idcardBirthday LIKE CONCAT(CONCAT('%', #{idcardBirthday}),'%')</if> 
+		<if test="idCard!=null and idCard!= ''">and idCard LIKE CONCAT(CONCAT('%', #{idCard}),'%')</if> 
+		<if  test="nation =='汉族'">
+		and nation like '汉'		
+		</if> 
+		<if test="nation =='非汉族'">		
+		and nation not like '汉'
+		</if> 
+		<if test="mobile!=null and mobile!= ''">and mobile LIKE CONCAT(CONCAT('%', #{mobile}),'%')</if> 
+		<if test="tUnivsName!=null and tUnivsName!= ''">and tUnivsName LIKE CONCAT(CONCAT('%', #{tUnivsName}),'%')</if> 
+		<if test="tUnivsGrade!=null and tUnivsGrade!= ''">and tUnivsGrade LIKE CONCAT(CONCAT('%', #{tUnivsGrade}),'%')</if> 
+		<if test="tUnivsRoom!=null and tUnivsRoom!= ''">and tUnivsRoom LIKE CONCAT(CONCAT('%', #{tUnivsRoom}),'%')</if> 
+		<if test="tUnivsFinishtime!=null and tUnivsFinishtime!= ''">and tUnivsFinishtime LIKE CONCAT(CONCAT('%', #{tUnivsFinishtime}),'%')</if> 
+		<if test="ageBegin!=null and ageBegin!= ''">and age <![CDATA[ >= ]]> #{ageBegin}   </if> 
+		<if test="ageEnd!=null and ageEnd!= ''">and age <![CDATA[ <= ]]> #{ageEnd}   </if> 
+		<if test="needMoneyBegin!=null and needMoneyBegin!= ''">and CONVERT (needmoney , DECIMAL) <![CDATA[ >= ]]>CONVERT (#{needMoneyBegin} , DECIMAL)   </if> 
+		<if test="needMoneyEnd!=null and needMoneyEnd!= ''">and CONVERT (needmoney , DECIMAL) <![CDATA[ <= ]]>CONVERT (#{needMoneyEnd} , DECIMAL)  </if> 
+  </select>
+  
+  
+  
+  
+  <select id="getMaxContratNo" resultType="string" parameterType="hashmap" >
+  	select MAX(contract_no)
+		from 
+		best_sign_status
+		WHERE 1=1
+	 	<if test="contractNo!=null and contractNo!= ''">
+   		 and contract_no LIKE CONCAT(CONCAT('%', #{contractNo}),'%')
+  	 	</if>
+  </select>
+  
+    <select id="getRejOrderSum" resultType="hashmap" parameterType="hashmap" >
+  	select sum(needmoney) as sumNeedMoney,
+  			count(*) as sumCount
+		from 
+		order_info
+		WHERE 1=1
+		and state ='0'
+	 	<if test="batchId!=null and batchId!= ''">
+   		 and batch_id LIKE CONCAT(CONCAT('%', #{batchId}),'%')
+  	 	</if>
+  </select>
+      <select id="getRecOrderSum" resultType="hashmap" parameterType="hashmap" >
+  	  	select sum(needmoney) as sumNeedMoney,
+  			count(*) as sumCount
+		from 
+		order_info
+		WHERE 1=1
+		and state !='0'
+	 	<if test="batchId!=null and batchId!= ''">
+   		 and batch_id LIKE #{batchId}
+  	 	</if>  
+  </select>
+        <select id="getRecOrderAndPeopleType" resultType="hashmap" parameterType="hashmap" >
+  	  	select
+  	  	 order_id orderId ,
+  	  	 people_type peopleType, needmoney
+		from 
+		order_info
+		WHERE 1=1
+		and state !='0'
+	 	<if test="batchId!=null and batchId!= ''">
+   		 and batch_id LIKE #{batchId}
+  	 	</if>  
+  </select>
+  <select id="getRecOrderCatchSum" resultType="hashmap" parameterType="hashmap" >
+  	  	select sum(needmoney) as sumNeedMoney,
+  			count(*) as sumCount
+		from 
+		order_check_catch
+		WHERE 1=1
+		and state ='1'
+ 		<if test="batchId!=null and batchId!= ''">
+   		 and batchId LIKE #{batchId}
+  	 	</if>
+  </select>
+     <select id="getRejOrderCatchSum" resultType="hashmap" parameterType="hashmap" >
+  	select sum(needmoney) as sumNeedMoney,
+  			count(*) as sumCount
+		from 
+		order_check_catch
+		WHERE 1=1
+		and state ='0'
+	 	<if test="batchId!=null and batchId!= ''">
+   		 and batchId LIKE #{batchId}
+  	 	</if>
+  </select>
+    <update id="updateOrderInfoIrr" parameterType="hashmap" >
+  update order_info set irr=#{irr} where order_id=#{orderId}
+  </update>
+</mapper>

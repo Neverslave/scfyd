@@ -1,0 +1,106 @@
+package com.ut.scf.service.test.project;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.ContextLoaderListener;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.pojo.auto.GuaranteeInfo;
+import com.ut.scf.reqbean.project.RefGetFinanceReqbean;
+import com.ut.scf.reqbean.project.RefundDepositReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IRefundDepositService;
+import com.ut.scf.web.controller.project.refundDepositController;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class RefundDepositServiceTest {
+	private static final Logger log = LoggerFactory
+			.getLogger(refundDepositController.class);
+	
+	@Resource
+	private IRefundDepositService refundDepositService;
+	
+	@Before
+	public void getContext(){
+		MockServletContext sc = new MockServletContext("");
+		sc.addInitParameter(ContextLoader.CONFIG_LOCATION_PARAM, "/spring-mybatis-test.xml");
+		ServletContextListener listener = new ContextLoaderListener();
+		ServletContextEvent event = new ServletContextEvent(sc);
+		listener.contextInitialized(event);
+	}
+	
+	@Test
+	public void getRefundDepositInfoTest(){
+		log.info("=============================getRefundDepositInfoTest start=============================");
+		try {
+
+			RefGetFinanceReqbean reqBean = new RefGetFinanceReqbean();
+			
+			BaseRespBean respBean = new BaseRespBean();
+			PageInfoBean page = new PageInfoBean();
+			page.setPageNumber(reqBean.getPageNumber());
+			page.setPageSize(reqBean.getPageSize());
+			Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+			paramMap.put("corpId", "2c99848b5ca4152c3a57a417e1e70002");
+			respBean = refundDepositService.getRefundDepositInfo(paramMap, page);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================getRefundDepositInfoTest end=============================");
+	}
+	
+	@Test
+	public void updateRefundDepositInfoTest(){
+		log.info("=============================updateRefundDepositInfoTest start=============================");
+		try {
+
+			GuaranteeInfo guaranteeInfo = new GuaranteeInfo();
+			guaranteeInfo.setFinanceId("2c9983075c422c1077c1422c10bc0000");
+			guaranteeInfo.setGuaranteePayHis("2017-05-28，实缴保证金 222.22 元");
+			
+			BaseRespBean respBean = new BaseRespBean();
+//			获取当前用户
+			respBean = refundDepositService.updateRefundDepositInfo(guaranteeInfo);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================updateRefundDepositInfoTest end=============================");
+	}
+	
+	@Test
+	public void startProcessTest(){
+		log.info("=============================startProcessTest start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			RefundDepositReqBean reqBean = new RefundDepositReqBean();
+			reqBean.setUserId("jxs");
+			reqBean.setActivitiKey("refundDeposit");
+			JSONObject reqBeanStr = new JSONObject(reqBean);
+			respBean = refundDepositService.startProcess(reqBeanStr);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		log.info("=============================startProcessTest end=============================");
+	}
+}

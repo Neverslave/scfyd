@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/scfyd.iml" filepath="$PROJECT_DIR$/.idea/scfyd.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scfyd_main.iml" filepath="$PROJECT_DIR$/.idea/modules/scfyd_main.iml" group="scfyd" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scfyd_test.iml" filepath="$PROJECT_DIR$/.idea/modules/scfyd_test.iml" group="scfyd" />
+    </modules>
+  </component>
+</project>

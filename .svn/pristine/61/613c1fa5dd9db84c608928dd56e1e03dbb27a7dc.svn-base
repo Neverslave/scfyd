@@ -1,0 +1,93 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.TfLoanInfoMapper;
+import com.ut.scf.dao.auto.TfProjectInfoMapper;
+import com.ut.scf.pojo.auto.TfLoanInfo;
+import com.ut.scf.pojo.auto.TfLoanInfoExample;
+import com.ut.scf.pojo.auto.TfProjectInfo;
+import com.ut.scf.service.tradfact.IProjectCreditService;
+import com.ut.scf.web.controller.pub.LoanInfoManagerController;
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.dao.auto.TfRepayInfoMapper;
+import com.ut.scf.dao.tradfact.IRepayRecordDao;
+import com.ut.scf.pojo.auto.TfRepayInfo;
+import com.ut.scf.reqbean.tradfact.RepayRecordBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.tradfact.IRepayRecordService;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service("repayRecordService")
+public class RepayRecordServiceImpl implements IRepayRecordService {
+
+    @Resource
+    private IRepayRecordDao repayRecordDao;
+
+    @Resource
+    private TfRepayInfoMapper tfRepayInfoMapper;
+
+    @Resource
+    private TfLoanInfoMapper loanInfoMapper;
+
+    @Resource
+    private IProjectCreditService projectCreditService;
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public BaseRespBean addRepayInfo(RepayRecordBean reqBean) {
+        BaseRespBean respBean = new BaseRespBean();
+        TfRepayInfo tfRepayInfo = new TfRepayInfo();
+        String loanId = reqBean.getLoanId();
+        BigDecimal restInterest = reqBean.getRestInterest();
+        BigDecimal restPrinciple = reqBean.getRestPrinciple();
+        BigDecimal thisPriciple = reqBean.getThisRepayPrinciple();
+        BigDecimal thisInterest = reqBean.getThisRepayInterest();
+        tfRepayInfo.setId(ScfUUID.generate());
+        tfRepayInfo.setAccountName(reqBean.getAccountName());
+        tfRepayInfo.setAccountNo(reqBean.getAccountNo());
+        tfRepayInfo.setBankName(reqBean.getBankName());
+        tfRepayInfo.setBankNo(reqBean.getBankNo());
+        tfRepayInfo.setCeateTime(new Date());
+        tfRepayInfo.setLoanId(loanId);
+        tfRepayInfo.setThisRepayInterest(thisInterest);
+        tfRepayInfo.setThisRepayPrinciple(thisPriciple);
+        tfRepayInfoMapper.insert(tfRepayInfo);
+
+        TfLoanInfo loanInfo = new TfLoanInfo();
+        TfLoanInfoExample example = new TfLoanInfoExample();
+        TfLoanInfoExample.Criteria criteria = example.createCriteria();
+        criteria.andLoanNoEqualTo(tfRepayInfo.getLoanId());
+        if (restInterest.compareTo(thisInterest) != 1 && restPrinciple.compareTo(thisPriciple) != 1) {
+            loanInfo.setRepayStatus("2");
+        } else {
+            loanInfo.setRepayStatus("1");
+        }
+        loanInfoMapper.updateByExampleSelective(loanInfo, example);
+        projectCreditService.unfreezeCredit(reqBean.getProjectId(), reqBean.getLoanId(), thisPriciple);
+        return respBean;
+    }
+
+    @Override
+    public BaseRespBean getLoanInfoList(Map<String, Object> paramMap,
+                                        PageInfoBean page) {
+        List<Map<String, Object>> list = repayRecordDao.getLoanInfoList(paramMap, page);
+        PageRespBean respBean = new PageRespBean();
+        respBean.setPages(page.getTotalPage());
+        respBean.setRecords(page.getTotalRecord());
+        respBean.setDataList(list);
+        return respBean;
+
+    }
+
+}

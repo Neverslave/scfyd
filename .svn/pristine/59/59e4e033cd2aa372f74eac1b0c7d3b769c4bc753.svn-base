@@ -1,0 +1,548 @@
+<form class="form-horizontal" role="form" id="detailForm" data-toggle="validator">
+ 	<input type="hidden" id="agree" name="agree" /> 
+	<input type="hidden" id="isEdit" name="isEdit" /> 
+	<input type="hidden" id="isEdit2" name="isEdit2" />
+	<input type="hidden" id="orginName" name="orginName" />
+	<input type="hidden" id="num" name="num" >
+	<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;text-align: center;">
+						<li class="tablename">
+							<b id="corpNameTitle" name="corpNameTitle" readonly="true" style="font-size: 20px;"></b>
+						</li>
+					
+					</ol>
+				</div>
+				<fieldset id='field'>
+				<div class="form-group">
+				<div class="form-group col-sm-8">
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="fixedPhone">联系方式(座机):</label>
+						<div class="col-sm-3">
+							<input type="text" name="fixedPhone" id="fixedPhone" class="form-control"  >
+							<input type="hidden" id="sysType" name ="sysType" value="4">
+							<input type="hidden" id="corpId" name="corpId" />
+							<input type="hidden" id="agencyNum" name="agencyNum" />
+							<input type="hidden" id="corpName" name="corpName" />
+<!-- 							<input type="hidden" name="maxCreditAmount" class="form-control" id="maxCreditAmount"> -->
+						</div>
+						<label class="col-sm-3 control-label" for="email">邮箱</label>
+						<div class="col-sm-3">
+							<input type="text" name="email" id="email" class="form-control" >
+						</div>
+						
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="companyUrl">网址:</label>
+						<div class="col-sm-3">
+							<input type="text" name="companyUrl" id="companyUrl" class="form-control"  >
+						</div>
+						<label class="col-sm-3 control-label" for="officeAddress">联系地址:</label>
+						<div class="col-sm-3">
+							<input type="text" name="officeAddress" id="officeAddress" class="form-control" >
+						</div>
+					
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="businessRegistrationNumber">工商注册号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="businessRegistrationNumber"  id="businessRegistrationNumber" class="form-control"  >
+						</div>
+						<label class="col-sm-3 control-label" for="orgnNum">组织机构代码:</label>
+						<div class="col-sm-3">
+							<input type="text" name="orgnNum" id="orgnNum" class="form-control" >
+						</div>
+					
+					</div>
+					<div class="form-group">
+					
+						<label class="col-sm-3 control-label" for="regAddress">注册地址:</label>
+						<div class="col-sm-3">
+							<input type="text" name="regAddress" class="form-control"  >
+						</div>
+							<label class="col-sm-3 control-label" for="busiScope">经营范围:</label>
+						<div class="col-sm-3">
+							<input type="text" name="busiScope" class="form-control"  >
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="uniformCreditCode">统一信用代码:</label>
+						<div class="col-sm-3">
+							<input type="text" name="uniformCreditCode" class="form-control"  >
+						</div>
+						<label class="col-sm-3 control-label" for="corpType"><span class="required">*</span>公司类型</label>
+						<div class="col-sm-3">
+							<select id="corpType" name=corpType class="form-control">
+								<option value="国有企业">国有企业</option>
+							     <option value="外资企业">外资企业</option>
+							     <option value="民营企业">民营企业</option>
+							     <option value="上市企业">上市企业</option>
+								<option value="5">其他</option>
+							</select>
+						</div>
+					
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 control-label"  for="area"><span class="required">*</span>所属区域</label>
+			          	<div class="col-sm-3">
+			            	<select id="area" name="area" class="form-control" onchange="changeArea(this.value);">
+			            		<option value=""></option>
+			                	<option value="0">东区事业部</option>
+			                	<option value="1">西区事业部</option>
+			                	<option value="2">南区事业部</option>
+			                	<option value="3">北区事业部</option>
+			                </select>
+			          	</div>
+			          	<label class="col-sm-3 control-label"  for="represent"><span class="required">*</span>所属商代处</label>
+			          	<div class="col-sm-3">
+			            	<select id="represent" name="represent" class="form-control">
+			                </select>
+			          	</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="taxpayerRegistrationNumber">纳税人识别号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="taxpayerRegistrationNumber" class="form-control"  >
+						</div>
+						<label class="col-sm-3 control-label" for="operatingPeriod">营业期限:</label>
+						<div class="col-sm-3">
+							<input type="text" name="operatingPeriod" class="form-control" >
+						</div>
+					</div>
+				
+			
+				</div>
+				<div class="form-group col-sm-3">
+				<div class="form-group">
+					<div class="col-sm-4">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path1"  src="../images/add-pic.png" onclick="$('#cp1').click();">
+							<input style="display: none;" id="cp1" name="file" type="file" >
+							<input type="hidden" name="companyPicturePath1" id="companyPicturePath1">
+							<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink1" onclick="showImg(1)" style="margin-left: 20px;">预览</button>
+							</div>
+						</div>
+						<div class="col-sm-4">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path2"  src="../images/add-pic.png" onclick="$('#cp2').click();">
+							<input style="display: none;" id="cp2" name="file" type="file" >
+							<input type="hidden" name="companyPicturePath2" id="companyPicturePath2">
+								<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink2" onclick="showImg(2)" style="margin-left: 20px;">预览</button>
+							</div>
+						</div>
+						<div class="col-sm-4">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path3"  src="../images/add-pic.png" onclick="$('#cp3').click();">
+							<input style="display: none;" id="cp3" name="file" type="file" >
+							<input type="hidden" name="companyPicturePath3" id="companyPicturePath3">
+								<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink3" onclick="showImg(3)" style="margin-left: 20px;">预览</button>
+							</div>
+						</div>
+				</div>
+				<div class="form-group">
+				
+							<div class="col-sm-4">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path4"  src="../images/add-pic.png" onclick="$('#cp4').click();">
+							<input style="display: none;" id="cp4" name="file" type="file" >
+							<input type="hidden" name="companyPicturePath4" id="companyPicturePath4">
+								<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink4" onclick="showImg(4)" style="margin-left: 20px;">预览</button>
+							</div>
+						</div>
+						<div class="col-sm-4">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path5"  src="../images/add-pic.png" onclick="$('#cp5').click();">
+							<input style="display: none;" id="cp5" name="file" type="file" >
+							<input type="hidden" name="companyPicturePath5" id="companyPicturePath5">
+									<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink5" onclick="showImg(5)" style="margin-left: 20px;">预览</button>
+							</div>
+						</div>
+						<div class="col-sm-4">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path6"  src="../images/add-pic.png" onclick="$('#cp6').click();">
+							<input style="display: none;" id="cp6" name="file" type="file" >
+							<input type="hidden" name="companyPicturePath6" id="companyPicturePath6">
+								<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink6" onclick="showImg(6)" style="margin-left: 20px;">预览</button>
+							</div>
+						</div>
+				</div>
+				
+						
+				</div>
+				
+				 </div>	
+				</fieldset>
+			</div>
+		</div>
+	</section>
+	<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">主要人员</li>
+					</ol>
+				</div>
+				<fieldset id='field'>
+				 	<div class="form-group">
+						<label class="col-sm-2 control-label" for="legalPerson">法人:</label>
+						<div class="col-sm-1">
+							<input type="text" name="legalPerson" class="form-control"  >
+						</div>
+						<label class="col-sm-1 control-label" for="legalIdNumber">身份证号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="legalIdNumber" class="form-control" >
+						</div>
+						<label class="col-sm-1 control-label" for="legalPhoneNumber">联系方式:</label>
+						<div class="col-sm-3">
+							<input type="text" name="legalPhoneNumber" class="form-control" >
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="controlPerson">实际控制人:</label>
+						<div class="col-sm-1">
+							<input type="text" name="controlPerson" class="form-control"  >
+						</div>
+						<label class="col-sm-1 control-label" for="controlIdNumber">身份证号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="controlIdNumber" class="form-control" >
+						</div>
+						<label class="col-sm-1 control-label" for="controlPhoneNumber">联系方式:</label>
+						<div class="col-sm-3">
+							<input type="text" name="controlPhoneNumber" class="form-control" >
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="financePerson">财务:</label>
+						<div class="col-sm-1">
+							<input type="text" name="financePerson" class="form-control"  >
+						</div>
+						<label class="col-sm-1 control-label" for="financeIdNumber">身份证号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="financeIdNumber" class="form-control" >
+						</div>
+						<label class="col-sm-1 control-label" for="financePhoneNumber">联系方式:</label>
+						<div class="col-sm-3">
+							<input type="text" name="financePhoneNumber" class="form-control" >
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="messenger">信息员:</label>
+						<div class="col-sm-1">
+							<input type="text" name="messenger" class="form-control"  >
+						</div>
+						<label class="col-sm-1 control-label" for="messengerIdNumber">身份证号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="messengerIdNumber" class="form-control" >
+						</div>
+						<label class="col-sm-1 control-label" for="messengerPhoneNumber">联系方式:</label>
+						<div class="col-sm-3">
+							<input type="text" name="messengerPhoneNumber" class="form-control" >
+						</div>
+					</div>
+				</fieldset>
+			</div>
+		</div>
+	</section>
+	<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">股东信息</li>
+					</ol>
+				</div>
+				<fieldset id='field'>
+					<div class="whiteBgDiv row">
+				 	<!-- 添加股东信息按钮 -->
+					<div> 
+				       <button id="btn_add" type="button" class="btn btn-default add" onclick="addFun(1)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加</button> 
+				     </div> 
+					<!-- 股东信息 -->
+					 <table id="shareHolderInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table> 
+				</fieldset>
+			</div>
+		</div>
+	</section>
+	<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">附件信息</li>
+					</ol>
+				</div>
+				
+		<div class="form-group">
+					<label class="col-sm-1 control-label" for="businessLicensePath">营业执照:</label>
+					<div class="col-sm-2">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="businessLicensePath2" id="businessLicensePath2" src="../images/add-pic.png" onclick="$('#bl').click();">
+						<input style="display: none;" id="bl" name="file" type="file" >
+						<input type="hidden" name="businessLicensePath" id="businessLicensePath">
+							<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink7" onclick="showImg(7)" style="margin-left: 30px;">预览</button>
+							</div>
+					</div>
+					<label class="col-sm-1 control-label" for="permissionAccountPath" style="width: 120px;">开户许可证:</label>
+					<div class="col-sm-2">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="permissionAccountPath2" id="permissionAccountPath2" src="../images/add-pic.png" onclick="$('#pa').click();">
+						<input style="display: none;" id="pa" name="file" type="file" >
+						<input type="hidden" name="permissionAccountPath" id="permissionAccountPath">
+							<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink8" onclick="showImg(8)" style="margin-left: 30px;">预览</button>
+							</div>
+						
+					</div>
+					<label class="col-sm-1 control-label" style="width: 100px;">法人身份证正反面:</label>
+					<div class="col-sm-2">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;"  id="legalIdNumberPath11" src="../images/add-pic.png"  onclick="$('#lin1').click();">
+						<input style="display: none;" id="lin1" name="file" type="file" >
+						<input type="hidden" name="legalIdNumberPath1" id="legalIdNumberPath1">
+							<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink9" onclick="showImg(9)" style="margin-left: 30px;">预览</button>
+							</div>
+					</div>
+					<div class="col-sm-2">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;"  id="legalIdNumberPath22" src="../images/add-pic.png" onclick="$('#lin2').click();">
+						<input style="display: none;" id="lin2" name="file" type="file" >
+						<input type="hidden" name="legalIdNumberPath2" id="legalIdNumberPath2">
+							<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink10" onclick="showImg(10)" style="margin-left: 30px;">预览</button>
+							</div>
+					</div>
+				</div>
+				
+				
+				<div id=fileUpload>
+					<input type="hidden" id="num" value="0">
+<!-- 					<a id="btn_upload" style="position:relative" class="btn btn-default add">上传 -->
+<!--                   		<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="file" name="file" type="file" > -->
+<!--                   	</a> -->
+					<button id="btn_contract" type="button" class="btn btn-default add" onclick="addFun(3)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>上传</button>
+				</div>
+				<table id="attachInfoTable" class="table table-bordered"
+					cellspacing="0" width="100%">
+				</table>
+			</div>
+		</div>
+	</section>
+	<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">合同信息</li>
+					</ol>
+				</div>
+				<fieldset >
+					<div class="whiteBgDiv row">
+				 	<!-- 添加合同信息按钮 -->
+					<div> 
+				       <button id="addContractInfo" type="button" class="btn btn-default add" onclick="addFun(2)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加</button> 
+				     </div> 
+					<!-- 合同信息 -->
+					 <table id="contractInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table> 
+				</fieldset>
+			
+			</div>
+		</div>
+	</section>
+
+</form>
+ 
+   	    <!--  股东信息模态框 -->
+	    <div class="modal fade" id="shareInfoModal" tabindex="-1" role="dialog"
+				aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+							<h4 class="modal-title" id="addshareInfoModalLabel">添加</h4>
+						</div>
+						<div class="modal-body">
+							<fieldset id='field'>
+							 <form class="form-horizontal" role="form" id="shareInfoForm" data-toggle="validator">
+							 	<div class="form-group">
+									<label class="col-sm-4 control-label" for="shareName"><span class="required">*</span>股东名称</label>
+									<div class="col-sm-6">
+										<input type="text" name="shareName" class="form-control"
+											id="shareName" placeholder="股东名称 ">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="shareProportion"><span class="required">*</span>股东持股比例(%)</label>
+									<div class="col-sm-6">
+										<input type="text" name="shareProportion" class="form-control"
+											id="shareProportion" placeholder="股东持股比例(%)">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="registeredCapital">注册资本份额</label>
+									<div class="col-sm-6">
+										<input type="text" name="registeredCapital" class="form-control"
+											id="registeredCapital" placeholder="注册资本份额">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="registeredCapitalProportion"><span class="required">*</span>注册资本占比</label>
+									<div class="col-sm-6">
+										<input type="text" name="registeredCapitalProportion" class="form-control"
+											id="registeredCapitalProportion" placeholder="注册资本占比">
+									</div>
+								</div>
+					         </form>
+							</fieldset>
+						</div>
+						<div class="modal-footer">
+							<div class="form-group">
+							  	<div class="col-sm-2 col-sm-offset-8">
+									<button type="button" class="btn btn-default cancel"
+										data-dismiss="modal">取消
+									</button>
+							  	</div>
+								<div class="col-sm-2">
+									<button type="submit" id="btn_save" class="btn btn-default save"
+										 onclick="saveFun(1);">确定
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div> 
+	   </div> 
+	   
+	   <!--合同信息-->
+	    <div class="modal fade" id="contractInfoModal" tabindex="-1" role="dialog"
+				aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+							<h4 class="modal-title" >添加合同信息</h4>
+						</div>
+						<div class="modal-body">
+							<fieldset id='field'>
+							 <form class="form-horizontal" role="form" id="contractForm" data-toggle="validator">
+							 	<input type="hidden" name="contractid" class="form-control" id="contractid" placeholder="合同id ">
+							 	<div class="form-group">
+									<label class="col-sm-4 control-label" for="contractName"><span class="required">*</span>合同名称</label>
+									<div class="col-sm-6">
+										<input type="text" name="contractName" class="form-control"
+											id="contractName" placeholder="合同名称 ">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="contractNum"><span class="required">*</span>合同编号</label>
+									<div class="col-sm-6">
+										<input type="text" name="contractNum" class="form-control"
+											id="contractNum" placeholder="合同编号">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="contractType">业务类型</label>
+									<div class="col-sm-6">
+										<div class="col-sm-5">
+											<select id="contractType" name=contractType class="form-control">
+												<option value="大宗">大宗</option>
+											     <option value="零售">零售</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="endDate"><span class="required">*</span>合同到期日</label>
+									<div class="col-sm-6">
+										<input type="date" name="endDate" class="form-control" id="endDate" placeholder="合同到期日">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" ><span class="required">*</span>选择要上传的pdf文件</label>
+									<div class="col-sm-6">
+										<a id="uploadContractInfo" style="position:relative" class="btn btn-default add">上传
+                    						<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="contractfile" name="file" type="file" >
+                    					</a>
+                    					<input type="text" name="fileName" class="form-control" id="fileName" >
+                    					<input type="hidden" id="fileUrl" name="fileUrl">
+									</div>
+								</div>
+					         </form>
+							</fieldset>
+						</div>
+						<div class="modal-footer">
+							<div class="form-group">
+							  	<div class="col-sm-2 col-sm-offset-8">
+									<button type="button" class="btn btn-default cancel"
+										data-dismiss="modal">取消
+									</button>
+							  	</div>
+								<div class="col-sm-2">
+									<button type="submit" id="saveContract" class="btn btn-default save"
+										 onclick="saveFun(2);">确定
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div> 
+			
+			
+			<!--添加附件-->
+	    	<div class="modal fade" id="fjModal" tabindex="-1" role="dialog" aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+							<h4 class="modal-title" >添加附件</h4>
+						</div>
+						<div class="modal-body">
+							<fieldset id='field'>
+								<form class="form-horizontal" role="form" >
+								 	<div class="form-group">
+										<label class="col-sm-2 control-label" for="uploadType"><span class="required">*</span>附件类型</label>
+										<div class="col-sm-5">
+											<select id="uploadType" name=uploadType class="form-control">
+												<option value="财产/审计报告">财产/审计报告(pdf)</option>
+											     <option value="实际控制人征信报告">实际控制人征信报告(pdf)</option>
+											     <option value="经销商企业征信报告">经销商企业征信报告(pdf)</option>
+											     <option value="实际控制人婚姻证明">实际控制人婚姻证明(jpg)</option>
+											</select>
+										</div>	
+									</div>
+					        	 </form>
+							</fieldset>
+						</div>
+						<div class="modal-footer">
+							<div class="form-group">
+							  	<div class="col-sm-2 col-sm-offset-8">
+									<button type="button" class="btn btn-default cancel"
+										data-dismiss="modal">取消
+									</button>
+							  	</div>
+								<div class="col-sm-2">
+									<a id="btn_upload" style="position:relative" class="btn btn-default add">上传 
+				                  		<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="file" name="file" type="file" >
+				                  	</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div> 
+				<div id="imgPreviewDiv"></div>

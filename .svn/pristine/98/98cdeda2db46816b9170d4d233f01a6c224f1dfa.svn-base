@@ -1,0 +1,14 @@
+package com.ut.scf.service.tradfact;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.pojo.auto.TfNoticeInfo;
+import com.ut.scf.respbean.BaseRespBean;
+
+import java.util.Map;
+
+public interface INoticeService {
+
+	String getMaxNoticeNo();
+
+	void addNotice(TfNoticeInfo noticeInfo);
+}

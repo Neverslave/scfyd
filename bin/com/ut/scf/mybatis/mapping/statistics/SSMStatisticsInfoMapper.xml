@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.statistics.ISSMStatisticsInfoDao" >
+  
+  
+  <select id="findSupRepayInfos" resultType="hashmap" parameterType="hashmap" >
+	SELECT temp.* from (SELECT
+		m.sumRepayInterest sumInterest,
+		m.sumRepayPrincipal sumPrincipal,
+		COALESCE (r.sumRepayPrincipal,0) sumRepayPrincipal,
+		COALESCE (r.sumRepayInterest,0) sumRepayInterest,
+		m.`MONTH` month,
+		m.sumRepayInterest+m.sumRepayPrincipal allMoney,
+		COALESCE (r.sumRepayPrincipal,0)+COALESCE (r.sumRepayInterest,0) moneyRepayAll,
+		(m.sumRepayInterest+m.sumRepayPrincipal)-(COALESCE (r.sumRepayPrincipal,0)+COALESCE (r.sumRepayInterest,0)) moneyOverdue,
+		round(((m.sumRepayInterest+m.sumRepayPrincipal)-(COALESCE(r.sumRepayPrincipal,0)+COALESCE(r.sumRepayInterest,0)))/(m.sumRepayInterest+m.sumRepayPrincipal)*100,2) rate2
+	FROM
+		v_sup_money m
+	LEFT JOIN v_sup_repay r ON m.`MONTH` = r.`MONTH`
+	where 1=1
+	<if test="month !=null and month !=''">
+		and m.`MONTH` = #{month}
+	</if>
+	ORDER BY
+		m.`MONTH` DESC) temp
+  </select>
+  
+  <select id="findStuRepayInfos" resultType="hashmap" parameterType="hashmap" >
+  	select temp.* from (SELECT
+		m.current_payable_principal payMAll,
+		m.current_repay_date repayDate,
+		m.periodAll,
+		r.current_payable_principal payMRepay,
+		r.periodRepay,
+		round((m.periodAll-r.periodRepay)/m.periodAll*100,2) rate1,
+		round((m.current_payable_principal-r.current_payable_principal)/m.current_payable_principal*100,2) rate2
+	FROM
+		v_student_money m
+	LEFT JOIN v_stu_reapay r ON m.`current_repay_date` = r.`current_repay_date`
+	WHERE
+		1=1
+		<choose>
+			<when test="currentRepayDate !=null and currentRepayDate !=''">
+				and DATE_FORMAT(m.current_repay_date,'%Y-%m-%d') <![CDATA[<=]]> #{currentRepayDate}
+			</when>
+			<otherwise>
+				AND m.current_repay_date <![CDATA[<=]]> NOW()
+			</otherwise>
+		</choose>	
+	ORDER BY
+		m.current_repay_date DESC) temp
+  </select>
+  
+</mapper>

@@ -1,0 +1,388 @@
+ <form class="form-horizontal" role="form" id="detailHisForm" data-toggle="validator">
+ 		<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+							<li class="tablename">基本信息</li>					
+					</ol>
+				</div>
+				<fieldset id='field'>
+				<div class="form-group">
+				<div class="form-group">
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="fixedPhone">联系方式(座机)001:</label>
+						<div class="col-sm-3">
+							<input type="text" name="fixedPhone" id="fixedPhone" class="form-control"  >
+							<input type="hidden" id="sysType" name ="sysType" value="4">
+							<input type="hidden" id="corpId" name="corpId" />
+							<input type="hidden" id="agencyNum" name="agencyNum" />
+<!-- 							<input type="hidden" name="maxCreditAmount" class="form-control" id="maxCreditAmount"> -->
+						</div>
+						<label class="col-sm-2 control-label" for="email">邮箱</label>
+						<div class="col-sm-3">
+							<input type="text" name="email" id="email" class="form-control" >
+						</div>
+						
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="companyUrl">网址:</label>
+						<div class="col-sm-3">
+							<input type="text" name="companyUrl" id="companyUrl" class="form-control"  >
+						</div>
+						<label class="col-sm-2 control-label" for="officeAddress">联系地址:</label>
+						<div class="col-sm-3">
+							<input type="text" name="officeAddress" id="officeAddress" class="form-control" >
+						</div>
+					
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="businessRegistrationNumber">工商注册号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="businessRegistrationNumber"  id="businessRegistrationNumber" class="form-control"  >
+						</div>
+						<label class="col-sm-2 control-label" for="orgnNum">组织机构代码:</label>
+						<div class="col-sm-3">
+							<input type="text" name="orgnNum" id="orgnNum" class="form-control" >
+						</div>
+					
+					</div>
+					<div class="form-group">
+					
+						<label class="col-sm-2 control-label" for="regAddress">注册地址:</label>
+						<div class="col-sm-3">
+							<input type="text" name="regAddress" class="form-control"  >
+						</div>
+							<label class="col-sm-2 control-label" for="busiScope">经营范围:</label>
+						<div class="col-sm-3">
+							<input type="text" name="busiScope" class="form-control"  >
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="uniformCreditCode">统一信用代码:</label>
+						<div class="col-sm-3">
+							<input type="text" name="uniformCreditCode" class="form-control"  >
+						</div>
+						<label class="col-sm-2 control-label" for="corpType"><span class="required">*</span>公司类型</label>
+						<div class="col-sm-3">
+							<select id="corpType" name=corpType class="form-control">
+								<option value="国有企业">国有企业</option>
+							     <option value="外资企业">外资企业</option>
+							     <option value="民营企业">民营企业</option>
+							     <option value="上市企业">上市企业</option>
+								<option value="5">其他</option>
+							</select>
+						</div>
+					
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label"  for="area"><span class="required">*</span>所属区域</label>
+			          	<div class="col-sm-3">
+			            	<select id="area" name="area" class="form-control" onchange="changeArea(this.value);">
+			            		<option value=""></option>
+			                	<option value="0">东区事业部</option>
+			                	<option value="1">西区事业部</option>
+			                	<option value="2">南区事业部</option>
+			                	<option value="3">北区事业部</option>
+			                </select>
+			          	</div>
+			          	<label class="col-sm-2 control-label"  for="represent"><span class="required">*</span>所属商代处</label>
+			          	<div class="col-sm-3">
+			            	<select id="represent" name="represent" class="form-control">
+			                </select>
+			          	</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="taxpayerRegistrationNumber">纳税人识别号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="taxpayerRegistrationNumber" class="form-control"  >
+						</div>
+						<label class="col-sm-2 control-label" for="operatingPeriod">营业期限:</label>
+						<div class="col-sm-3">
+							<input type="text" name="operatingPeriod" class="form-control" >
+						</div>
+					</div>
+				
+				
+				</div>
+				
+				
+				 </div>	
+				</fieldset>
+			</div>
+		</div>
+	</section>
+	
+		<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">公司图片</li>
+					</ol>
+				</div>
+				<fieldset id='field'>
+			<div class="form-group">
+				<div class="form-group">
+				<div class="col-sm-1">
+				</div>
+				<div class="col-sm-3">
+							<img style="width:120px;height:160px;margin-left:15px;"  id="Path1"  src="../../images/add-pic.png" >
+							<a target="_blank" style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="cp1" ></a>
+							<input type="hidden" name="companyPicturePath1" id="companyPicturePath1">
+						</div>
+						<div class="col-sm-3">
+							<img style="width:120px;height:160px;margin-left:15px;" id="Path2" src="../../images/add-pic.png" >
+<a target="_blank" style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="cp2" ></a>`
+							<input type="hidden" name="companyPicturePath2" id="companyPicturePath2">
+						</div>
+						<div class="col-sm-3">
+							<img style="width:120px;height:160px;margin-left:15px;"  id="Path3" src="../../images/add-pic.png" >
+<a target="_blank" style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="cp3" ></a>
+							<input type="hidden" name="companyPicturePath3" id="companyPicturePath3">
+						</div>
+				</div>
+				<div class="form-group">
+				<div class="col-sm-1">
+				</div>
+							<div class="col-sm-3">
+							<img style="width:120px;height:160px;margin-left:15px;" id="Path4" src="../../images/add-pic.png" >
+							<a target="_blank" style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="cp4" ></a>
+							<input type="hidden" name="companyPicturePath4" id="companyPicturePath4">
+						</div>
+						<div class="col-sm-3">
+							<img style="width:120px;height:160px;margin-left:15px;" id="Path5" src="../../images/add-pic.png" >
+<a target="_blank" style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="cp5" ></a>
+							<input type="hidden" name="companyPicturePath5" id="companyPicturePath5">
+						</div>
+						<div class="col-sm-3">
+							<img style="width:120px;height:160px;margin-left:15px;" id="Path6" src="../../images/add-pic.png" >
+<a target="_blank" style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="cp6" ></a>
+							<input type="hidden" name="companyPicturePath6" id="companyPicturePath6">
+						</div>
+				</div>
+				
+						
+				</div>
+				</fieldset>
+			</div>
+		</div>
+	</section>
+	<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">主要人员</li>
+					</ol>
+				</div>
+				<fieldset id='field'>
+				 	<div class="form-group">
+						<label class="col-sm-2 control-label" for="legalPerson">法人:</label>
+						<div class="col-sm-1">
+							<input type="text" name="legalPerson" class="form-control"  >
+						</div>
+						<label class="col-sm-2 control-label" for="legalIdNumber">身份证号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="legalIdNumber" class="form-control" >
+						</div>
+						<label class="col-sm-2 control-label" for="legalPhoneNumber">联系方式:</label>
+						<div class="col-sm-2">
+							<input type="text" name="legalPhoneNumber" class="form-control" >
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="controlPerson">实际控制人:</label>
+						<div class="col-sm-1">
+							<input type="text" name="controlPerson" class="form-control"  >
+						</div>
+						<label class="col-sm-2 control-label" for="controlIdNumber">身份证号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="controlIdNumber" class="form-control" >
+						</div>
+						<label class="col-sm-2 control-label" for="controlPhoneNumber">联系方式:</label>
+						<div class="col-sm-2">
+							<input type="text" name="controlPhoneNumber" class="form-control" >
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="financePerson">财务:</label>
+						<div class="col-sm-1">
+							<input type="text" name="financePerson" class="form-control"  >
+						</div>
+						<label class="col-sm-2 control-label" for="financeIdNumber">身份证号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="financeIdNumber" class="form-control" >
+						</div>
+						<label class="col-sm-2 control-label" for="financePhoneNumber">联系方式:</label>
+						<div class="col-sm-2">
+							<input type="text" name="financePhoneNumber" class="form-control" >
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="messenger">信息员:</label>
+						<div class="col-sm-1">
+							<input type="text" name="messenger" class="form-control"  >
+						</div>
+						<label class="col-sm-2 control-label" for="messengerIdNumber">身份证号:</label>
+						<div class="col-sm-3">
+							<input type="text" name="messengerIdNumber" class="form-control" >
+						</div>
+						<label class="col-sm-2 control-label" for="messengerPhoneNumber">联系方式:</label>
+						<div class="col-sm-2">
+							<input type="text" name="messengerPhoneNumber" class="form-control" >
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label adviceHidden" for="agree">审核结果</label>
+		<div class="col-sm-3 adviceHidden">
+             <select class="form-control" id="agree" name="agree" disabled>
+             	<option value="0">同意</option>
+             	<option value="1">拒绝</option>
+             </select>
+         </div>
+	</div>	</div>	
+	<div class="form-group">
+		<label class="col-sm-2 control-label adviceHidden" for="advice">审核意见</label>
+		<div class="col-sm-3 adviceHidden">
+			<input type="text" name="advice" class="form-control" id="advice" readonly>
+		</div>
+	</div>
+					
+				</fieldset>
+			</div>
+		</div>
+	</section>
+
+	
+	
+	<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">股东信息</li>
+					</ol>
+				</div>
+				<fieldset id='field'>
+					<div class="form-group">
+				
+					<div class="col-sm-5">
+					<div class="col-sm-5">
+					<label class=" form-group control-label" for="businessLicensePath">营业执照:</label>
+					<div class="form-group">
+						<img style="width:120px;height:160px;margin-left:15px;" name="businessLicensePath2" id="businessLicensePath2" src="../images/add-pic.png" >
+<a target="_blank" style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="bl" ></a>`
+						<input type="hidden" name="businessLicensePath" id="businessLicensePath">
+					</div>
+					</div>
+					<div class="col-sm-5">
+					<label class="form-group control-label" for="permissionAccountPath">开户许可证:</label>
+					<div class="form-group">
+						<img style="width:120px;height:160px;margin-left:15px;" name="permissionAccountPath2" id="permissionAccountPath2" src="../images/add-pic.png" >
+<a target="_blank" style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="pa" ></a>`
+						<input type="hidden" name="permissionAccountPath" id="permissionAccountPath">
+						
+					</div>
+					</div>
+					</div>	
+					
+					
+						<div class="col-sm-5">
+					<div class="col-sm-5">
+				<label class="form-group control-label" >法人身份证正反面:</label>
+					<div class="form-group">
+						<img style="width:120px;height:160px;margin-left:15px;"  id="legalIdNumberPath11" src="../images/add-pic.png" >
+						<a target="_blank" style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="lin1" ></a>`
+
+						<input type="hidden" name="legalIdNumberPath1" id="legalIdNumberPath1">
+					</div>
+					</div>
+					<div class="col-sm-5">
+					<label class="form-group control-label" >法人身份证正反面:</label>
+					<div class="form-group">
+						<img style="width:120px;height:160px;margin-left:15px;"  id="legalIdNumberPath22" src="../images/add-pic.png" >
+						<a target="_blank" style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="lin2" ></a>`
+						<input type="hidden" name="legalIdNumberPath2" id="legalIdNumberPath2">
+					</div>
+					</div>
+					</div>	
+					
+					
+							
+				</div>
+	
+				<div class="form-group">
+				 <table id="shareHolderInfoTableHis" class="table" cellspacing="0" width="100%"> 
+		</table> 
+		</div>
+				</fieldset>
+			</div>
+		</div>
+	</section>
+	
+	
+		<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">附件表</li>
+					</ol>
+				</div>
+				<fieldset id='field'>
+					<div class="form-group">
+						<table id="attachInfoTableHis" class="table" cellspacing="0"
+							width="100%">
+						</table>
+					</div>
+				</fieldset>
+			</div>
+		</div>
+	</section>
+	
+	<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">合同表</li>
+					</ol>
+				</div>
+				<fieldset id='field'>
+					<div class="form-group">
+						<table id="contractInfoTable" class="table" cellspacing="0"
+							width="100%">
+						</table>
+					</div>
+				</fieldset>
+			</div>
+		</div>
+	</section>
+	
+
+	
+<!-- 	
+	<div class="nav margin-top-30">
+        <ol class="breadcrumb" style="border: 1px solid #dddddd;border-bottom: 0px;">
+            <li class="active">附件表</li>
+        </ol>
+    </div>		
+	 <table id="attachInfoTableHis" class="table" cellspacing="0" width="100%"> 
+	</table>  -->
+<!-- 	
+	<div class="nav margin-top-30">
+        <ol class="breadcrumb" style="border: 1px solid #dddddd;border-bottom: 0px;">
+            <li class="active">合同表</li>
+        </ol>
+    </div>		
+	 <table id="contractInfoTable" class="table" cellspacing="0" width="100%"> 
+	</table> 
+	
+ </form> -->

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.statistics.IAccountsReceivableDao" >
+  <select id="getARList" resultType="hashmap" parameterType="hashmap" >
+	   select temp.* from (select
+	   c.corp_name corpName,
+	   c.agency_num agencyNum,
+	   li.use_able_credit_amt useAbleCreditAmt,
+	   fi.finance_end_date financeEndDate,
+	   fi.pay_amt payAmt,
+       SUM(ci.car_actual_price) cashCollection,
+       count(ci.finance_id) carNum,
+       (SUM(ci.car_actual_price)/fi.pay_amt)*100 backProportion
+	   from corp_info c
+	   left join limit_info li ON li.corp_id=c.corp_id
+	   left join finance_info fi ON fi.corp_id=c.corp_id
+       left join car_info ci ON ci.finance_id=fi.finance_id
+       where ci.sale_status='1'
+	   	<if test="corpName != null and corpName != ''">
+		    and c.corp_name LIKE CONCAT(CONCAT('%', #{corpName}),'%')
+		</if>
+		<if test="agencyNum != null and agencyNum != ''">
+		    and c.agency_num LIKE CONCAT(CONCAT('%', #{agencyNum}),'%')
+		</if>
+		GROUP BY fi.finance_id
+	    order by c.corp_name) temp
+  </select>
+  <select  id="getCorpCountInMonth" resultType="hashmap" parameterType="hashmap">
+	SELECT
+		count(*) AS corpCount
+	FROM
+		(
+			SELECT
+				corp_id
+			FROM
+				car_info car
+			LEFT JOIN finance_info finance ON car.finance_id = finance.finance_id
+			WHERE
+			 	finance.finance_status != '999'
+			 	AND car.sale_status != '99'
+		  		<if test="cprYear != null and cprYear != ''">
+				AND finance.cpr_year =  #{cprYear}
+				</if>
+				<if test="cprMonth != null and cprMonth != ''">
+				AND finance.cpr_month = #{cprMonth}
+				</if>
+				<if test="ywlxId != null and ywlxId != ''">
+				AND finance.ywlx_id = #{ywlxId}
+				</if>
+			GROUP BY
+				finance.corp_id
+		) corp
+  </select>
+  
+    <select  id="getCorpCarCountPayAmitInMonth" resultType="hashmap" parameterType="hashmap">
+  		SELECT
+			count(*) as carCount,
+			sum(car.car_actual_price) as sumPayAmit
+		FROM
+			car_info car
+		LEFT JOIN finance_info finance ON car.finance_id = finance.finance_id
+		WHERE
+		 	finance.finance_status !=  '999'
+		 	AND car.sale_status != '99'
+		  	<if test="cprYear != null and cprYear != ''">
+			AND finance.cpr_year =  #{cprYear}
+			</if>
+			<if test="cprMonth != null and cprMonth != ''">
+			AND finance.cpr_month = #{cprMonth}
+			</if>
+			<if test="ywlxId != null and ywlxId != ''">
+			AND finance.ywlx_id = #{ywlxId}
+			</if>
+  </select>
+  
+  <select  id="getGuaranteeRestInMonth" resultType="hashmap" parameterType="hashmap">
+  
+		SELECT
+		sum(guarantee.pay_guarantee) as payGuarantee
+		FROM
+			guarantee_history_info guarantee
+		LEFT JOIN finance_info finance ON guarantee.finance_id = finance.finance_id
+		WHERE
+			finance.finance_status !=  '999'
+		  	<if test="cprYear != null and cprYear != ''">
+			AND finance.cpr_year =  #{cprYear}
+			</if>
+			<if test="cprMonth != null and cprMonth != ''">
+			AND finance.cpr_month = #{cprMonth}
+			</if>
+			<if test="ywlxId != null and ywlxId != ''">
+			AND finance.ywlx_id = #{ywlxId}
+			</if>
+  
+  </select>
+   <select  id="getRepayAmitSumInMonth" resultType="hashmap" parameterType="hashmap">
+  		SELECT
+			count(*) as carCount,
+			sum(car.car_actual_price) as sumPayAmit
+		FROM
+			car_info car
+		LEFT JOIN finance_info finance ON car.finance_id = finance.finance_id
+		WHERE
+		 		car.sale_status = '1'
+				AND finance.finance_status != '999'
+				AND car.sale_status != '99'
+		  	<if test="cprYear != null and cprYear != ''">
+			AND finance.cpr_year =  #{cprYear}
+			</if>
+			<if test="cprMonth != null and cprMonth != ''">
+			AND finance.cpr_month = #{cprMonth}
+			</if>
+			<if test="ywlxId != null and ywlxId != ''">
+			AND finance.ywlx_id = #{ywlxId}
+			</if>
+  </select>
+  
+  <select id="getLsWeiShouCarCount" resultType="hashmap" parameterType="hashmap">
+    		SELECT
+			count(*) as weishouCarCount
+		FROM
+			car_info car
+		LEFT JOIN finance_info finance ON car.finance_id = finance.finance_id
+		WHERE
+		 	finance.finance_status != '999'
+		 	AND car.sale_status ='0'
+		  	<if test="cprYear != null and cprYear != ''">
+			AND finance.cpr_year =  #{cprYear}
+			</if>
+			<if test="cprMonth != null and cprMonth != ''">
+			AND finance.cpr_month = #{cprMonth}
+			</if>
+			<if test="ywlxId != null and ywlxId != ''">
+			AND finance.ywlx_id = #{ywlxId}
+			</if>
+  </select>
+  
+</mapper>

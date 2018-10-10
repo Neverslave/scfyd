@@ -1,0 +1,63 @@
+package com.ut.scf.service.project;
+
+import java.util.List;
+import java.util.Map;
+
+import com.alibaba.fastjson.JSONObject;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.pojo.auto.ChaorenContract;
+import com.ut.scf.pojo.auto.OrderBatchInfo;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface ISignContractService {
+
+	Map<String, String> sendContract(String path) throws Exception;
+
+	JSONObject autoSignFopp(String signid) throws Exception;
+
+	String viewContract(String signid, String fileid) throws Exception;
+
+	BaseRespBean batchInfoList(Map<String, Object> param, PageInfoBean page);
+	BaseRespBean batchInfoListAll(Map<String, Object> param, PageInfoBean page);
+	BaseRespBean repaymentInfoList(Map<String, Object> paramMap);
+
+	String getCrReqAmtByBatchId(Map<String, Object> paramMap);
+
+	OrderBatchInfo batchInfoById(String batchId);
+
+	BaseRespBean insertContract(Map<String, Object> paramMap) throws Exception;
+
+	BaseRespBean orderInfoByBatchId(Map<String, Object> paramMap, PageInfoBean page);
+
+	double getGuaranteeRate(String id);
+
+	BaseRespBean findStuFileInfo(String stuId);
+
+	List<Map<String, Object>> findCountsByGroup(Map<String, Object> paramMap);
+
+	BaseRespBean repaymentInfoBean(Map<String, Object> paramMap, PageInfoBean page);
+
+	BaseRespBean repaymentInfoBeanByOrder(Map<String, Object> paramMap);
+	BaseRespBean repaymentInfoBeanByOrderSuper(Map<String, Object> paramMap);
+	BaseRespBean endProcess(org.activiti.engine.impl.util.json.JSONObject jsonObject, Map<String, Object> paramMap)
+			throws Exception;
+
+	BaseRespBean startProcess(org.activiti.engine.impl.util.json.JSONObject jsonObject);
+
+	BaseRespBean reApply(org.activiti.engine.impl.util.json.JSONObject jsonObject);
+
+	List<Map<String, Object>> repaymentInfoListByOrder(Map<String, Object> paramMap);
+
+	List<Map<String, Object>> repaymentInfoListByOrders(Map<String, Object> paramMap);
+
+	String getSSMContactNo(String peopleType);
+
+	String recomend(String peolpeType);
+
+	BaseRespBean batchInfoListAllSigned(Map<String, Object> param, PageInfoBean page);
+
+	BaseRespBean SignedContract(Map<String, Object> paramMap) throws Exception;
+
+	ChaorenContract getChaorenContract(String peopleType);
+
+}

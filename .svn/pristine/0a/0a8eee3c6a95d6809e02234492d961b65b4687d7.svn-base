@@ -1,0 +1,42 @@
+package com.ut.scf.service.project.impl;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.project.RepayPlanReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+import com.ut.scf.service.project.IRepayManagerService;
+
+@Service("repayBpmServiceImpl")
+public class RepayBpmServiceImpl extends BaseActivitiService<RepayPlanReqBean>
+implements IActivitiService<RepayPlanReqBean>{
+	@Resource
+	private IRepayManagerService repayManagerService;
+	private static final String ADVANCE_APPLY_BPM = "ssmRepayManager";
+
+	@Override
+	public String getProcessDefinitionKey() {
+		return ADVANCE_APPLY_BPM;
+	}
+
+	@Override
+	public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+		if (bpmProcessContext.isProcessEnd()) {
+			RepayPlanReqBean refundDepositAgreeReqBean = (RepayPlanReqBean) bpmProcessContext.getT();
+			Map<String, Object> paramMap = BeanUtil.beanToMap(refundDepositAgreeReqBean);
+			try {
+				repayManagerService.ssmEndProcess(paramMap);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+//			refundDepositService.modRef(refundDepositAgreeReqBean);    
+		}
+	}
+}

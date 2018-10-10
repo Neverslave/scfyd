@@ -1,0 +1,197 @@
+package com.ut.scf.service.query.impl;
+
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.core.util.ExcelXLSXUtil;
+import com.ut.scf.dao.query.IFinanceRepayDao;
+import com.ut.scf.service.query.IFinanceRepayService;
+
+@Service("finaceRepayService")
+public class FinanceRepayServiceImpl implements IFinanceRepayService {
+	@Resource
+	private IFinanceRepayDao financeRepayDao;
+
+	@Override 
+	public void getCurrentSum(Map<String, Object> paramMap, String path){
+		
+	}
+	
+	
+	
+	
+	@Override
+	public Map<String, Object> exportExcel(Map<String, Object> paramMap, String path) throws Exception {
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		List<Map<String, Object>> tiqianList = financeRepayDao.fqcrYIFTiqianjqOrderList(paramMap);
+		List<Map<String, Object>> repayList = financeRepayDao.fqcrYIFZCJSRepayList(paramMap);
+/*		List<Map<String, Object>> tiqiansum = financeRepayDao.fqcrSumYIFTiqianjqOrderList(paramMap);
+		List<Map<String, Object>> repaysum = financeRepayDao.fqcrSumYIFZCJSRepayList(paramMap);*/
+		
+		BigDecimal tqsumCurrentMoney= new BigDecimal(0.00);
+		BigDecimal tqsumInterest= new BigDecimal(0.00);
+		BigDecimal tqsumMarketingFeeYi= new BigDecimal(0.00);
+		
+		BigDecimal sumCurrentMoney= new BigDecimal(0.00);
+		BigDecimal sumInterest= new BigDecimal(0.00);
+		BigDecimal sumMarketingFeeYi= new BigDecimal(0.00);
+		for (Map<String, Object> map : tiqianList) {
+			tqsumMarketingFeeYi=tqsumMarketingFeeYi.add(new BigDecimal(map.get("sumMarketingFeeYi").toString()) );
+			tqsumInterest=tqsumInterest.add(new BigDecimal(map.get("restInterest").toString()))  ;
+			tqsumCurrentMoney=tqsumCurrentMoney.add(new BigDecimal(map.get("restCurrentMoney").toString())) ;
+		}
+		
+		for (Map<String, Object> map : repayList) {
+			sumMarketingFeeYi.add(new BigDecimal(map.get("marketingFeeYi").toString()) );
+			sumCurrentMoney.add(new BigDecimal(map.get("currentMoney").toString()) );
+			sumInterest.add(new BigDecimal(map.get("interest").toString()) );
+		}
+		
+		Date dateEnd = dateFormat.parse(paramMap.get("dateEnd").toString());
+		Calendar ca = Calendar.getInstance(); 
+		ca.setTime(dateEnd);
+		ca.add(ca.DATE, -1);
+		dateEnd=ca.getTime();
+		
+		
+		List<Map<String, Object>> huizongList=new 	ArrayList<Map<String, Object>> ();
+		Map<String, Object> map=new HashMap<>();
+		map.put("sumdataBegin", paramMap.get("dateBegin"));
+		map.put("sumdataEnd", dateFormat.format(dateEnd));
+		map.put("sumdata", paramMap.get("dateEnd"));
+
+		map.put("tqSumCount", tiqianList.size());
+		map.put("tqSumCurrentMoney", tqsumCurrentMoney);
+		map.put("tqSumInterest", tqsumInterest);
+		map.put("tqSumMarketingFeeYi", tqsumMarketingFeeYi);
+		map.put("sumCount", repayList.size());
+		map.put("sumInterest", sumInterest);
+		map.put("sumCurrentMoney", sumCurrentMoney);
+		map.put("sumMarketingFeeYi", sumMarketingFeeYi);
+		
+		huizongList.add(map);
+		
+		XSSFWorkbook XSSFWorkbook = ExcelXLSXUtil.crateBook();
+		XSSFFont font = ExcelXLSXUtil.getFont(XSSFWorkbook);
+		XSSFCellStyle style = ExcelXLSXUtil.setCell(XSSFWorkbook, font);
+		XSSFSheet sheet = ExcelXLSXUtil.crateSheetByName(XSSFWorkbook,"提前结清数据");
+		XSSFSheet sheet2 = ExcelXLSXUtil.crateSheetByName(XSSFWorkbook,"应收账款数据");
+		XSSFSheet sheet3 = ExcelXLSXUtil.crateSheetByName(XSSFWorkbook,"汇总");
+		ExcelXLSXUtil.writeTitle("提前结清数据", getTiQianTitles(), style, sheet);
+		ExcelXLSXUtil.exportToExcel(getTiQianFields(), tiqianList, null, style, sheet);
+		ExcelXLSXUtil.writeTitle("应收账款数据", getTitles(), style, sheet2);
+		ExcelXLSXUtil.exportToExcel(getFields(), repayList, null, style, sheet2);
+		
+		ExcelXLSXUtil.writeTitle("汇总数据", getTitles(), style, sheet3);
+		ExcelXLSXUtil.exportToExcel(getFields(), huizongList, null, style, sheet3);
+		
+		ExcelXLSXUtil.writeExcel(XSSFWorkbook, path);
+		XSSFWorkbook.close();
+		
+		return map;
+	}
+
+	private List<String> getTiQianTitles() {
+		List<String> titles = new ArrayList<String>();
+
+		titles.add("批次号");
+		titles.add("订单号");
+		titles.add("翼支付订单号");
+		titles.add("商品名称");
+		titles.add("总还款期数");
+		titles.add("投放金额");
+		titles.add("结清期数");
+		titles.add("剩余本金金额");
+		titles.add("剩余利息金额（一期）");
+		titles.add("剩余营销费金额");
+	
+		return titles;
+
+	}
+
+	private List<String> getFields() {
+		List<String> fields = new ArrayList<String>();
+
+		fields.add("batchId");
+		fields.add("orderId");
+		fields.add("loanTenor");
+		fields.add("repaymentDate");
+		fields.add("interest");
+		fields.add("currentMoney");
+		fields.add("marketingFeeYi");
+		return fields;
+
+	}
+	
+	private List<String> getTitles() {
+		List<String> titles = new ArrayList<String>();
+		titles.add("批次号");
+		titles.add("订单号");
+		titles.add("期数");
+		titles.add("应还日期");
+		titles.add("应还利息");
+		titles.add("应还本金");
+		titles.add("应还营销费");
+		return titles;
+	}
+
+	private List<String> getTiQianFields() {
+		List<String> fields = new ArrayList<String>();
+		fields.add("batchId");
+		fields.add("orderId");
+		fields.add("orderIdYi");
+		fields.add("goodsName");
+		fields.add("financePeriod");
+		fields.add("needmoney");
+		fields.add("totalCount");
+		fields.add("restCurrentMoney");
+		fields.add("restInterest");
+		fields.add("restMarketingFeeYi");
+		return fields;
+	}
+	
+	private List<String> getSumTitles() {
+		List<String> titles = new ArrayList<String>();
+		titles.add("应收账款数量（正常）：");
+		titles.add("应收账款本金总额（正常）：");
+		titles.add("应收账款利息总额（正常）：");
+		titles.add("应收账款营销费总额（正常）：");
+		
+		titles.add("提前还款数量：");
+		titles.add("提前还款剩余本金：");
+		titles.add("提前还款应收利息（一期）：");
+		titles.add("提前还款剩余营销费：");
+		return titles;
+	}
+
+	private List<String> getSumFields() {
+		List<String> fields = new ArrayList<String>();
+		fields.add("sumCount");
+		fields.add("sumCurrentMoney");
+		fields.add("sumInterest");
+		fields.add("sumMarketingFeeYi");
+		
+		fields.add("tqSumCount");
+		fields.add("tqSumCurrentMoney");
+		fields.add("tqSumInterest");
+		fields.add("tqSumMarketingFeeYi");
+
+		return fields;
+	}
+	
+}

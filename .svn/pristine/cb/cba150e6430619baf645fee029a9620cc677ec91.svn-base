@@ -1,0 +1,352 @@
+var IS_CUSTOMER_HIDDEN = true;
+
+$(document).ready(function() {
+    CloudUtils.getMenuNames("nav");
+    dateload();
+    initTable();
+});
+
+function searchFun() {
+    initTable();
+}
+
+
+
+
+function dateload() {
+	$('#firTime').datetimepicker({
+	    format: 'yyyy-mm-dd',
+	    autoclose: true,
+	    todayBtn: true,
+	    startView: 'month',
+	    minView:'month',
+	    maxView:'decade',
+	    language:  'zh-CN',
+	     // 日期时间选择器所能够提供的最精确的时间选择视图。
+	    initialDate: new Date()
+	});
+	//$('#cprYear').val(new Date().getFullYear());
+	$('#secTime').datetimepicker({
+	    format: 'yyyy-mm-dd',
+	    autoclose: true,
+	    todayBtn: true,
+	    
+	    startView: 'month',
+	    minView:'month',
+	    maxView:'decade',
+	    language:  'zh-CN',
+	     // 日期时间选择器所能够提供的最精确的时间选择视图。
+	    initialDate: new Date()
+	});
+}
+
+
+function initTable() {
+    $('#saleListDayTable').bootstrapTable('destroy');
+    $("#saleListDayTable").bootstrapTable({
+        method: "post",
+        contentType:"application/json;charset=UTF-8",
+        url: "../repayInfo/getSaleListDayList",
+        striped: true, //表格显示条纹  
+        pagination: false, //启动分页  
+        showFooter:false,
+        search: false, //是否启用查询  1
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+        	var param = {              
+        			firTime: jsonData.firTime,
+        			secTime: jsonData.secTime
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+            return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [[{
+            field: 'date',
+            title: '</br>日期</br></br>',
+            align: 'center',
+            rowspan:2,
+            valign: 'middle',
+        },{
+            title: '零售私家车业务',
+            align: 'center',
+            valign: 'middle',
+            colspan:7
+        },{
+            title: '大宗业务',
+            align: 'center',
+            valign: 'middle',
+            colspan:7
+        }],[{
+  	        field: 'lsYinghang',
+  	        title: '银行转账',
+  	        align: 'center',
+            valign: 'middle'
+  	    },{
+  	        field: 'lsBaozhengjin',
+  	        title: '保证金冲抵',
+  	        align: 'center',
+            valign: 'middle',
+  	    },{
+  	        field: 'lsDaifu',
+  	        title: '他人代付',
+  	        align: 'center',
+            valign: 'middle',
+  	    },{
+  	        field: 'lsQita',
+  	        title: '其他',
+  	        align: 'center',
+            valign: 'middle',
+  	    },{
+  	        title: '合计金额',
+  	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+            	var heji = Number(row.lsYinghang)+Number(row.lsBaozhengjin)+Number(row.lsDaifu)+Number(row.lsQita);
+            	heji=$.number(heji, 2);
+             	if(heji == 0){
+           	     return '-';
+	           	}else{
+	           	     return heji;
+	           	}
+ 	        },
+  	    },{
+  	        field: 'lsHeji',
+  	        title: '当天销售数量',
+  	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+             	if(row.lsHeji == 0){
+           	     return '-';
+	           	}else{
+	           	     return row.lsHeji;
+	           	}
+ 	        }
+  	    },{
+  	        title: '车辆明细',
+  	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+ 	            var d = '<a class = "fa fa-list-ul lsDetail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+               return d;
+ 	        },
+ 	        events: 'operateEvents'
+  	    },{
+  	        field: 'dzYinghang',
+  	        title: '银行转账',
+  	        align: 'center',
+            valign: 'middle'
+  	    },{
+  	        field: 'dzBaozhengjin',
+  	        title: '保证金冲抵',
+  	        align: 'center',
+            valign: 'middle',
+  	    },{
+  	        field: 'dzDaifu',
+  	        title: '他人代付',
+  	        align: 'center',
+            valign: 'middle',
+  	    },{
+  	        field: 'dzQita',
+  	        title: '其他',
+  	        align: 'center',
+            valign: 'middle',
+  	    },{
+  	        title: '合计金额',
+  	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+            	var heji = Number(row.dzYinghang)+Number(row.dzBaozhengjin)+Number(row.dzDaifu)+Number(row.dzQita);
+            	heji=$.number(heji, 2);
+            	if(heji == 0){
+            	     return '-';
+            	}else{
+            	     return heji;
+            	}
+ 	        },
+  	    },{
+  	        field: 'dzHeji',
+  	        title: '当天销售数量',
+  	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+             	if(row.dzHeji == 0){
+           	     return '-';
+	           	}else{
+	           	     return row.dzHeji;
+	           	}
+ 	        }
+  	    },{
+  	        title: '车辆明细',
+  	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+ 	            var d = '<a class = "fa fa-list-ul dzDetail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+               return d;
+ 	        },
+ 	        events: 'operateEvents'
+  	    },
+         ] 
+        ],
+/*        onLoadSuccess : function(data) {                                
+        	var data = $('#saleListDayTable').bootstrapTable('getData', true);
+        	                   // 合并单元格
+        	var fieldList=["cprYear"];
+        	        mergeCells(data, "cprYear", 1, $('#saleListDayTable'),fieldList);
+        	        //默认加载管理车辆数—柱状图
+        	        dropdownMenu(1);
+        	}*/
+    });
+}
+window.operateEvents = {
+		'click .lsDetail': function (e, value, row, index) {
+			initCarInfoTable(row.date,'1');
+			$('#detailModal').modal();
+		},
+		'click .dzDetail': function (e, value, row, index) {
+			initCarInfoTable(row.date,'2');
+			$('#detailModal').modal();
+		},
+	};
+
+function initCarInfoTable(date,ywlxId) {
+	$('#carInfoListTable').bootstrapTable('destroy'); 
+	$("#carInfoListTable").bootstrapTable({  
+		method: "post", 
+	    contentType:"application/json;charset=UTF-8",
+        url: "../carInfo/getDetailDayList", 
+        striped: true,  //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false,  //是否启用查询  
+        showColumns: false,  //显示下拉框勾选要显示的列  
+        showRefresh: false,  //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType : "undefined",   
+        queryParams: function queryParams(params) {   //设置查询参数  
+          var param = {
+        		  date:date,
+        		  ywlxId:ywlxId
+          }; 
+          return JSON.stringify(param);
+        },  
+        responseHandler:function responseHandler(res) {
+       	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		
+	        	 };
+
+       	 } else {
+       		 bootbox.alert(res.resultNote);
+       		 return {
+			        	 "rows": [],
+			        	
+			        	 };
+       	 }
+        },
+         columns: [{
+             title: '序号',
+             align: 'center',
+             valign: 'middle',
+             formatter: function (value, row, index) {  
+                 return index+1;  
+             }  
+         },{
+	 	        field: 'storeName',
+	 	        title: '经销商名称',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	},{
+	 	        field: 'cprYear',
+	 	        title: '合作年份',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	},{
+	 	        field: 'cprMonth',
+	 	        title: '合作月份',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	},{
+	 	        field: 'payId',
+	 	        title: '付款函编号',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	},{
+	 	        field: 'ywlxId',
+	 	        title: '业务类型',
+	 	        align: 'center',
+	            valign: 'middle',
+	            formatter:function(value,row,index) {
+					if(value=='1'){
+						return '零售';
+					}else if(value=='2'){
+						return '大宗';
+					}else{
+						return '';
+					}
+		    	}
+	           
+		 	},{
+	 	        field: 'carFrameNum',
+	 	        title: '车架号',
+	 	        align: 'center',
+	            valign: 'middle',
+	           
+		 	},{
+	 	        field: 'carActualPrice',
+	 	        title: '车辆价格',
+	 	        align: 'center',
+	            valign: 'middle',
+	            formatter:function(value,row,index) {
+					return $.number(value, 2);
+		    	}
+		 	},{
+	 	        field: 'carColor',
+	 	        title: '车辆颜色',
+	 	        align: 'center',
+	            valign: 'middle',
+	            visible:false,
+	           
+		 	},{
+	 	        field: 'engineNum',
+	 	        title: '发动机号',
+	 	        align: 'center',
+	            valign: 'middle',
+	            visible:false,
+	           
+		 	}]
+       });  
+}
+
+function exportExcel(){
+	$('#carInfoListTable').tableExport({
+		type:'excel',
+		excape:'false'
+	})
+}

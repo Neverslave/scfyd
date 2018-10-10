@@ -1,0 +1,32 @@
+package com.ut.scf.web.controller.wechat;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.reqbean.project.RevenueProcessReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IRevenueService;
+import com.ut.scf.web.controller.BaseJsonController;
+
+@Controller
+@RequestMapping("/wechat/revenue")
+public class RevenuFlowWechatControllrt extends BaseJsonController {
+	@Resource
+	private IRevenueService revenueService;
+
+	@RequestMapping(value = "/doAgree", method = RequestMethod.POST, consumes = { "application/json" }, produces = {
+			"application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean doAgree(HttpSession httpSession,
+			@RequestBody RevenueProcessReqBean reqBean) {
+		String userName = (String) httpSession.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		return revenueService.doAgree(reqBean);
+	}
+}

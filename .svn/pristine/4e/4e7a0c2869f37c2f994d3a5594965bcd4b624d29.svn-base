@@ -1,0 +1,21 @@
+package com.ut.scf.service.project;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpSession;
+
+import com.alibaba.fastjson.JSONObject;
+import com.ut.scf.pojo.auto.OrderBatchInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.reqbean.project.OrderManagerReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IRepaymentPlanService {
+
+    BaseRespBean repayMentInfoByOrderList(ArrayList<String> Orderlist);
+
+    void getRepaymentPlan(List<Map<String, String>> statusList) throws Exception;
+
+}

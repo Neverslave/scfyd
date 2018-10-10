@@ -1,0 +1,549 @@
+package com.ut.scf.service.project.impl;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.ScfDateUtil;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.core.util.SignUtil;
+import com.ut.scf.dao.auto.BestSignStatusMapper;
+import com.ut.scf.dao.auto.ChaorenContractMapper;
+import com.ut.scf.dao.auto.FactorContractFileInfoMapper;
+import com.ut.scf.dao.auto.FactorContractInfoMapper;
+import com.ut.scf.dao.auto.GuaranteeMoneyManagementMapper;
+import com.ut.scf.dao.auto.OrderBatchInfoMapper;
+import com.ut.scf.dao.auto.StuFileInfoMapper;
+import com.ut.scf.dao.project.IBatchInfoDao;
+import com.ut.scf.dao.project.IRepayPlanDao;
+import com.ut.scf.dao.project.ISignContractDao;
+import com.ut.scf.pojo.auto.BestSignStatus;
+import com.ut.scf.pojo.auto.ChaorenContract;
+import com.ut.scf.pojo.auto.ChaorenContractExample;
+import com.ut.scf.pojo.auto.GuaranteeMoneyManagement;
+import com.ut.scf.pojo.auto.OrderBatchInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.pojo.auto.StuFileInfo;
+import com.ut.scf.pojo.auto.StuFileInfoExample;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.ListRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.project.ISignContractService;
+import com.ut.scf.service.project.thread.OperateOrderThread;
+
+import cn.bestsign.sdk.BestSignSDK;
+import cn.bestsign.sdk.domain.vo.params.ReceiveUser;
+import cn.bestsign.sdk.domain.vo.params.SendUser;
+import cn.bestsign.sdk.integration.Constants.CONTRACT_NEEDVIDEO;
+import cn.bestsign.sdk.integration.Constants.USER_TYPE;
+
+@Service("signContractService")
+public class SignContractServiceImpl implements ISignContractService {
+
+	Logger log = LoggerFactory.getLogger(this.getClass());
+
+	private static String MID = "2248cea470ce4ab4831629865051b26a";
+	private static String PEM = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAMwVbzFD2p9U5n/6h7IgFHnJDEUOkPSdPQJj2SGbevWwyGxbP3BbOdsKzwJPXlGQ6+JWH0Ppn4XyhQyFWMiZMrQSrkNwQmpHkAy7hVI4xsFcq9PbxUyprmFLn1RtLFEu3SYMyO7b2SBoiGuIFQrpVQOGDX+M8vY3+JNCXLJaJcVpAgMBAAECgYEAkgUIENy20OejIJB1hKpVXCnQYJyidJMIcuxUECq52I7LaFQFWPO8uo/KO6HkH0IstD3gkuvWWrWCIspKEwUh89OY+EsWN+RfIkT/h/D8nIfbCBGvr3b2f3QZFhAYjbv9pSS7LfCR5ImIvTXlBWi9X2Ssr0cU4mg4B8jJvPaaVDECQQD2zJFlNbVgzAY9DtWZiaRxestu3knwddSw8DTvACfndEg12JPybixL08NGN8kTFuaWuWFumwC91ALNwwYk/SY9AkEA07Exs55vtz8RQP7p8IsoodcqPMixgUGOGjKt0fugouiE5x0QhFeSZW4GJrfyDExLxuECrNAisoU3/cAPQGG6nQJAf4KJzETHhU9kGb/EVCNtNsQ+vvVSNk5qqVAxyRnHhCnr9QYEykhp0nOCfJDt7lLyqAT3dfHXnDwhhrWwQwQX8QJBAItO+F4zzWDR6BDVsC3T5hFa/ziw+d8NvO4Qm8KrzLJoQc21msD8wCJvnSytsGPXcaaXPKNs9Oh2MrqSQXck2SECQAXAPaw28ZN7WVdAagNIix/2obqVLfPg5xxTu0YDqoXNlWFX8KgOLFM6fHkHY7VX2rsuOuGQVSenbmks/Q+ysJk=";
+	private static String HOST = "https://www.bestsign.cn";
+
+	private static String RECEIVE_EMAIL = "api@fenqichaoren.com";
+	private static String RECEIVE_NAME = "成都乐超人科技有限公司";
+	private static String RECEIVE_MOBILE = "18280338392";
+
+	private static String SEND_EMAIL = "yuedabaoli@yuedazb.com";
+	private static String SEND_NAME = "悦达商业保理有限公司";
+	private static String SEND_MOBILE = "18818213500";
+	
+/*	private static String  SEND_EMAIL= "api@fenqichaoren.com";
+	private static String  SEND_NAME= "成都乐超人科技有限公司";
+	private static String  SEND_MOBILE= "18280338392";
+
+	private static String RECEIVE_EMAIL = "yuedabaoli@yuedazb.com";
+	private static String RECEIVE_NAME = "悦达商业保理有限公司";
+	private static String RECEIVE_MOBILE = "18818213500";*/
+	
+
+	private static String DATE_FORMAT = "yyyy-MM-dd";
+
+	private static SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+
+	@Resource
+	private IBatchInfoDao iBatchInfoDao;
+
+	@Resource
+	private IRepayPlanDao iRepayPlanDao;
+
+	@Resource
+	private OrderBatchInfoMapper orderBatchInfoMapper;
+
+	@Resource
+	private FactorContractInfoMapper factorContractInfoMapper;
+
+	@Resource
+	private FactorContractFileInfoMapper factorContractFileInfoMapper;
+
+	@Resource
+	private ISignContractDao iSignContractDao;
+
+	@Resource
+	private GuaranteeMoneyManagementMapper guaranteeMoneyManagementMapper;
+
+	@Resource
+	private OperateOrderThread operateOrderThread;
+
+	@Resource
+	private StuFileInfoMapper stuFileInfoMapper;
+
+	@Resource
+	private IActivitiService activitiService;
+
+	@Resource
+	ProcessEngine processEngine;
+
+	@Resource
+	private TaskService taskService;
+
+	@Resource
+	private IProcessRepeatChkService iProcessRepeatChkService;
+	
+	@Resource
+	private BestSignStatusMapper bestSignStatusMapper;
+	
+	@Resource
+	private ChaorenContractMapper chaorenContractMapper;
+	
+	
+	
+	@Override
+	public BaseRespBean startProcess(org.activiti.engine.impl.util.json.JSONObject jsonObject) {
+
+		BaseRespBean respBean = new BaseRespBean();
+		String userName = (String) jsonObject.get("userId");
+		String key = (String) jsonObject.get("activitiKey");
+		// 加上当前用户
+		ProcessInstance pi = processEngine.getRuntimeService()// 管理流程实例和执行对象，也就是表示正在执行的操作
+				.startProcessInstanceByKey(key);
+		Task task = taskService.createTaskQuery().processInstanceId(pi.getId()).singleResult();
+		// 拾取用户
+		taskService.claim(task.getId(), userName);
+		// 设置变量
+		taskService.setVariable(task.getId(), "launchUser", userName);// 发起者
+		taskService.setVariableLocal(task.getId(), "agencyJson", jsonObject.toString());
+		// 完成节点
+		taskService.complete(task.getId());
+		insertProcessCheck(jsonObject.get("batchId").toString(), pi.getProcessInstanceId());
+		return respBean;
+
+	}
+
+	@Override
+	public BaseRespBean reApply(org.activiti.engine.impl.util.json.JSONObject jsonObject) {
+		String procInstId = jsonObject.getString("procInstId");
+
+		BaseRespBean respBean = new BaseRespBean();
+		// 1.获取taskId和userId
+		String taskId = (String) jsonObject.get("taskId");
+		String userId = (String) jsonObject.get("userId");
+
+		// 2.拾取用户
+		taskService.claim(taskId, userId);
+		// 3.设置流程变量
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+		// 4.完成流程
+		taskService.complete(taskId);
+		insertProcessCheck(jsonObject.get("batchId").toString(), procInstId);
+		return respBean;
+	}
+
+	private void insertProcessCheck(String orderBatchId, String processId) {
+		ProcessRepeatCheck processRepeatCheck = new ProcessRepeatCheck();
+		processRepeatCheck.setItemKey("ORDER_BATCH_ID");
+		processRepeatCheck.setItemValue(orderBatchId);
+		processRepeatCheck.setProcessKey("contractSign");
+		processRepeatCheck.setRecUid(ScfUUID.generate());
+		processRepeatCheck.setProcInstId(processId);
+		iProcessRepeatChkService.insert(processRepeatCheck);
+	}
+
+	// 查询学生附件信息
+	@Override
+	public BaseRespBean findStuFileInfo(String orderId) {
+		StuFileInfoExample example = new StuFileInfoExample();
+		com.ut.scf.pojo.auto.StuFileInfoExample.Criteria criteria = example.createCriteria();
+		criteria.andOrderIdEqualTo(orderId);
+		List<StuFileInfo> fileInfos = stuFileInfoMapper.selectByExample(example);
+		ListRespBean listRespBean = new ListRespBean();
+		listRespBean.setDataList(fileInfos);
+		return listRespBean;
+	}
+
+	// 获取批次信息
+	@Override
+	public BaseRespBean batchInfoList(Map<String, Object> param, PageInfoBean page) {
+		PageRespBean respBean = new PageRespBean();
+		List<Map<String, Object>> list = iBatchInfoDao.getBatchInfoList(param, page);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+	// 获取批次信息
+	@Override
+	public BaseRespBean batchInfoListAll(Map<String, Object> param, PageInfoBean page) {
+		PageRespBean respBean = new PageRespBean();
+		List<Map<String, Object>> list = iBatchInfoDao.getBatchInfoListAll(param, page);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+	// 获取批次信息
+	@Override
+	public BaseRespBean orderInfoByBatchId(Map<String, Object> paramMap, PageInfoBean page) {
+		PageRespBean respBean = new PageRespBean();
+		List<Map<String, Object>> list = iSignContractDao.orderInfoByBatchId(paramMap, page);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	public OrderBatchInfo batchInfoById(String batchId) {
+		return orderBatchInfoMapper.selectByPrimaryKey(batchId);
+	}
+
+	// 获取还款计划
+	@Override
+	public BaseRespBean repaymentInfoList(Map<String, Object> paramMap) {
+		List<Map<String, Object>> orderIdlList = iRepayPlanDao.findCountByBatchId(paramMap);
+		PageInfoBean page = new PageInfoBean();
+		List<Map<String, Object>> list = null;
+		List<Map<String, Object>> resultList = new LinkedList<Map<String, Object>>();
+		for (int j = 0; j < orderIdlList.size(); j++) {
+			page.setPageNumber(j + 1);
+			page.setPageSize(Integer.parseInt(orderIdlList.get(j).get("counts").toString()));
+			list = iRepayPlanDao.selectRepayPlanInfo(paramMap, page);
+			resultList.addAll(list);
+		}
+		ListRespBean respBean = new ListRespBean();
+		respBean.setDataList(resultList);
+		return respBean;
+	}
+
+	@Override
+	public List<Map<String, Object>> findCountsByGroup(Map<String, Object> paramMap) {
+		return iRepayPlanDao.findCountByBatchId(paramMap);
+	}
+
+	@Override
+	public BaseRespBean repaymentInfoBean(Map<String, Object> paramMap, PageInfoBean page) {
+		PageRespBean respBean = new PageRespBean();
+		List<Map<String, Object>> list = iRepayPlanDao.getRepymentInfoList(paramMap, page);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean repaymentInfoBeanByOrder(Map<String, Object> paramMap) {
+		ListRespBean respBean = new ListRespBean();
+		List<Map<String, Object>> list = iRepayPlanDao.getRepymentInfoList(paramMap);
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean repaymentInfoBeanByOrderSuper(Map<String, Object> paramMap) {
+		ListRespBean respBean = new ListRespBean();
+		List<Map<String, Object>> list = iRepayPlanDao.selectRepayPlanInfoByOrderSuper(paramMap);
+		respBean.setDataList(list);
+		return respBean;
+	}
+	@Override
+	public List<Map<String, Object>> repaymentInfoListByOrder(Map<String, Object> paramMap) {
+		List<Map<String, Object>> list = iRepayPlanDao.selectRepayPlanInfoByOrder(paramMap);
+		return list;
+	}
+
+	@Override
+	public List<Map<String, Object>> repaymentInfoListByOrders(Map<String, Object> paramMap) {
+		List<Map<String, Object>> list = iRepayPlanDao.selectRepayPlanInfoByOrders(paramMap);
+		return list;
+	}
+
+	// 结束流程并插入合同
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean endProcess(org.activiti.engine.impl.util.json.JSONObject jsonObject,
+			Map<String, Object> paramMap) throws Exception {
+		activitiService.doAgree(jsonObject);
+		return insertContract(paramMap);
+	}
+
+	// 插入合同
+	@Override
+	@Transactional
+	public BaseRespBean insertContract(Map<String, Object> paramMap) throws Exception {
+		BaseRespBean respBean = new BaseRespBean();
+		/*String contractNo = getSSMContactNo();*/
+		/*if ("".equals(contractNo)) {*/
+		if (false) {
+			respBean.setResult(-1);
+			respBean.setResultNote("操作失败，不存在分期超人的保理合同");
+		} else {
+			BestSignStatus bestSignStatus=new BestSignStatus();
+			bestSignStatus.setBatchId(paramMap.get("batchId").toString());
+			bestSignStatus.setFileId(paramMap.get("fileId").toString());
+			String peopleType = (String) paramMap.get("peopleType");
+			if(peopleType.equals("3")){//1 学生 2 家庭宽带 3翼支付
+				bestSignStatus.setStatus("1");//0 未签约 1 已签约
+			}else{
+				bestSignStatus.setSignId(paramMap.get("signId").toString());
+				bestSignStatus.setStatus("0");//0 未签约 1 已签约
+			}
+	
+			bestSignStatus.setContractNo(paramMap.get("contractNo").toString());
+			if(bestSignStatusMapper.selectByPrimaryKey(paramMap.get("batchId").toString())!=null){
+				int updateNum=bestSignStatusMapper.updateByPrimaryKeySelective(bestSignStatus);
+				if (updateNum <= 0) {
+					respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+				}
+			}
+			else {
+				int insertNum=bestSignStatusMapper.insertSelective(bestSignStatus);
+				if (insertNum <= 0) {
+					respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+				}
+			}
+			if(!peopleType.equals("3")){//1 学生 2 家庭宽带 3翼支付
+				//返回batchId、signId 给分期超人
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("batch_id", paramMap.get("batchId").toString());
+				map.put("signid", paramMap.get("signId").toString());
+				map.put("fileid", paramMap.get("fileId").toString());
+				JSONObject object = SignUtil.requestInterface(map, SignUtil.contract);
+				System.out.println(object);
+			}
+			
+		}
+
+		return respBean;
+	}
+	@Override
+	@Transactional
+	public BaseRespBean SignedContract(Map<String, Object> paramMap) throws Exception {
+		BaseRespBean respBean = new BaseRespBean();
+		BestSignStatus bestSignStatus=new BestSignStatus();
+		bestSignStatus.setBatchId(paramMap.get("batchId").toString());
+		bestSignStatus.setSignDate(new Date());
+		bestSignStatus.setStatus("1");
+		
+		int updateNum=bestSignStatusMapper.updateByPrimaryKeySelective(bestSignStatus);
+		if (updateNum <= 0) {
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+		}
+		JSONObject object=	autoSignFopp(paramMap.get("signId").toString());
+		return respBean;
+	}
+	// 获取保理合同编号
+	@Override
+	public String getSSMContactNo(String peopleType) {
+		ChaorenContractExample example = new ChaorenContractExample();
+		com.ut.scf.pojo.auto.ChaorenContractExample.Criteria criteria = example.createCriteria();
+		criteria.andContractTypeEqualTo(peopleType);
+		criteria.andStatusEqualTo("0");
+		List<ChaorenContract> chaorenContract = chaorenContractMapper.selectByExample(example);
+		if (chaorenContract != null && chaorenContract.size() > 0) {
+			return chaorenContract.get(0).getContractNo();
+		}
+		return "";
+	}
+	
+	// 获取保理合同编号
+	@Override
+	public ChaorenContract getChaorenContract(String peopleType) {
+		ChaorenContractExample example = new ChaorenContractExample();
+		com.ut.scf.pojo.auto.ChaorenContractExample.Criteria criteria = example.createCriteria();
+		criteria.andContractTypeEqualTo(peopleType);
+		criteria.andStatusEqualTo("0");
+		List<ChaorenContract> chaorenContract = chaorenContractMapper.selectByExample(example);
+		if (chaorenContract != null && chaorenContract.size() > 0) {
+			return chaorenContract.get(0);
+		}
+		return null;
+	}
+
+	// 获取超人所需费用
+	@Override
+	public String getCrReqAmtByBatchId(Map<String, Object> paramMap) {
+		return iRepayPlanDao.selectCrReqAmtByBatchId(paramMap);
+	}
+
+	// 获取保证金比例
+	@Override
+	public double getGuaranteeRate(String id) {
+		GuaranteeMoneyManagement guaranteeMoneyManagement = guaranteeMoneyManagementMapper.selectByPrimaryKey(id);
+		return guaranteeMoneyManagement.getGuaranteeMoneyRate();
+	}
+
+	// 上上签
+	// 发送合同 返回合同编号
+	@Override
+	public Map<String, String> sendContract(String path) throws Exception {
+		BestSignSDK sdk = BestSignSDK.getInstance(MID, PEM, HOST);
+		byte[] fileData = getResource(path);
+		ReceiveUser[] userlist = { new ReceiveUser(RECEIVE_EMAIL, RECEIVE_NAME, RECEIVE_MOBILE, USER_TYPE.ENTERPRISE,
+				CONTRACT_NEEDVIDEO.NONE, false) };
+		SendUser senduser = new SendUser(SEND_EMAIL, SEND_NAME, SEND_MOBILE, 99, true, USER_TYPE.ENTERPRISE, false,
+				"订单合同签约", "");
+		JSONObject lastContinfoList = sdk.sjdsendcontractdocUpload(userlist, senduser, fileData);
+		log.info("发送合同：{}", lastContinfoList.toJSONString());
+		String fileId = getLastFileId(lastContinfoList);
+		String signId = getLastContractId(lastContinfoList);
+		Map<String, String> map = new HashMap<>();
+		map.put("fileId", fileId);
+		map.put("signId", signId);
+		return map;
+	}
+
+	// 合同查看
+	@Override
+	public String viewContract(String signid, String fileid) throws Exception {
+		BestSignSDK sdk = BestSignSDK.getInstance(MID, PEM, HOST);
+		String result = sdk.ViewContract(signid, fileid);
+		return result;
+	}
+
+	// 上上签 签署合同
+	@Override
+	public JSONObject autoSignFopp(String signid) throws Exception {
+		BestSignSDK sdk = BestSignSDK.getInstance(MID, PEM, HOST);
+		// BestSignExecutor bestSignExecutor = new BestSignExecutor(MID, PEM,
+		// HOST);
+		// 自动签这份合同
+
+		@SuppressWarnings("serial")
+		Map<String, Object> dataSend = new HashMap<String, Object>() {
+			{
+				put("pagenum", 1);
+				put("signx", 0.02);
+				put("signy", 0.75);
+			}
+		};
+	/*	@SuppressWarnings("serial")
+		Map<String, Object> dataReceive = new HashMap<String, Object>() {
+			{
+				put("pagenum", 1);
+				put("signx", 0.6);
+				put("signy", 0.85);
+			}
+		};*/
+		String coordinateList = "[" + JSON.toJSONString(dataSend) + "]";
+		//String coordinateReceiveList = "[" + JSON.toJSONString(dataReceive) + "]";
+		//sdk.AutoSignFopp(RECEIVE_EMAIL, signid, coordinateReceiveList, "0", "", "");
+
+		JSONObject object = sdk.AutoSignFopp(SEND_EMAIL, signid, coordinateList, "1", "", "");
+
+		log.info("签署合同：{}", object.toString());
+		return object;
+
+	}
+
+	private byte[] getResource(String path) throws IOException {
+		File file = new File(path);
+		long fileSize = file.length();
+		if (fileSize > Integer.MAX_VALUE) {
+			return null;
+		}
+		FileInputStream fi = new FileInputStream(file);
+		byte[] buffer = new byte[(int) fileSize];
+		int offset = 0;
+		int numRead = 0;
+		while (offset < buffer.length && (numRead = fi.read(buffer, offset, buffer.length - offset)) >= 0) {
+			offset += numRead;
+		}
+
+		fi.close();
+		return buffer;
+	}
+
+	// 提取lastContinfoList的signid
+	private static String getLastContractId(JSONObject jsonObject) {
+		if (jsonObject == null) {
+			return "";
+		}
+		JSONObject response = jsonObject.getJSONObject("response");
+		JSONObject content = response.getJSONObject("content");
+		JSONArray continfoList = content.getJSONArray("contlist");
+		JSONObject contractInfo = continfoList.getJSONObject(0);
+		contractInfo = contractInfo.getJSONObject("continfo");
+		String signid = contractInfo.getString("signid");
+		return signid;
+	}
+
+	// 提取lastContinfoList的docid
+	private String getLastFileId(JSONObject jsonObject) {
+		JSONObject response = jsonObject.getJSONObject("response");
+		JSONObject content = response.getJSONObject("content");
+		JSONArray continfoList = content.getJSONArray("contlist");
+		JSONObject contractInfo = continfoList.getJSONObject(0);
+		contractInfo = contractInfo.getJSONObject("continfo");
+		String docid = contractInfo.getString("docid");
+		return docid;
+	}
+
+	@Override
+	public String recomend(String peolpeType) {
+		// TODO Auto-generated method stub
+		String contractNo = getSSMContactNo(peolpeType)+"-"+ScfDateUtil.format(new Date(), "yyyyMMdd");
+		Map<String, Object> paramMap=new HashMap<>();
+		paramMap.put("contractNo", contractNo);
+		String maxcontratNo=iSignContractDao.getMaxContratNo(paramMap);
+		if(maxcontratNo==null||maxcontratNo==""||maxcontratNo.length()<2){
+			contractNo=contractNo+"01";
+		}
+		else {		
+			
+			contractNo=contractNo+String.format("%02d", (Integer.parseInt(maxcontratNo.substring(maxcontratNo.length()-2))+1)); 
+		}
+		return contractNo;
+	}
+
+	@Override
+	public BaseRespBean batchInfoListAllSigned(Map<String, Object> param, PageInfoBean page) {
+		PageRespBean respBean = new PageRespBean();
+		List<Map<String, Object>> list = iBatchInfoDao.getBatchInfoListAllSigned(param, page);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+}

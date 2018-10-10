@@ -1,0 +1,27 @@
+package com.ut.scf.service.tradfact;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.tradfact.ProjectAdjustAddReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IProjectAdjustService {
+
+	/**
+	 *  项目尽调查询
+	 * @param paramMap
+	 * @param page
+	 * @return
+	 */
+	BaseRespBean searchAdjustInfo(Map<String, Object> paramMap, PageInfoBean page);
+	
+	/**
+	 * 添加数据进tf_adjust_info表
+	 * @param ReqBean
+	 * @return
+	 */
+	BaseRespBean interAdjustInfo(ProjectAdjustAddReqBean ReqBean);
+	
+	BaseRespBean searchRiskManagerInfo(Map<String, Object> paramMap, PageInfoBean page);
+}

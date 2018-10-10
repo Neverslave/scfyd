@@ -1,0 +1,55 @@
+package com.ut.scf.reqbean.pub;
+
+import com.ut.scf.reqbean.PageReqBean;
+
+public class LoanInfoListReqBean extends PageReqBean {
+
+	private String loanDate;
+	
+	private String contractNo;
+	
+	private String batchId;
+	private String status;
+	private String payHistoryListInfo;
+	public String getLoanDate() {
+		return loanDate;
+	}
+
+	public void setLoanDate(String loanDate) {
+		this.loanDate = loanDate;
+	}
+
+	public String getContractNo() {
+		return contractNo;
+	}
+
+	public void setContractNo(String contractNo) {
+		this.contractNo = contractNo;
+	}
+
+	public String getBatchId() {
+		return batchId;
+	}
+
+	public void setBatchId(String batchId) {
+		this.batchId = batchId;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public String getPayHistoryListInfo() {
+		return payHistoryListInfo;
+	}
+
+	public void setPayHistoryListInfo(String payHistoryListInfo) {
+		this.payHistoryListInfo = payHistoryListInfo;
+	}
+
+
+}

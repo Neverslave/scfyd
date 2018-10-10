@@ -1,0 +1,70 @@
+package com.ut.scf.service.tradfact.impl;
+
+
+import com.ut.scf.dao.auto.TfLoanInfoMapper;
+import com.ut.scf.dao.tradfact.IProjectLoanDao;
+import com.ut.scf.dao.tradfact.ITfProjectDao;
+import com.ut.scf.pojo.auto.*;
+import com.ut.scf.service.tradfact.IProjectCreditService;
+import com.ut.scf.service.tradfact.IProjectLoanService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+public class ProjectLoanServiceImpl implements IProjectLoanService {
+    @Resource
+    private TfLoanInfoMapper loanInfoMapper;
+    @Resource
+    private IProjectLoanDao loanDao;
+    @Resource
+    private ITfProjectDao projectDao;
+
+
+    //按天计息
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void calInterestByDay() {
+        Map<String, Object> param = new HashMap<>();
+        param.put("repayStatus", "2");
+        param.put("receiptWay", "2");
+        List<Map<String, Object>> loanInfoList = projectDao.findLoanInfo(param);
+        for (Map<String, Object> map : loanInfoList) {
+            TfLoanInfo loanInfo = new TfLoanInfo();
+            String id = (String) map.get("id");
+            BigDecimal interestRate = (BigDecimal) map.get("interestRate");
+            BigDecimal repayPrinciple = map.get("repayPrinciple") == null ? BigDecimal.ZERO : (BigDecimal) map.get("repayPrinciple");
+            BigDecimal loanAmount = (BigDecimal) map.get("loanAmount");
+            BigDecimal interestAmount = map.get("interestAmount") == null ? BigDecimal.ZERO : (BigDecimal) map.get("interestAmount");
+            interestRate = interestRate.divide(new BigDecimal(360), 4, RoundingMode.HALF_UP);
+            interestAmount = calInterestByDay(interestRate, loanAmount.subtract(repayPrinciple), new BigDecimal(1)).add(interestAmount);
+            loanInfo.setInterestAmount(interestAmount);
+            loanInfo.setId(id);
+            loanInfoMapper.updateByPrimaryKeySelective(loanInfo);
+        }
+    }
+
+    public BigDecimal calInterestByDay(BigDecimal interestRate, BigDecimal amount, BigDecimal day) {
+        interestRate = interestRate.divide(new BigDecimal(100), 4, RoundingMode.HALF_UP).divide(new BigDecimal(360), 4, RoundingMode.HALF_UP);
+        return amount.multiply(interestRate).multiply(day);
+    }
+
+
+    //获取未全部还款的
+    @Override
+    public List<TfLoanInfo> getLoanInfoList() {
+        TfLoanInfoExample example = new TfLoanInfoExample();
+        TfLoanInfoExample.Criteria criteria = example.createCriteria();
+        criteria.andRepayStatusNotEqualTo("2");//排除已全部还款的
+        return loanInfoMapper.selectByExample(example);
+    }
+
+
+}

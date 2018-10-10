@@ -1,0 +1,55 @@
+package com.ut.scf.service.test.pub;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.pojo.auto.DykRate;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.pub.IDykRateService;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = {
+        "classpath:spring-mybatis-test.xml" })
+public class DykRateServiceTest {
+	private static final Logger log = LoggerFactory.getLogger(DykRateServiceTest.class);
+	
+	@Autowired
+	private IDykRateService dykRateService;
+	
+	@Test
+	public void getDykRateListTest(){
+		log.info("**********************************getDykRateListTest start*********************************");
+		Map<String, Object> paramMap = new HashMap<>();
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(1);
+		page.setPageSize(10);
+    	BaseRespBean respBean = dykRateService.getDykRateList(paramMap, page);
+    	log.info("getProductList : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************getDykRateListTest end*********************************");
+	}
+	
+	@Test
+	public void updateDykRateTest(){
+		log.info("**********************************updateDykRateTest start*********************************");
+		DykRate dykRate = new DykRate();
+		dykRate.setRecUid("dyk0005");
+		dykRate.setRateStandard("piupiupiu");
+		dykRate.setDykRate(BigDecimal.valueOf(444.5));
+		BaseRespBean respBean = dykRateService.updateDykRate(dykRate);
+    	log.info("getProductList : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************updateDykRateTest end*********************************");
+	}
+}

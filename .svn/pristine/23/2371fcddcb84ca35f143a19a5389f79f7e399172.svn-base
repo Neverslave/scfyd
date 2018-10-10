@@ -1,0 +1,24 @@
+package com.ut.scf.web.controller.tradfact;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.ut.scf.reqbean.tradfact.ProjectReviewDetailReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.web.controller.ActivitiController;
+
+@Controller
+@RequestMapping("/tradfact/projectReview")
+public class ProjectReviewDetailController extends ActivitiController<ProjectReviewDetailReqBean>{
+
+	@Resource(name = "projectReviewBpmService")
+	private IActivitiService<ProjectReviewDetailReqBean> activitiService;
+	
+	@Override
+	protected IActivitiService<ProjectReviewDetailReqBean> getBpmProcessService() {
+		return activitiService;
+	}
+
+}

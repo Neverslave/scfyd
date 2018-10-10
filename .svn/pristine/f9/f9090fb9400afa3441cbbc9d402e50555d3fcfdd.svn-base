@@ -1,0 +1,829 @@
+package com.ut.scf.service.project.impl;
+
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.core.util.ScfDateUtil;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.core.util.SignUtil;
+import com.ut.scf.dao.auto.FqcrGuaranteeInfoMapper;
+import com.ut.scf.dao.auto.OrderBatchInfoMapper;
+import com.ut.scf.dao.auto.OrderCheckCatchMapper;
+import com.ut.scf.dao.auto.OrderInfoMapper;
+import com.ut.scf.dao.auto.RepaymentPlanInfoMapper;
+import com.ut.scf.dao.auto.RepaymentPlanInfoUnMapper;
+import com.ut.scf.dao.project.ISignContractDao;
+import com.ut.scf.pojo.auto.FqcrGuaranteeInfo;
+import com.ut.scf.pojo.auto.OrderBatchInfo;
+import com.ut.scf.pojo.auto.OrderCheckCatch;
+import com.ut.scf.pojo.auto.OrderCheckCatchExample;
+import com.ut.scf.pojo.auto.OrderCheckResult;
+import com.ut.scf.pojo.auto.OrderInfo;
+import com.ut.scf.pojo.auto.OrderInfoExample;
+import com.ut.scf.pojo.auto.OrderInfoExample.Criteria;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.pojo.auto.RepaymentPlanInfo;
+import com.ut.scf.pojo.auto.RepaymentPlanInfoExample;
+import com.ut.scf.pojo.auto.RepaymentPlanInfoUn;
+import com.ut.scf.pojo.auto.RepaymentPlanInfoUnExample;
+import com.ut.scf.reqbean.project.OrderCheckCatchReqBean;
+import com.ut.scf.reqbean.project.OrderManagerReqBean;
+import com.ut.scf.reqbean.project.OrderYcManagerReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IOrderManagerService;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.project.ISignContractService;
+import com.ut.scf.service.project.thread.OperateOrderThread;
+
+@Service("orderManagerService")
+public class OrderManagerServiceImpl implements IOrderManagerService {
+
+    Logger log = LoggerFactory.getLogger(this.getClass());
+
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+
+    @Resource
+    private OrderInfoMapper orderInfoMapper;
+    @Resource
+    private OrderCheckCatchMapper orderCheckCatchMapper;
+    @Resource
+    private OrderBatchInfoMapper orderBatchInfoMapper;
+    @Resource
+    private RepaymentPlanInfoMapper repaymentPlanInfoMapper;
+    @Resource
+    private ISignContractDao iSignContractDao;
+    @Resource
+    private OperateOrderThread operateOrderThread;
+    @Resource
+    private IActivitiService activitiService;
+	@Resource
+	private ProcessEngine processEngine;
+	@Resource
+	private ISignContractDao signContractDao;
+    @Resource
+    private RuntimeService runtimeService;
+    @Resource
+    private RepaymentPlanInfoUnMapper repaymentPlanInfoUnMapper;
+    @Resource
+    private FqcrGuaranteeInfoMapper fqcrGuaranteeInfoMapper;
+    @Resource
+	private ISignContractService iSignContractService;
+	@Resource
+	private IProcessRepeatChkService processRepeatChkService;
+    @Resource
+    private TaskService taskService;
+
+    // 获取根据订单号获取订单信息
+    @Override
+    public BaseRespBean orderInfoById(String batchId, Map<String, String> map) {
+        PageRespBean respBean = new PageRespBean();
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        paramMap.put("batchId", batchId);
+        List<Map<String, Object>> list = iSignContractDao
+                .orderInfoByBatchId(paramMap);
+
+        if (map != null) {
+            for (Map<String, Object> tempMap : list) {
+                if (map.containsKey(tempMap.get("orderId"))) {
+                    tempMap.put("state", map.get(tempMap.get("orderId")));
+                }
+            }
+        }
+        respBean.setDataList(list);
+        return respBean;
+    }
+    
+    @Override
+    public BaseRespBean orderCheckCatch( OrderCheckCatchReqBean reqBean) {
+        PageRespBean respBean = new PageRespBean();
+    	Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+        List<Map<String, Object>> list = iSignContractDao
+                .selectOrderCheckCatch(paramMap);
+
+ 
+        respBean.setDataList(list);
+        return respBean;
+    }
+    @Override
+    public BaseRespBean orderInfoByList(String orderIdList,PageInfoBean page) {
+        PageRespBean respBean = new PageRespBean();
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        String [] idList =StringUtils.split(orderIdList,",");
+        paramMap.put("orderId", idList);
+		List<Map<String, Object>> list = iSignContractDao.orderInfoByBatchId(paramMap, page);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+    }
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public BaseRespBean startProcess(org.activiti.engine.impl.util.json.JSONObject jsonObject, HttpSession httpSession, ProcessRepeatCheck checkInfo)
+	{
+    	BaseRespBean respBean = new BaseRespBean();
+
+		String userName = (String) jsonObject.get("userId");
+		String key = (String) jsonObject.get("activitiKey");
+		String launchRoleId = (String) jsonObject.get("launchRoleId");
+		String orderBatchId = (String) jsonObject.get("batchId");
+
+		ProcessInstance pi = processEngine.getRuntimeService()// 管理流程实例和执行对象，也就是表示正在执行的操作
+				.startProcessInstanceByKey(key);
+		String procInstId = pi.getProcessInstanceId();
+		Task task = taskService.createTaskQuery().processInstanceId(pi.getId()).singleResult();
+
+		// 拾取用户
+		taskService.claim(task.getId(), userName);
+		// 设置变量
+		taskService.setVariable(task.getId(), "launchUser", userName);
+		taskService.setVariable(task.getId(), "launchRoleId", launchRoleId);
+		taskService.setVariable(task.getId(), "batchId", orderBatchId);
+
+		taskService.setVariableLocal(task.getId(), "agencyJson", jsonObject.toString());
+		// 完成节点
+		taskService.complete(task.getId());
+		checkInfo.setProcInstId(procInstId);
+		int result = processRepeatChkService.insert(checkInfo);
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		//设为正在审核
+	     OrderBatchInfo orderBatchInfo = new OrderBatchInfo();
+	        orderBatchInfo.setBatchId(orderBatchId);
+	       
+	        orderBatchInfo.setStatus("2");
+	        orderBatchInfoMapper.updateByPrimaryKeySelective(orderBatchInfo);
+
+		return respBean;
+	}
+    // 审核
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public BaseRespBean doAgree(OrderManagerReqBean reqBean) throws Exception {
+        BaseRespBean respBean = new BaseRespBean();
+
+        // 1.获取taskId和当前用户
+        org.activiti.engine.impl.util.json.JSONObject jsonObject = new org.activiti.engine.impl.util.json.JSONObject(reqBean);
+        String procInstId = (String) jsonObject.get("procInstId");
+        String taskId = (String) jsonObject.get("taskId");
+        String userId = (String) jsonObject.get("userId");
+        String agree = (String) jsonObject.get("agree");
+        boolean flag = agree.equals("0") ? true : false;
+
+        // 2.拾取用户
+        taskService.claim(taskId, userId);
+        // 3.设置变量
+        taskService.setVariableLocal(taskId, "agencyJson",
+                jsonObject.toString());
+        // 4.流程走向
+        taskService.setVariable(taskId, "agree", flag);
+        // 5.完成流程
+        taskService.complete(taskId);
+        // 6.查看流程状态
+        ProcessInstance pi = runtimeService.createProcessInstanceQuery()
+                .processInstanceId(procInstId).singleResult();
+        if (pi == null) { // 流程已结束
+            updateBatchInfo(reqBean);
+            Map<String, String> map = null;
+            if (reqBean.getState() != null && reqBean.getOrderId() != null) {
+                String[] ids = reqBean.getOrderId().split(",");
+                String[] status = reqBean.getState().split(",");
+                map = new HashMap<String, String>();
+                for (int i = 0; i < status.length; i++) {
+                    map.put(ids[i], status[i]);
+                }
+         /*       respBean = addRepayPlanInfo(Arrays.asList(ids), map,"");*/
+            }
+        }
+        return respBean;
+    }
+
+
+    // 结束流程
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public BaseRespBean endProcess(
+            org.activiti.engine.impl.util.json.JSONObject jsonObject,
+            OrderManagerReqBean reqBean) throws Exception {
+        BaseRespBean baseRespBean = new BaseRespBean();
+      
+        if(jsonObject.getString("agree").equals("0"))
+        {
+        	if(StringUtils.isBlank(reqBean.getPlanPayDate()))
+		        {
+        		baseRespBean.setResult(-1);
+        		baseRespBean.setResultNote("计划放款时间不可以为空！");
+        		return baseRespBean;
+		        }
+        
+            Map<String, String> map = null;
+            ArrayList<String> refusedOrderLists = new ArrayList<String>();
+            if (reqBean.getState() != null && reqBean.getOrderId() != null) {
+                String[] ids = reqBean.getOrderId().split(",");
+                String[] status = reqBean.getState().split(",");
+                map = new HashMap<String, String>();
+                for (int i = 0; i < status.length; i++) {
+                    map.put(ids[i], status[i]);
+                    if(status[i].equals("0"))//订单拒绝
+                    {
+                    	refusedOrderLists.add(ids[i]);
+                    }
+                }
+               /* baseRespBean = addRepayPlanInfo(Arrays.asList(ids), map,reqBean.getBatchId());*/
+                
+                operateOrderThread.setBatchId(reqBean.getBatchId());
+                operateOrderThread.setPeopleType(reqBean.getPeopleType());
+                
+            	//将计划还款时间以及拒绝的订单发送给分期超人
+        		OrderCheckResult checkResult=new OrderCheckResult();		
+        		checkResult.setDate(reqBean.getPlanPayDate());
+        		checkResult.setBatch_id(reqBean.getBatchId());
+        		checkResult.setRefuse_order_id(refusedOrderLists);
+        		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        		Map<String, Object> map2 = new HashMap<String, Object>();
+        		map2.put("batch_id", checkResult.getBatch_id());
+        		map2.put("date", sdf.format(sdf.parse(checkResult.getDate()+" 00:00:00")));
+        		map2.put("refuse_order_id", checkResult.getRefuse_order_id());
+        		JSONObject object = SignUtil.requestInterface(map2, SignUtil.orderConfirm);
+        		System.out.println(object);
+
+        		if(!object.getString("code").equals("200"))
+        		{	
+        			baseRespBean.setResult(ErrorCodeEnum.ADD_FAILED);
+        			baseRespBean.setResultNote("超人接口请求失败");
+        			return baseRespBean;
+        		}else {//返回拒绝的订单
+        			
+        			String dataString=new String();		
+        			dataString = SignUtil.parseData(jsonObject.getString("data"));	
+        			com.alibaba.fastjson.JSONArray dataArray = JSON.parseArray(dataString);
+        			if(dataArray.size()<checkResult.getRefuse_order_id().size()){
+        				baseRespBean.setResult(ErrorCodeEnum.ADD_FAILED);
+            			baseRespBean.setResultNote("接口返回的拒绝结果存在异常，请确认！");
+            			return baseRespBean;
+        			}
+        			List<String> values=new ArrayList<String>();
+        			for (int i=0;i<dataArray.size();i++) {
+        				values.add(dataArray.getString(i));
+        				}
+        			
+        		
+        			
+        			//更新拒绝订单
+        			OrderInfo record= new OrderInfo();
+        			OrderInfoExample example=new OrderInfoExample();
+        			Criteria criteria= example.createCriteria();
+        			record.setState((byte)0);
+        			criteria.andOrderIdIn(values);
+        			criteria.andBatchIdEqualTo(checkResult.getBatch_id());
+        			orderInfoMapper.updateByExampleSelective(record, example);
+        			
+        			//更新同意订单
+        			OrderInfo record2= new OrderInfo();
+        			OrderInfoExample example2=new OrderInfoExample();
+        			Criteria criteria2= example.createCriteria();
+        			record2.setState((byte)1);
+        			criteria2.andOrderIdNotIn(values);
+        			criteria.andBatchIdEqualTo(checkResult.getBatch_id());
+        			orderInfoMapper.updateByExampleSelective(record2, example2);
+        			
+        		}
+        		
+            }
+            int result = processRepeatChkService.deleteByProcInstId(jsonObject.getString("procInstId"));
+    		if (result < 0) {
+    			baseRespBean.setResult(ErrorCodeEnum.SSM_REPAY_FAIL);
+    		}
+    		
+    		
+    		//更新批次订单数量
+    		OrderBatchInfo batchInfo = new OrderBatchInfo();
+
+    		Map<String, Object> paramMap= new HashMap<String, Object>();
+    		paramMap.put("batchId", reqBean.getBatchId());
+    	
+    			batchInfo.setStatus("9");//等待获取还款计划		
+    			Map<String, Object> resultMap=signContractDao.getRejOrderSum(paramMap);
+    			batchInfo.setRejOrderAmt(resultMap.get("sumNeedMoney")==null?new BigDecimal(0.00): new BigDecimal(resultMap.get("sumNeedMoney").toString()));
+    			batchInfo.setRejOrderNum(resultMap.get("sumCount")==null?0:Integer.valueOf(resultMap.get("sumCount").toString()));
+    			Map<String, Object> resultMapc=signContractDao.getRecOrderSum(paramMap);
+    			batchInfo.setRecOrderAmt(resultMapc.get("sumNeedMoney")==null?new BigDecimal(0.00):new BigDecimal(resultMapc.get("sumNeedMoney").toString()));
+    			batchInfo.setRecOrderNum(resultMapc.get("sumCount")==null?0:Integer.valueOf(resultMapc.get("sumCount").toString()));
+    		
+    		batchInfo.setBatchId(reqBean.getBatchId());
+    		batchInfo.setOrderTotalNum(reqBean.getOrderTotalNum()==null?0:Integer.valueOf(reqBean.getOrderTotalNum()));	
+    		orderBatchInfoMapper.updateByPrimaryKeySelective(batchInfo);
+    		
+
+    		
+    		
+    		if(!reqBean.getPeopleType().equals("3"))
+    		{
+    			double rate = iSignContractService.getGuaranteeRate("product02");
+    			//计算并插入保证金
+    			FqcrGuaranteeInfo fqcrGuaranteeInfo=new FqcrGuaranteeInfo();
+    			fqcrGuaranteeInfo.setBatchId(reqBean.getBatchId());
+    			fqcrGuaranteeInfo.setGuaranteeMoneyRate(new BigDecimal(rate));
+    			fqcrGuaranteeInfo.setPayAbleGuarantee(batchInfo.getRecOrderAmt().divide(new BigDecimal(100)));
+    			fqcrGuaranteeInfo.setPayActGuarantee(new BigDecimal(0));
+    			fqcrGuaranteeInfo.setGuaranteeBalance(new BigDecimal(0));
+    			
+    			int insertNum= fqcrGuaranteeInfoMapper.insertSelective(fqcrGuaranteeInfo);
+    			if (insertNum < 0) {
+    				baseRespBean.setResult(ErrorCodeEnum.ADD_FAILED);
+    			}
+    		}
+    		//完毕后，获取还款计划.
+    		 Thread thread2 = new Thread(operateOrderThread);
+             thread2.start();
+        }
+        activitiService.doAgree(jsonObject);
+	
+		
+        return baseRespBean;
+    }
+    // 结束流程
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public BaseRespBean endProcess(org.activiti.engine.impl.util.json.JSONObject jsonObject, OrderYcManagerReqBean reqBean){
+        BaseRespBean baseRespBean = new BaseRespBean();
+        activitiService.doAgree(jsonObject);
+    	List<String> liststate=new ArrayList<>();
+		liststate.add("0");
+		liststate.add("2");
+        if(!StringUtils.isEmpty(reqBean.getOrderIdList()))
+        {
+        	String[] ordersList =StringUtils.split(reqBean.getOrderIdList(), ",");
+        	
+        	for (int i = 0; i < ordersList.length; i++) {
+        		RepaymentPlanInfoUnExample example=new RepaymentPlanInfoUnExample();
+        		com.ut.scf.pojo.auto.RepaymentPlanInfoUnExample.Criteria criteria =example.createCriteria();
+        		criteria.andOrderIdEqualTo(ordersList[i]);
+        		 List<RepaymentPlanInfoUn> reList=repaymentPlanInfoUnMapper.selectByExample(example);
+        		if(reList!=null)
+        		{
+        		
+        			for (RepaymentPlanInfoUn repaymentPlanInfoUn : reList) {
+        				RepaymentPlanInfoExample examlpe2=new RepaymentPlanInfoExample();
+        				com.ut.scf.pojo.auto.RepaymentPlanInfoExample.Criteria criteria2=examlpe2.createCriteria();
+        				criteria2.andOrderIdEqualTo(repaymentPlanInfoUn.getOrderId());
+        				criteria2.andPeriodEqualTo(repaymentPlanInfoUn.getPeriod());
+        		/*		criteria2.andStudentRepayStatusIn(liststate);*/
+        				List<RepaymentPlanInfo> list2=repaymentPlanInfoMapper.selectByExample(examlpe2);
+        				if(list2!=null&&list2.size()>0)
+        				{
+        					RepaymentPlanInfo repaymentPlanInfo=new RepaymentPlanInfo();
+        					repaymentPlanInfo.setCurrentMoney(repaymentPlanInfoUn.getCurrentMoney());
+        					repaymentPlanInfo.setCurrentPayableInterest(repaymentPlanInfoUn.getCurrentPayableInterest());
+        					repaymentPlanInfo.setCurrentPayablePrincipal(repaymentPlanInfoUn.getCurrentPayablePrincipal());
+        					repaymentPlanInfo.setCurrentRepayDate(repaymentPlanInfoUn.getCurrentRepayDate());
+        					repaymentPlanInfo.setEnsureMoney(repaymentPlanInfoUn.getEnsureMoney());
+        					repaymentPlanInfo.setInterest(repaymentPlanInfoUn.getInterest());
+        					repaymentPlanInfo.setLcMoney(repaymentPlanInfoUn.getLcMoney());
+        					repaymentPlanInfo.setMarketingFeeYi(repaymentPlanInfoUn.getMarketingFeeYi());
+        					repaymentPlanInfo.setPayedTime(repaymentPlanInfoUn.getPayedTime());
+        					repaymentPlanInfo.setRepaymentMoney(repaymentPlanInfoUn.getRepaymentMoney());
+        					repaymentPlanInfo.setServiceChargeYi(repaymentPlanInfoUn.getServiceChargeYi());
+        					repaymentPlanInfo.setState(repaymentPlanInfoUn.getState());
+        					repaymentPlanInfo.setStudentRepayStatus(repaymentPlanInfoUn.getStudentRepayStatus());
+        					repaymentPlanInfo.setSuperRepayStatus(repaymentPlanInfoUn.getSuperRepayStatus());
+        					repaymentPlanInfoMapper.updateByPrimaryKeySelective(repaymentPlanInfo);
+        				}else{
+        					RepaymentPlanInfo repaymentPlanInfo=new RepaymentPlanInfo();
+        					repaymentPlanInfo.setRepaymentId(ScfUUID.generate());
+        					repaymentPlanInfo.setOrderId(repaymentPlanInfoUn.getOrderId());
+        					repaymentPlanInfo.setPeriod(repaymentPlanInfoUn.getPeriod());
+        					repaymentPlanInfo.setCurrentRepayDate(repaymentPlanInfoUn.getCurrentRepayDate());
+        					repaymentPlanInfo.setInterest(repaymentPlanInfoUn.getInterest());
+							repaymentPlanInfo.setLcMoney(repaymentPlanInfoUn.getLcMoney());
+							repaymentPlanInfo.setCurrentMoney(repaymentPlanInfoUn.getCurrentMoney());
+							repaymentPlanInfo.setEnsureMoney(repaymentPlanInfoUn.getEnsureMoney());
+							repaymentPlanInfo.setPayedTime(repaymentPlanInfoUn.getPayedTime());
+							repaymentPlanInfo.setRepaymentMoney(repaymentPlanInfoUn.getRepaymentMoney());
+							repaymentPlanInfo.setState(repaymentPlanInfoUn.getState());
+							repaymentPlanInfo.setMarketingFeeYi(repaymentPlanInfoUn.getMarketingFeeYi());
+							repaymentPlanInfo.setServiceChargeYi(repaymentPlanInfoUn.getServiceChargeYi());
+							String studentRepayStatus="";
+							if(reqBean.getType().equals("提前结清"))
+								studentRepayStatus="88";
+			        		else if(reqBean.getType().equals("退单"))
+			        			studentRepayStatus="99";
+							repaymentPlanInfo.setStudentRepayStatus(studentRepayStatus);
+							repaymentPlanInfoMapper.updateByPrimaryKeySelective(repaymentPlanInfo);
+        				}
+					}
+        		}
+        		
+        		//更新订单状态为退单
+        		OrderInfo record=new OrderInfo();
+        		record.setOrderId(ordersList[i]);
+        		if(reqBean.getType().equals("提前结清"))
+        			record.setState((byte)88);
+        		else if(reqBean.getType().equals("退单"))
+        			record.setState((byte)99);
+        		orderInfoMapper.updateByPrimaryKeySelective(record);
+			}
+        }
+      
+		
+        return baseRespBean;
+    }
+    // 更新订单批次
+    @Transactional
+    public void updateBatchInfo(OrderManagerReqBean reqBean) throws Exception {
+    	
+		//更新批次订单数量
+		OrderBatchInfo batchInfo = new OrderBatchInfo();
+
+		Map<String, Object> paramMap= new HashMap<String, Object>();
+		paramMap.put("batchId", reqBean.getBatchId());
+	
+			batchInfo.setStatus("9");//等待获取还款计划		
+			Map<String, Object> resultMap=signContractDao.getRejOrderSum(paramMap);
+			batchInfo.setRejOrderAmt(resultMap.get("sumNeedMoney")==null?new BigDecimal(0.00): new BigDecimal(resultMap.get("sumNeedMoney").toString()));
+			batchInfo.setRejOrderNum(resultMap.get("sumCount")==null?0:Integer.valueOf(resultMap.get("sumCount").toString()));
+			Map<String, Object> resultMapc=signContractDao.getRecOrderSum(paramMap);
+			batchInfo.setRecOrderAmt(resultMapc.get("sumNeedMoney")==null?new BigDecimal(0.00):new BigDecimal(resultMapc.get("sumNeedMoney").toString()));
+			batchInfo.setRecOrderNum(resultMapc.get("sumCount")==null?0:Integer.valueOf(resultMapc.get("sumCount").toString()));
+		
+		batchInfo.setBatchId(reqBean.getBatchId());
+		batchInfo.setOrderTotalNum(reqBean.getOrderTotalNum()==null?0:Integer.valueOf(reqBean.getOrderTotalNum()));	
+		orderBatchInfoMapper.updateByPrimaryKeySelective(batchInfo);
+    }
+
+    /*//更新订单状态
+    @Override
+    public BaseRespBean addRepayPlanInfo(List<String> orderIds,
+                                         Map<String, String> map,String batchId) throws Exception {
+
+        PageRespBean respBean = new PageRespBean();
+        List<Map<String, String>> orderList = new ArrayList<Map<String, String>>();
+        List<Map<String, String>> operateList = new ArrayList<Map<String, String>>();
+
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        paramMap.put("orderId", orderIds);
+        List<Map<String, Object>> orderInfos = iSignContractDao
+                .orderInfoByBatchId(paramMap);
+
+        if (map != null) {
+        	List<String> orderListreject=new ArrayList<>();
+        	List<String> orderListrefuse=new ArrayList<>();
+            for (Map<String, Object> orderInfo : orderInfos) {
+                String orderId = (String) orderInfo.get("orderId");
+                // 跟新订单状态
+                if (map.containsKey(orderId)) {                    
+                    if(map.get(orderId).equals("1")){//只获取审核通过的还款计划
+                  	  Map<String, String> tempMap = new HashMap<String, String>();
+                        tempMap.put("orderId", orderId);
+                        tempMap.put("status",
+                                String.valueOf('1'));
+                        tempMap.put("peopleType",
+                                String.valueOf(orderInfo.get("peopleType")));
+                        orderList.add(tempMap);
+                        orderListreject.add(orderId);
+
+	                  }else if(map.get(orderId).equals("0")){//拒绝
+	                	  orderListrefuse.add(orderId);
+	
+	                }
+                }
+            }
+            //更新订单
+            OrderInfo record=new OrderInfo();
+         
+            OrderInfoExample example=new OrderInfoExample();
+            Criteria criteria=example.createCriteria();
+            if(orderListreject.size()>0){
+            	   record.setState((byte)1);
+                criteria.andOrderIdIn(orderListreject);
+                orderInfoMapper.updateByExampleSelective(record, example);
+            }
+			if(orderListrefuse.size()>0){
+			    record.setState((byte)0);
+			    criteria.andOrderIdIn(orderListrefuse);
+			    orderInfoMapper.updateByExampleSelective(record, example);
+			}
+            
+
+            // 还款计划对比接口
+            operateOrderThread.setStatusList(orderList);
+            operateOrderThread.setBatchId(batchId);
+           operateOrderThread.setPeopleType(peopleType);
+        }
+
+        return respBean;
+    }*/
+
+    // 根据批次号获取订单信息
+    @Override
+    public OrderBatchInfo batchInfoById(String batchId) {
+    	 Map<String, Object> paramMap = new HashMap<String, Object>();
+    	 paramMap.put("batchId", batchId);
+    	 iSignContractDao. truncateCheckCatch(batchId);
+    	iSignContractDao.orderCheckCatchInsert(paramMap);
+        return orderBatchInfoMapper.selectByPrimaryKey(batchId);
+    }
+    // 根据批次号获取订单信息
+    @Override
+    public OrderBatchInfo opearte(OrderManagerReqBean reqBean) {
+    	/* Map<String, Object> paramMap = new HashMap<String, Object>();
+    	 paramMap.put("batchId", batchId);
+    	 iSignContractDao. truncateCheckCatch();
+    	iSignContractDao.orderCheckCatchInsert(paramMap);
+        return orderBatchInfoMapper.selectByPrimaryKey(batchId);*/
+    
+    	OrderCheckCatchExample example=new OrderCheckCatchExample();
+		com.ut.scf.pojo.auto.OrderCheckCatchExample.Criteria criteria=example.createCriteria();
+		OrderCheckCatch record=new OrderCheckCatch();
+    	if(reqBean.getOpearte().equals("allRefuse")){
+    		List<String> values=new ArrayList<String>();
+        	String s[]=reqBean.getOrderIds().split(",");
+        
+        	for (String string : s) {
+        		values.add(string);
+    		}
+    		criteria.andOrderidIn(values);
+    		record.setState("0");
+    	 	orderCheckCatchMapper.updateByExampleSelective(record, example);
+    	} else if (reqBean.getOpearte().equals("agree")) {
+    		List<String> values=new ArrayList<String>();
+        	String s[]=reqBean.getOrderIds().split(",");
+     
+        	for (String string : s) {
+        		values.add(string);
+    		}
+    		criteria.andOrderidIn(values);
+    		record.setState("1");
+    	 	orderCheckCatchMapper.updateByExampleSelective(record, example);
+		} else if (reqBean.getOpearte().equals("allAgree")) {
+			criteria.andStateIsNull();
+    		record.setState("1");
+    	  	orderCheckCatchMapper.updateByExampleSelective(record, example);
+		}
+    	
+	    	Map<String, Object> paramMap= new HashMap<String, Object>();
+			paramMap.put("batchId", reqBean.getBatchId());
+		
+			OrderBatchInfo batchInfo=new OrderBatchInfo();
+	
+			Map<String, Object> resultMap=signContractDao.getRejOrderCatchSum(paramMap);
+			batchInfo.setRejOrderAmt(resultMap.get("sumNeedMoney")==null?new BigDecimal(0.00): new BigDecimal(resultMap.get("sumNeedMoney").toString()));
+			batchInfo.setRejOrderNum(resultMap.get("sumCount")==null?0:Integer.valueOf(resultMap.get("sumCount").toString()));
+			
+			Map<String, Object> resultMapc=signContractDao.getRecOrderCatchSum(paramMap);
+			batchInfo.setRecOrderAmt(resultMapc.get("sumNeedMoney")==null?new BigDecimal(0.00):new BigDecimal(resultMapc.get("sumNeedMoney").toString()));
+			batchInfo.setRecOrderNum(resultMapc.get("sumCount")==null?0:Integer.valueOf(resultMapc.get("sumCount").toString()));
+			return batchInfo;
+    }
+    // 获取生成还款计划
+    @Override
+    public List<List<Map<String, Object>>> getRepaymentPlans(String ids)
+            throws Exception {
+        List<List<Map<String, Object>>> plans = new ArrayList<List<Map<String, Object>>>();
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        String[] idStrs = ids.split(",");
+        paramMap.put("orderId", Arrays.asList(idStrs));
+        paramMap.put("state", "1");
+        List<Map<String, Object>> orderInfos = iSignContractDao
+                .orderInfoByBatchId(paramMap);
+        for (Map<String, Object> orderInfo : orderInfos) {
+            List<Map<String, Object>> list = getRepayPlan(orderInfo);
+            plans.add(list);
+        }
+        return plans;
+    }
+
+    // 根据订单号查询订单信息
+    public List<OrderInfo> findOrderInfosById(List<String> ids) {
+        OrderInfoExample example = new OrderInfoExample();
+        Criteria criteria = example.createCriteria();
+        criteria.andOrderIdIn(ids);
+        return orderInfoMapper.selectByExample(example);
+    }
+
+    // 根据订单生成还款计划
+    // 插表 返回利息本金json串
+    @Override
+    public String generateRepayPlan(Map<String, Object> orderInfo)
+            throws Exception {
+        List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+        Date syncDate = (Date) orderInfo.get("syncDate");
+        int period = Integer.parseInt(orderInfo.get("period").toString()); // 分期期数
+        BigDecimal crReqAmt = new BigDecimal(orderInfo.get("crReqAmt")
+                .toString());// 申请金额
+        BigDecimal money = paymentCalc(12, period, new BigDecimal(0.12),
+                crReqAmt);// 每月应付
+        BigDecimal principal = crReqAmt.divide(new BigDecimal(period), 2,
+                BigDecimal.ROUND_HALF_UP);// 每月应还本金
+        BigDecimal interest = money.subtract(principal);// 每月应还利息
+
+        for (int i = 0; i < period; i++) {
+            Map<String, String> tempMap = new HashMap<String, String>();
+            String date = addMonth((Date) orderInfo.get("startPayDay"), i);
+            Date tempDate = format.parse(date);
+
+            byte tempPeriod = (byte) (i + 1);
+            if (i == period - 1) {
+                // 最后一期 解决 本金四舍五入
+                principal = crReqAmt.subtract(principal
+                        .multiply(new BigDecimal(i)));
+                interest = money.subtract(principal);
+            }
+            RepaymentPlanInfo repaymentPlanInfo = new RepaymentPlanInfo();
+            repaymentPlanInfo.setOrderBatchId(orderInfo.get("orderBatchId")
+                    .toString());
+            repaymentPlanInfo.setOrderId(orderInfo.get("orderId").toString());
+            repaymentPlanInfo.setStudentRepayStatus("0");
+            repaymentPlanInfo.setSuperRepayStatus("0");
+            repaymentPlanInfo.setPeriod(tempPeriod);
+            repaymentPlanInfo.setCurrentRepayDate(ScfDateUtil.parseDate(date));
+            if (tempDate.getTime() < syncDate.getTime()) {
+                repaymentPlanInfo.setCurrentPayableInterest(BigDecimal.ZERO);
+            } else {
+                repaymentPlanInfo.setCurrentPayableInterest(interest);
+            }
+            repaymentPlanInfo.setCurrentPayablePrincipal(principal);
+            repaymentPlanInfo.setRepaymentId(ScfUUID.generate());
+            repaymentPlanInfoMapper.insert(repaymentPlanInfo);
+
+            tempMap.put("current_payable_principal", principal.toString());
+            tempMap.put("current_payable_interest", interest.toString());
+            list.add(tempMap);
+        }
+        return JSONObject.toJSONString(list);
+
+    }
+
+    // 0 ：返回数组
+    public List<Map<String, Object>> getRepayPlan(Map<String, Object> orderInfo)
+            throws Exception {
+        List<Map<String, Object>> lists = new ArrayList<Map<String, Object>>();
+        Date syncDate = (Date) orderInfo.get("syncDate");
+        int period = Integer.parseInt(orderInfo.get("period").toString()); // 分期期数
+        BigDecimal crReqAmt = new BigDecimal(orderInfo.get("crReqAmt")
+                .toString());// 申请金额
+        BigDecimal money = paymentCalc(12, period, new BigDecimal(0.12),
+                crReqAmt);// 每月应付
+        BigDecimal principal = crReqAmt.divide(new BigDecimal(period), 2,
+                BigDecimal.ROUND_HALF_UP);// 每月应还本金
+        BigDecimal interest = money.subtract(principal);// 每月应还利息
+
+        for (int i = 0; i < period; i++) {
+            String date = addMonth((Date) orderInfo.get("startPayDay"), i);
+            Date tempDate = format.parse(date);
+            byte tempPeriod = (byte) (i + 1);
+            if (i == period - 1) {
+                // 最后一期 解决 本金四舍五入
+                principal = crReqAmt.subtract(principal
+                        .multiply(new BigDecimal(i)));
+                interest = money.subtract(principal);
+            }
+            Map<String, Object> tempMap = new HashMap<String, Object>();
+            tempMap.putAll(orderInfo);
+            tempMap.put("studentRepayStatus", "0");
+            tempMap.put("superRepayStatus", "0");
+            tempMap.put("period", tempPeriod);
+            tempMap.put("currentRepayDate", date);
+            if (tempDate.getTime() < syncDate.getTime()) {
+                tempMap.put("currentPayableInterest", "0");
+            } else {
+                tempMap.put("currentPayableInterest", interest);
+            }
+
+            tempMap.put("currentPayablePrincipal", principal);
+            lists.add(tempMap);
+
+        }
+        return lists;
+
+    }
+
+    // 传入具体日期和n ，返回具体日期减n个月
+    private String addMonth(Date date, int n) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.MONTH, n);
+        Date tempDate = calendar.getTime();
+        return ScfDateUtil.format(tempDate, ScfConsts.DATE_FORMAT);
+    }
+
+    // 计算 还款计划
+    // 第一个m固定值12|n分期期数|r利率0.12|p金额 计算商家还款计划表的公式
+    private BigDecimal paymentCalc(int m, int n, BigDecimal r,
+                                   BigDecimal principal) {
+        BigDecimal top = r.divide(new BigDecimal(m), 10,
+                BigDecimal.ROUND_HALF_UP);
+        top = new BigDecimal(1).add(top);
+        top = new BigDecimal(1).divide(top, 10, BigDecimal.ROUND_HALF_UP);
+        BigDecimal resultTop = new BigDecimal(1).subtract(top);
+        resultTop = resultTop.multiply(principal);
+        BigDecimal resultBtm = top.pow(n);
+        resultBtm = new BigDecimal(1).subtract(resultBtm);
+        resultBtm = top.multiply(resultBtm);
+        BigDecimal result = resultTop.divide(resultBtm, 2,
+                BigDecimal.ROUND_HALF_UP);
+        return result;
+    }
+    @Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean deleteProcess(String procInstId) {
+		BaseRespBean respBean = new BaseRespBean();
+		activitiService.deleteProcessById(procInstId);
+		// 根据procInstId获取发起时存入的流程变量,还原预占用额度和可用授信额度
+		Object value = processEngine.getHistoryService().createHistoricVariableInstanceQuery()
+				.processInstanceId(procInstId).variableName("batchId").singleResult().getValue();
+		
+		String batchId = value.toString();
+		  OrderBatchInfo orderBatchInfo = new OrderBatchInfo();
+	        orderBatchInfo.setBatchId(batchId);
+	       
+	        orderBatchInfo.setStatus("3");
+	       
+
+		int updateByPrimaryKeySelective =  orderBatchInfoMapper.updateByPrimaryKeySelective(orderBatchInfo);
+		if (updateByPrimaryKeySelective < 1) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		return respBean;
+	}
+	@Override
+	public OrderInfo selectByPrimaryKey(String orderId) {
+		// TODO Auto-generated method stub
+		return orderInfoMapper.selectByPrimaryKey(orderId);
+	}
+
+	@Override
+	public BaseRespBean orderInfoById(String batchId, Map<String, String> map, PageInfoBean page) {
+        PageRespBean respBean = new PageRespBean();
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        paramMap.put("batchId", batchId);
+        List<Map<String, Object>> list = iSignContractDao
+                .orderInfoByBatchId(paramMap,page);
+
+        if (map != null) {
+            for (Map<String, Object> tempMap : list) {
+                if (map.containsKey(tempMap.get("orderId"))) {
+                    tempMap.put("state", map.get(tempMap.get("orderId")));
+                }
+            }
+        }
+    	respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+        return respBean;
+    }
+	
+	@Override
+	public BaseRespBean orderInfoByMap(OrderManagerReqBean reqBean, Map<String, String> map, PageInfoBean page) {
+        PageRespBean respBean = new PageRespBean();
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        paramMap.put("batchId", reqBean.getBatchId());
+        paramMap.put("orderBy", reqBean.getOrderBy());
+        paramMap.put("orderByName", reqBean.getOrderByName());
+        List<Map<String, Object>> list = iSignContractDao
+                .orderInfoByBatchId(paramMap,page);
+
+        if (map != null) {
+            for (Map<String, Object> tempMap : list) {
+                if (map.containsKey(tempMap.get("orderId"))) {
+                    tempMap.put("state", map.get(tempMap.get("orderId")));
+                }
+            }
+        }
+    	respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+        return respBean;
+    }
+}

@@ -1,0 +1,103 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.TfProjectAssignMapper;
+import com.ut.scf.dao.auto.TfProjectFilesMapper;
+import com.ut.scf.dao.auto.TfProjectInfoMapper;
+import com.ut.scf.dao.tradfact.IProjectReviewDao;
+import com.ut.scf.pojo.auto.TfProjectAssign;
+import com.ut.scf.pojo.auto.TfProjectFiles;
+import com.ut.scf.pojo.auto.TfProjectInfo;
+import com.ut.scf.reqbean.tradfact.ProjectReviewDetailReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+
+@Service("projectReviewBpmService")
+public class ProjectReviewBpmServiceImpl extends BaseActivitiService<ProjectReviewDetailReqBean> implements
+        IActivitiService<ProjectReviewDetailReqBean> {
+
+	@Resource
+	private TfProjectFilesMapper projectFilesMapper;
+
+	@Resource
+	private TfProjectInfoMapper tfProjectInfoMapper;
+	
+	@Resource
+	private IProjectReviewDao projectReviewDao;
+	
+	@Resource
+	private TfProjectAssignMapper  assignMapper;
+
+	private static final String ADVANCE_APPLY_BPM = "projectReview";
+
+	@Override
+	public String getProcessDefinitionKey() {
+		return ADVANCE_APPLY_BPM;
+	}
+
+	@Override
+	public void doStartAfter(BpmProcessContext processContext) {
+		ProjectReviewDetailReqBean projectAdjustDetailReqBean = (ProjectReviewDetailReqBean) processContext.getT();
+		TfProjectInfo tfProjectInfo = new TfProjectInfo();
+		tfProjectInfo.setProjectId(projectAdjustDetailReqBean.getProjectId());
+		tfProjectInfo.setProjectStatus("30");
+		tfProjectInfoMapper.updateByPrimaryKeySelective(tfProjectInfo);
+	}
+
+	@Override
+	public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+		if (bpmProcessContext.isProcessEnd()) {
+			ProjectReviewDetailReqBean reqBean = (ProjectReviewDetailReqBean) bpmProcessContext.getT();
+			insertFiles(reqBean.getReviewFiles(), "5", reqBean.getProjectId());
+			TfProjectInfo tfProjectInfo = new TfProjectInfo();
+			tfProjectInfo.setProjectId(reqBean.getProjectId());
+			tfProjectInfo.setProjectStatus("31");
+			tfProjectInfoMapper.updateByPrimaryKeySelective(tfProjectInfo);
+			addProjectAssign(reqBean.getProjectId(),reqBean.getUserId());
+		}
+	}
+
+	private void insertFiles(List<TfProjectFiles> projectFiles, String fileClass, String projectId) {
+		//先删除
+		Map<String,Object> paramap = new HashMap<String,Object>();
+		if(!projectId.equals(null) ||!projectId.equals(""))
+		paramap.put("projectId", projectId);
+		projectReviewDao.deleteReviewFiles(paramap);
+		//后添加
+		for (TfProjectFiles file : projectFiles) {
+			file.setProjectId(projectId);
+			file.setMaterialClass(fileClass);
+			file.setFileId(ScfUUID.generate());
+			file.setCreateTime(new Date());
+			projectFilesMapper.insert(file);
+		}
+	}
+	//指派风险经理
+    private void addProjectAssign(String projectId,String userId){
+        TfProjectAssign projectAssign = new TfProjectAssign();
+        projectAssign.setId(ScfUUID.generate());
+        projectAssign.setProjectId(projectId);
+        projectAssign.setUserAssign(userId);
+        projectAssign.setProjectType("2");
+        assignMapper.insert(projectAssign);
+    }
+	@Override
+	public void deleteProcessAfter(JSONObject jsonObject) {
+		String projectId = (String) jsonObject.get("projectId");
+		TfProjectInfo tfProjectInfo = new TfProjectInfo();
+		tfProjectInfo.setProjectId(projectId);
+		tfProjectInfo.setProjectStatus("21");
+		tfProjectInfoMapper.updateByPrimaryKeySelective(tfProjectInfo);
+	}
+}

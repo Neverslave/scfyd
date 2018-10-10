@@ -1,0 +1,75 @@
+package com.ut.scf.service.test.pub;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.pub.GaranteeMoneyUpdateReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.pub.IGaranteeMoneyService;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = {
+        "classpath:spring-mybatis-test.xml" })
+public class GaranteeMoneyServiceTest {
+	
+	private static final Logger log = LoggerFactory.getLogger(GaranteeMoneyServiceTest.class);
+	
+	@Autowired
+	private IGaranteeMoneyService garanteeMoneyService;
+	
+	@Test
+	public void getGaranteeMoneyListTest(){
+		log.info("**********************************getGaranteeMoneyListTest start*********************************");
+		Map<String, Object> paramMap = new HashMap<>();
+    	PageInfoBean page = new PageInfoBean();
+    	paramMap.put("productName", "23");
+    	page.setPageNumber(1);
+		page.setPageSize(10);
+    	BaseRespBean respBean = garanteeMoneyService.getGaranteeMoneyList(paramMap, page);
+    	log.info("getGaranteeMoneyList : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************getGaranteeMoneyListTest end*********************************");
+	}
+	
+	@Test
+	public void insertGaranteeMoneyTest(){
+		log.info("**********************************insertGaranteeMoneyTest start*********************************");
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("productId", "2c99848b5ca00e8a3aa5a011dded0002");
+		paramMap.put("productName", "1408");
+		paramMap.put("guaranteeMoneyRate", 55.0);
+		BaseRespBean respBean = garanteeMoneyService.insertGaranteeMoney(paramMap);
+		log.info("insertGaranteeMoney : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************insertGaranteeMoneyTest end*********************************");
+	}
+	
+	@Test
+	public void updateGaranteeMoneyTest(){
+		log.info("**********************************updateGaranteeMoneyTest start*********************************");
+		GaranteeMoneyUpdateReqBean garanteeMoneyUpdateReqBean = new GaranteeMoneyUpdateReqBean();
+		garanteeMoneyUpdateReqBean.setProductId("2c99848b5ca00e8a3aa5a011dded0002");
+		garanteeMoneyUpdateReqBean.setGuaranteeMoneyRate(68.0);
+		garanteeMoneyService.updateGaranteeMoney(garanteeMoneyUpdateReqBean);
+		log.info("**********************************updateGaranteeMoneyTest end*********************************");
+	}
+	
+	@Test
+	public void deleteGaranteeMoneyTest(){
+		log.info("**********************************deleteGaranteeMoney start*********************************");
+		BaseRespBean respBean = garanteeMoneyService.deleteGaranteeMoney("2c99848b5ca00e8a3aa5a011dded0002");
+    	log.info("deleteProduct : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************deleteGaranteeMoney end*********************************");
+	}
+}

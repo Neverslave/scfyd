@@ -1,0 +1,560 @@
+$(document).ready(function() {
+    $("form").attr("autocomplete", "off");
+    CloudUtils.getMenuNames("nav");
+    $('#agencyModal').on('hidden.bs.modal', function() {
+        $("#searchForm")[0].reset();
+    });
+    dateload();
+    
+    // 保证金收取比例取得
+    initCarInfoListTable();
+    numFormat();
+    formValidator();
+    ajaxFkTemplate();
+    // 付款日期
+    $("#payDate").val(store.get("serverDate"));
+    ajaxFileUpload();
+    downloadTemp();
+    if (CloudUtils.isEmpty($("#fkTemplateUrl").val())) {
+		$("#fkTemplate option:first").prop("selected", 'selected');
+		chgTemplate($("#fkTemplate").val());
+	}
+    getFormInfo();
+});
+
+function dateload() {
+    $('#financeStartDate').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        minView: 'month',
+        // 日期时间选择器所能够提供的最精确的时间选择视图。
+        initialDate: new Date()
+    }).on("click", function() {
+        $("#financeStartDate").datetimepicker("setEndDate", $("#financeEndDate").val());
+        $("#financeStartDate").datetimepicker("setStartDate", CloudUtils.addDays($("#financeEndDate").val(), -120));
+    }).on('hide', function(e) {
+        $('#addForm').data('bootstrapValidator')
+            .updateStatus('financeStartDate', 'NOT_VALIDATED', null)
+            .validateField('financeStartDate');
+        $('#addForm').data('bootstrapValidator')
+            .updateStatus('financeEndDate', 'NOT_VALIDATED', null)
+            .validateField('financeEndDate');
+    });
+
+    $('#financeEndDate').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        minView: 'month',
+         // 日期时间选择器所能够提供的最精确的时间选择视图。
+        initialDate: new Date()
+    }).on("click", function() {
+        $("#financeEndDate").datetimepicker("setStartDate", $("#financeStartDate").val());
+        $("#financeEndDate").datetimepicker("setEndDate", CloudUtils.addDays($("#financeStartDate").val(), 120));
+    }).on('hide', function(e) {
+        $('#addForm').data('bootstrapValidator')
+            .updateStatus('financeStartDate', 'NOT_VALIDATED', null)
+            .validateField('financeStartDate');
+        $('#addForm').data('bootstrapValidator')
+            .updateStatus('financeEndDate', 'NOT_VALIDATED', null)
+            .validateField('financeEndDate');
+    });
+    
+    $('#payDate').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        minView: 'month',
+         // 日期时间选择器所能够提供的最精确的时间选择视图。
+        initialDate: new Date()
+    });
+}
+function getFormInfo() {
+    var row = store.get('commitmentRow'); //从缓存中获取数据
+    console.log(row);
+		if(row.ywlxId=="1")
+		{
+			$('#lscredit').show();
+			$('#dzcredit').hide();
+		}
+	else 
+		{
+			$('#lscredit').hide();
+			$('#dzcredit').show();
+		}
+        //详情 只读
+        detailFun(row);
+
+   
+
+}
+ 
+ function detailFun(row) {
+	    $("#addForm").val("");
+	    CloudUtils.setForm(row, 'addForm');
+	    $("#payM").val(row.payAmt);
+//	    $('#detailForm input').attr('readonly', true);
+//	    $("select").attr("disabled", true);
+//	    document.getElementById("btn_save").style.display = "none";
+//	    $("#btn_blank").removeClass('col-sm-4').addClass('col-sm-7');
+	}
+function initCarInfoListTable() {
+    $('#carInfoListTable').bootstrapTable('destroy');
+    $("#carInfoListTable").bootstrapTable({
+        method: "post",
+        url: "",
+        striped: true, //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) { //设置查询参数  
+            return null;
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+ 	        field: 'financeId',
+ 	        title: '付款函ID',
+ 	        align: 'center',
+            valign: 'middle',
+           
+	 	}, {
+ 	        field: 'storeName',
+ 	        title: '经销商名称',
+ 	        align: 'center',
+            valign: 'middle',
+           
+	 	}, {
+ 	        field: 'payDate',
+ 	        title: '付款日期',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index) {
+            	 	
+            	    da = new Date(value);
+            	    var year = da.getFullYear();
+            	    var month = da.getMonth()+1;
+            	    var date = da.getDate();
+				return year+'-'+month+'-'+date;
+	    	}
+	 	},{
+ 	        field: 'carFrameNum',
+ 	        title: '车架号',
+ 	        align: 'center',
+            valign: 'middle',
+           
+	 	},{
+ 	        field: 'carActualPrice',
+ 	        title: '车辆价格',
+ 	        align: 'center',
+            valign: 'middle',
+           
+	 	},{
+ 	        field: 'carColor',
+ 	        title: '车辆颜色',
+ 	        align: 'center',
+            valign: 'middle',
+           
+	 	},{
+ 	        field: 'engineNum',
+ 	        title: '发动机号',
+ 	        align: 'center',
+            valign: 'middle',
+           
+	 	},{
+ 	        field: 'saleStatus',
+ 	        title: '销售状态',
+ 	        align: 'center',
+            valign: 'middle',
+           
+	 	},{
+ 	        field: 'operate',
+ 	        title: '操作',
+ 	        align: 'center',
+            valign: 'middle',
+           
+	 	}]
+    });
+}
+
+window.operateEvents = {
+    'click .remove': function(e, value, row, index) {
+        $('#carInfoListTable').bootstrapTable('remove', { field: 'fileUrl', values: [row.fileUrl] });
+        $("#fileupload").val("");
+        $("#payM").val("0");
+        $('#addForm').data('bootstrapValidator').updateStatus('payM', 'NOT_VALIDATED').validateField('payM');
+        if (!CloudUtils.isEmpty($("#agencyNum").val())) {
+            chgPayM();
+        } else {
+            $("#guaranteeAmt").val("0");
+        }
+    }
+};
+function ajaxProGuarantee(productId) {
+	var data = {productId:productId};
+    var options = {
+        url: '../../finance/getProGuarantee',
+        data:  JSON.stringify(data),
+        callBackFun: function(data) {
+            if (data.result == 0) {
+                $("#guaranteeRate").val(data.guaranteeRate);
+            } else {
+                bootbox.alert(data.resultNote);
+                return false;
+            }
+        },
+        errorCallback: function(data) {
+            bootbox.alert(data.resultNote);
+            return false;
+        }
+    };
+    CloudUtils.ajax(options);
+}
+
+
+function numFormat() {
+    $("#maxCredit").number(true, 2);
+    $("#availableCredit").number(true, 2);
+    $("#payM").number(true, 2);
+    $("#guaranteeAmt").number(true, 2);
+    $("#payActGuarantee").number(true, 2);
+    $("#guaranteeDiff").number(true, 2);
+    $("#financeAmount").number(true, 2);
+}
+
+function chgPayM() {
+    var payM = $("#payM").val();
+    var guaranteeRate = $("#guaranteeRate").val();
+    var payActGuarantee = $("#payActGuarantee").val();
+    // 保证金金额
+    var a = CloudUtils.Math(payM, guaranteeRate, "mul");
+    var b = CloudUtils.Math(a, 100, "div");
+    $("#guaranteeAmt").val(b);
+    // 保证金差额
+    var guaranteeAmt = $("#guaranteeAmt").val();
+    var guaranteeDiff = CloudUtils.Math(payActGuarantee, guaranteeAmt, "sub");
+    $("#guaranteeDiff").val(Math.abs(guaranteeDiff));
+}
+
+// 下载模板
+function downloadTemp() {
+    var options = {
+        url: '../../user/configKey',
+        data: '{"itemKey":"carDetailExcelTemp"}',
+        callBackFun: function(data) {
+            if (data.result == 0) {
+                var excelUrl = "../../" + data.itemValue;
+                $("#downloadTemp").attr("href",excelUrl);
+            } else {
+                bootbox.alert(data.resultNote);
+                return false;
+            }
+        },
+        errorCallback: function(data) {
+            bootbox.alert(data.resultNote);
+            return false;
+        }
+    };
+    CloudUtils.ajax(options);
+}
+
+/*// 文件上传
+function upload() {
+    var carListData = $("#carInfoListTable").bootstrapTable('getData');
+    if (carListData.length == 1) {
+        bootbox.alert("只能上传一个文件");
+        return false;
+    }
+    $("#fileupload").click();
+}*/
+
+var fileTypes = [".xls", ".xlsx", ".xlsm"];
+
+function checkFileType(type) {
+    var result = $.inArray(type, fileTypes);
+    if (result == -1) {
+        return false;
+    }
+    return true;
+}
+
+function checkFileSize(fileSize) {
+    fileSize = Math.round(fileSize / 1024 * 100) / 100; //单位为KB
+    fileSize = Math.round(fileSize / 1024);
+    if (fileSize > 50) {
+        return false;
+    }
+    return true;
+}
+
+function ajaxFileUpload() {
+    $('#fileupload').fileupload({
+        url: "../../file/uploadFile?pathId=3",
+        dataType: 'json',
+        // 上传完成后的执行逻辑
+        done: function(e, data) {
+            data = data.result;
+            if (data.result == 0) {
+             
+            	ajaxCalCarCompare(data.fileUrl);
+            } else {
+                bootbox.alert(data.resultNote);
+            }
+        }
+    });
+    $('#fileupload').bind('fileuploadadd', function(e, data) {
+        var obj = data.files[0];
+        var name = obj.name;
+        var size = obj.size;
+        var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+        if (!checkFileType(type)) {
+            bootbox.alert("仅支持excel文件,请选择正确的文件类型");
+            return false;
+        }
+        if (!checkFileSize(size)) {
+            bootbox.alert("文件大小不得超过50M");
+            return false;
+        }
+        var carListData = $("#carInfoListTable").bootstrapTable('getData');
+        if (carListData.length == 1) {
+            bootbox.alert("只能上传一个文件");
+            return false;
+        }
+    });
+
+}
+
+function save() {
+    if (!$('#agencyName').val()) {
+        bootbox.alert("请选择经销商及融资信息信息");
+        return false;
+    }
+    $('#addForm').data('bootstrapValidator').validate();
+    if (!$('#addForm').data('bootstrapValidator').isValid()) {
+        //没有通过校验 
+        return false;
+    } else {
+        var carListData = $("#carInfoListTable").bootstrapTable('getData');
+        if (carListData.length == 0) {
+            bootbox.alert("请上传车辆明细");
+            return false;
+        }
+
+        var data = CloudUtils.convertStringJson('addForm');
+        var jsonData = eval("(" + data + ")");
+        jsonData.carListInfo = JSON.stringify(carListData);
+
+        var options = {
+            url: "../../commitment/updateCarinfo",
+            data: JSON.stringify(jsonData),
+            callBackFun: function(data) {
+                if (data.result == 0) {
+                    bootbox.alert(data.resultNote, function() {
+                        window.location.href = '../../project/dykManager/payCommitmentManager.html';
+                    });
+                } else {
+                    bootbox.alert(data.resultNote);
+                    return false;
+                }
+            },
+            errorCallback: function(data) {
+                bootbox.alert("error");
+            }
+        };
+        CloudUtils.ajax(options);
+    }
+}
+
+function formValidator() {
+    $('#addForm').bootstrapValidator({
+            message: 'This value is not valid',
+            excluded: ':disabled',
+            group: ".valid_group",
+            feedbackIcons: {
+                valid: 'glyphicon glyphicon-ok',
+                invalid: 'glyphicon glyphicon-remove',
+                validating: 'glyphicon glyphicon-refresh'
+            },
+            fields: {
+                financeStartDate: {
+                    validators: {
+                        notEmpty: {
+                            message: '付款承诺函起始日不能为空'
+                        },
+                        callback: {
+                            message: '付款承诺函起始日需要小于付款承诺函到期日,且不能超过120天',
+                            callback: function(value, validator, $field, options) {
+                                var financeEndDate = $('#addForm').find("input[name='financeEndDate']").val();
+                                if (financeEndDate) {
+                                    var n = CloudUtils.DateDiffSec(financeEndDate, value);
+
+                                    return (n >= 1 && n <= 120);
+                                } else {
+                                    return true;
+                                }
+
+                            }
+                        }
+                    }
+                },
+                financeEndDate: {
+                    validators: {
+                        notEmpty: {
+                            message: '付款承诺函到期日不能为空'
+                        }
+                    },
+                    callback: {
+                        message: '付款承诺函到期日需要大于付款承诺函起始期日,且不能超过120天',
+                        callback: function(value, validator, $field, options) {
+                            var financeStartDate = $('#addForm').find("input[name='financeStartDate']").val();
+                            if (financeStartDate) {
+                                var n = CloudUtils.DateDiffSec(value, financeStartDate);
+
+                                return (n >= 1 && n <= 120);
+                            } else {
+                                return true;
+                            }
+
+                        }
+                    }
+                },
+                payM: {
+                    validators: {
+                        callback: {
+                            message: '付款金额要在0~1,000,000,000之间',
+                            callback: function(value, validator) {
+                                return parseFloat(value) > 0 && parseFloat(value) <= 1000000000;
+                            }
+                        }
+                    }
+                },
+                note: {
+                    validators: {
+                        notEmpty: { message: '备注不能为空' },
+                        stringLength: {
+                            max: 128,
+                            message: '备注长度不能超过128'
+                        },
+                    }
+                }
+            }
+        })
+        .on('success.form.bv', function(e) {
+            e.preventDefault();
+        });
+}
+function ajaxCalCarCompare(fileUrl) {
+    var options = {
+        url: "../../commitment/compareCarStatus",
+        data: JSON.stringify({
+            fileUrl: fileUrl,
+            financeId:$("#financeId").val()
+        }),
+        callBackFun: function(data) {
+            if (data.result == 0) {
+            	initCarInfoListTable();
+            	$("#carInfoListTable").bootstrapTable('append', data.dataList);
+                $("#addForm #payM").val(data.resultNote);
+                $('#addForm').data('bootstrapValidator').updateStatus('payM', 'NOT_VALIDATED').validateField('payM');
+                if (!CloudUtils.isEmpty($("#agencyNum").val())) {
+                    chgPayM();
+                } else {
+                    // 保证金金额
+                    var payM = $("#payM").val();
+                    var guaranteeRate = $("#guaranteeRate").val();
+                    var a = CloudUtils.Math(payM, guaranteeRate, "mul");
+                    var b = CloudUtils.Math(a, 100, "div");
+                    $("#guaranteeAmt").val(b);
+                }
+            } else {
+                bootbox.alert(data.resultNote);
+                return false;
+            }
+        },
+        errorCallback: function(data) {
+            bootbox.alert("error");
+        }
+    };
+    CloudUtils.ajax(options);
+}
+
+function click_pay(){
+	window.open("../.." + $("#fkTemplateUrl").val());
+}
+
+function ajaxFkTemplate() {
+	var options = {
+		url : '../../ydcommon/cnhTemplates',
+		data : JSON.stringify({
+			templateType: '1'
+		}),
+		callBackFun : function(data) {
+			if(data.result==0){
+				$.each(data.dataList, function(i, rec) {
+					if (i == 0) {
+						$("#fkTemplateUrl").val(rec.templatePath);
+					}
+					$("#fkTemplate").append('<option value="' + rec.templateKey +'">' + rec.templateName + '</option>')
+				});
+			}else{
+				bootbox.alert(data.resultNote);
+				return false;
+			}
+		},
+		errorCallback : function(data) {
+			bootbox.alert(data.resultNote);
+			return false;
+		}
+	};
+	CloudUtils.ajax(options);
+}
+
+function chgTemplate(templateKey) {
+	var options = {
+		url : '../../ydcommon/cnhTemplateUrl',
+		data : JSON.stringify({
+			templateKey: templateKey
+		}),
+		callBackFun : function(data) {
+			if(data.result==0){
+				$("#fkTemplateUrl").val(data.str);
+			}else{
+				bootbox.alert(data.resultNote);
+				return false;
+			}
+		},
+		errorCallback : function(data) {
+			bootbox.alert(data.resultNote);
+			return false;
+		}
+	};
+	CloudUtils.ajax(options);
+}

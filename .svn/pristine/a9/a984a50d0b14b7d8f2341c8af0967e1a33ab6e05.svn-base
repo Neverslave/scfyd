@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.project.IPayCommitmentDao" >
+  <select id="getPayInfoList" resultType="hashmap" parameterType="hashmap" >
+    select
+  	  ci.corp_id corpId,
+	  ci.corp_name agencyName,
+	  ci.agency_num agencyNum,
+	  li.max_credit_amount maxCredit,
+	  li.use_able_credit_amt availableCredit,
+	  li.max_lscredit_amount maxLscredit,
+	  li.use_able_lscredit_amt availableLscredit,
+	  fi.pay_id payId,
+	  fi.pay_date payDate,
+	  fi.pay_amt payAmt,
+	  fi.finance_id financeId,
+	  fi.finance_start_date financeStartDate,
+	  fi.finance_end_date financeEndDate,
+	  fi.finance_amount financeAmount,
+	  fi.cpr_year cprYear,
+	  fi.cpr_month cprMonth,
+	  fi.ywlx_id  ywlxId,
+	   fi.note  note,
+	  fi.finance_status financeStatus,
+	  fi.fk_template_url fkTemplateUrl,
+	  fi.fk_template_url_new fkTemplateUrlNew,
+	  busi.type_name typeName,
+	  fi.product_id productId,
+	  pro.product_name productName,
+	  gi.pay_able_guarantee payAbleGuarantee,
+	  gi.pay_act_guarantee payActGuarantee,
+	  gi.guarantee_balance guaranteeBalance
+	from finance_info fi
+	left join guarantee_info gi on fi.finance_id = gi.finance_id
+	join corp_info ci on fi.corp_id = ci.corp_id
+    left join limit_info li on ci.corp_id = li.corp_id
+    left join product_info pro on fi.product_id=pro.product_id
+LEFT JOIN business_type_info busi on fi.ywlx_id=busi.type_id
+    <where>
+	    fi.finance_status in (2,3,4,5)
+	    and ci.sys_type = '4'
+	    <if test="agencyName != null and agencyName != ''">
+		    and ci.corp_name LIKE CONCAT(CONCAT('%', #{agencyName}),'%')
+		</if> 
+	    <if test="agencyNum != null and agencyNum !='' ">  
+	        and ci.agency_num LIKE CONCAT(CONCAT('%', #{agencyNum}),'%') 
+	    </if>
+	    <if test="payId != null and payId !='' ">  
+	        and fi.pay_id LIKE CONCAT(CONCAT('%', #{payId}),'%') 
+	    </if>
+	    <if test="payDate != null and payDate !='' ">  
+	        and DATE_FORMAT(fi.pay_date, '%Y-%m-%d') = #{payDate}
+	    </if>
+	    <if test="financeId != null and financeId !='' ">  
+	        and fi.finance_id LIKE CONCAT(CONCAT('%', #{financeId}),'%')
+	    </if>
+	      <if test="cprYear != null and cprYear !='' ">  
+	        and fi.cpr_year = #{cprYear}
+	    </if>
+	      <if test="cprMonth != null and cprMonth !='' ">  
+	        and fi.cpr_month = #{cprMonth}
+	    </if>
+	      <if test="financeStatus != null and financeStatus !='' ">  
+	        and  fi.finance_status = #{financeStatus}
+	    </if>
+		<if test="corpId != null and corpId !='' ">
+			<choose>
+				<when test="corpId =='corp00002'">
+					and ci.corp_id not in ('corp00003')
+				</when>
+				<otherwise>
+					and ci.corp_id = #{corpId}
+				</otherwise>
+			</choose>
+		</if>
+		order by ci.agency_num,fi.cpr_year,fi.cpr_month desc
+    </where>
+  </select>
+  
+  <select id="getAgencyFinanceList" resultType="hashmap" parameterType="hashmap" >
+    select
+	  ci.corp_id corpId,
+	  ci.corp_name agencyName,
+	  ci.agency_num agencyNum,
+	  li.max_credit_amount maxCredit,
+	  li.use_able_credit_amt availableCredit,
+	  li.max_lscredit_amount maxLscredit,
+	  li.use_able_lscredit_amt availableLscredit,
+	  gi.pay_act_guarantee payActGuarantee,
+	  fi.finance_id financeId,
+	  fi.finance_start_date financeStartDate,
+	  fi.finance_end_date financeEndDate,
+	  fi.finance_amount financeAmount,
+	  fi.product_id productId,
+	  fci.contract_no contractNo,
+	  fi.ywlx_id ywlxId,
+	  busi.type_name typeName,
+	  pro.product_name productName
+	  
+	from finance_info fi
+	left join guarantee_info gi on fi.finance_id = gi.finance_id
+	join corp_info ci on fi.corp_id = ci.corp_id
+	left join factor_contract_info fci on ci.corp_id = fci.agency_corp_id
+    left join limit_info li on ci.corp_id = li.corp_id
+    left join business_type_info busi on busi.type_id = fi.ywlx_id
+    left join product_info pro on pro.product_id = fi.product_id
+    <where>
+	    fi.finance_status = '1'
+	    and fi.finance_id not in (
+	    	select prc.item_value
+	    	from process_repeat_check prc
+	    	where prc.process_key = 'payCommitment'
+	    	and prc.item_key = 'FINANCE_ID'
+	    )
+	    <if test="agencyName != null and agencyName != ''">
+		    and ci.corp_name LIKE CONCAT(CONCAT('%', #{agencyName}),'%')
+		</if> 
+	    <if test="agencyNum != null and agencyNum !='' ">  
+	        and ci.agency_num LIKE CONCAT(CONCAT('%', #{agencyNum}),'%') 
+	    </if>
+	    <if test="financeId != null and financeId !='' ">  
+	        and fi.finance_id LIKE CONCAT(CONCAT('%', #{financeId}),'%')
+	    </if>
+    </where>
+  </select>
+</mapper>

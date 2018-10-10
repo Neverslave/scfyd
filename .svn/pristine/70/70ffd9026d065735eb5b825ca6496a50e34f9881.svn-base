@@ -1,0 +1,18 @@
+package com.ut.scf.service.tradfact;
+
+
+import java.math.BigDecimal;
+
+public interface IProjectCreditService {
+    BigDecimal getCreditAvailable(String projectId);
+
+    BigDecimal getCreditAll(String projectId);
+
+    BigDecimal getCreditUsed(String projectId);
+
+    void freezeCredit(String projectId, String flag, BigDecimal credit);
+
+    void unfreezeCredit(String projectId, String flag, BigDecimal creditUnfreeze);
+
+    void unfreezeCredit(String projectId, String flag);
+}

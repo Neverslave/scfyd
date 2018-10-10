@@ -1,0 +1,199 @@
+<style type="text/css">
+#repayInfo .th-inner {
+    height: 80px;
+}
+</style>
+
+<script type="text/javascript">
+function initCorpRepayPlanListTable(orderId,corpRepayUrl) {
+
+    $('#corpRepayPlanListTableDetail').bootstrapTable('destroy');
+    $("#corpRepayPlanListTableDetail").bootstrapTable({
+        method: "post",
+        url: corpRepayUrl,
+        striped: false, //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var jsonData = {
+                orderId:orderId,
+            };
+            return JSON.stringify(jsonData);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [
+        {
+            field: 'orderId',
+            title: '订单编号',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'batchId',
+            title: '订单批次',
+            align: 'center',
+            valign: 'middle'
+        },{
+            field: 'peopleId',
+            title: '业务类型',
+            align: 'center',
+            valign: 'middle'
+        },{
+            field: 'loanTenor',
+            title: '第几期',
+            align: 'center',
+            valign: 'middle'
+        },{
+            field: 'repaymentPrice',
+            title: '应还本金',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'paidPrice',
+            title: '实还本金',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'commission',
+            title: '应还手续费',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'paidCommission',
+            title: '实还手续费',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'insurance',
+            title: '应还保险费',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'paidInsurance',
+            title: '实还保险费',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'repaymentDamages',
+            title: '应还违约金',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'paidDamages',
+            title: '实还违约金',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'repaymentDate',
+            title: '应还时间',
+            align: 'center',
+            valign: 'middle'
+        },{
+            field: 'paidDate',
+            title: '实还时间',
+            align: 'center',
+            valign: 'middle'
+        },{
+            field: 'remark',
+            title: '备注',
+            align: 'center',
+            valign: 'middle',
+         
+        },{
+            field: 'state',
+            title: '客户回款状态',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter:function(value){
+            	if(value=='0'||value==""||value==null){
+            		return "未还款";
+            	}else if (value=='1'){
+            		return "还款完成";
+            	}else if (value=='2'){
+            		return "还款不足";
+            	}else if (value=='3'){
+            		return "超额还款";
+            	}else if (value=='5'){
+            		return "已取消";
+            	}else if (value=='6'){
+            		return "取消中";
+            	}else if (value=='7'){
+            		return "退订中";
+            	}else if (value=='8'){
+            		return "提前结清中";
+            	}else{
+            		return value;
+            	}	
+            }
+        }     
+        ]       
+    });
+}
+</script>
+<div class="modal fade" id="corpRepayInfoDetail" aria-hidden="true" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="repayModal">
+    <div class="modal-dialog" role="document" style='width:95%'>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span> </button>
+                <h4 class="modal-title" id="corpRepayModal">客户还款计划详情信息</h4>
+            </div>
+            <div class="modal-body">
+                <div class="panel-body">
+                    <table id="corpRepayPlanListTableDetail" class="table" height="100%" cellspacing="0" width="100%">
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-3">
+                        <button type="button" class="btn btn-default cancel" data-dismiss="modal">取消
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

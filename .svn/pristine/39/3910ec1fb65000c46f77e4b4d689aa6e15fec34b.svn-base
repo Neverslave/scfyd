@@ -1,0 +1,377 @@
+package com.ut.scf.web.controller.project;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.dict.ScfCacheDict;
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.CorpInfoMapper;
+import com.ut.scf.pojo.auto.DykRepaymentInfo;
+import com.ut.scf.pojo.auto.FinanceInfo;
+import com.ut.scf.reqbean.project.RepayInfoListReqBean;
+import com.ut.scf.reqbean.project.RepayProcessReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IRepayManagerService;
+import com.ut.scf.web.controller.BaseJsonController;
+
+@Controller
+@RequestMapping("/repayInfo")
+public class RepayManagerController extends BaseJsonController {
+	private static final Logger log = LoggerFactory
+			.getLogger(RepayManagerController.class);
+
+	@Resource
+	private IRepayManagerService repayManagerService;
+
+	@Resource
+	private IActivitiService activitiService;
+	
+	@Resource
+	private CorpInfoMapper corpInfoMapper;
+
+	@RequestMapping(value = "/list", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getRepayInfoList(HttpSession httpSession,
+			@RequestBody RepayInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		String corpId = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_CORP_ID);
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		paramMap.put("repaymentCorpId", corpId);
+		respBean = repayManagerService.getRepayList(paramMap, page);
+		log.debug("getRepayList: {}", respBean);
+
+		return respBean;
+	}
+
+	@RequestMapping(value = "/carInfoList", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getCarInfoList(
+			@RequestBody RepayInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		respBean = repayManagerService.getCarInfoList(paramMap, page);
+
+		return respBean;
+	}
+	@RequestMapping(value = "/repayInfoList", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getRepayInfoList(
+			@RequestBody RepayInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		respBean = repayManagerService.getRepayInfoList(paramMap, page);
+
+		return respBean;
+	}
+	@RequestMapping(value = "/getAllNotPayInterest", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getAllNotPayInterest(
+			HttpSession httpSession, @RequestBody RepayInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		String corpId = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_CORP_ID);
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("corpId", corpId);
+		respBean = repayManagerService.getAllNotPayInterest(paramMap);
+
+		return respBean;
+	}
+
+	@RequestMapping(value = "/getRepayCarInfoList", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getRepayCarInfoList(
+			HttpSession httpSession, @RequestBody RepayInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		String corpId = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_CORP_ID);
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("corpId", corpId);
+		if (StringUtils.isNotEmpty(reqBean.getCorpId())) {
+			paramMap.put("corpId", reqBean.getCorpId());
+		}
+		if (!StringUtils.isEmpty(reqBean.getCarFrameNums())) {
+			paramMap.put("carFrameNums", reqBean.getCarFrameNums());
+		}
+		
+		if (StringUtils.isNotEmpty(reqBean.getCarFrameNum())) {
+		paramMap.put("carFrameNum", reqBean.getCarFrameNum());
+		};
+		if (StringUtils.isNotEmpty(reqBean.getFinanceEndDate())) {
+			paramMap.put("financeEndDate", reqBean.getFinanceEndDate());
+			};
+		if (StringUtils.isNotEmpty(reqBean.getCprYear())) {
+				paramMap.put("cprYear", reqBean.getCprYear());
+				};
+		if (StringUtils.isNotEmpty(reqBean.getCprMonth())) {
+					paramMap.put("cprMonth", reqBean.getCprMonth());
+					};
+					System.out.println("###########"+reqBean.getFinanceEndDate());
+		
+		PageInfoBean page = null;
+		if (reqBean.getIsPage() == 1) {// 分页
+			page = new PageInfoBean();
+			page.setPageNumber(reqBean.getPageNumber());
+			page.setPageSize(reqBean.getPageSize());
+		}
+		respBean = repayManagerService.getRepayCarInfoList(paramMap, page);
+
+		return respBean;
+	}
+
+	@RequestMapping(value = "/getAllCarInfoList", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getAllCarInfoList(
+			HttpSession httpSession, @RequestBody RepayInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("carFrameNums", reqBean.getCarFrameNums());
+
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+
+		respBean = repayManagerService.getAllCarInfoList(paramMap, page);
+
+		return respBean;
+	}
+
+	// 流程发起
+	@RequestMapping(value = "/startProcess", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean startProcess(HttpSession httpSession,
+			@RequestBody RepayProcessReqBean repayProcessReqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 获取当前用户
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		String corpId = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_CORP_ID);
+/*		//通过corpId获取名称
+		CorpInfoExample example=new CorpInfoExample();
+		Criteria criteria = example.createCriteria();
+		criteria=criteria.andCorpIdEqualTo(corpId);
+		List<CorpInfo> list=corpInfoMapper.selectByExample(example);
+		String corpName=list.get(0).getCorpName();
+		repayProcessReqBean.setCorpName(corpName);*/
+		
+		repayProcessReqBean.setUserId(userName);
+		repayProcessReqBean.setRepaymentCorpId(corpId);
+
+		if(repayProcessReqBean.getRepayCarType()==null||repayProcessReqBean.getRepayCarType().equals("")||repayProcessReqBean.getRepayCarType().equals("02"))
+		{
+			//赎证
+			repayProcessReqBean.setActivitiKey("dykRepayment2");
+		}
+		else
+		{
+			//释放
+			repayProcessReqBean.setActivitiKey("dykRepayment");
+		}
+	
+		JSONObject repayInfoStr = new JSONObject(repayProcessReqBean);
+		respBean = repayManagerService.startProcess(repayInfoStr);
+		return respBean;
+	}
+
+	// 审核是否同意
+	@RequestMapping(value = "/doAgree", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean doAgree(HttpSession httpSession,
+			@RequestBody RepayProcessReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 获取当前用户
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		respBean = repayManagerService.doAgree(reqBean);
+		return respBean;
+	}
+
+	// 流程再申请
+	@RequestMapping(value = "/reApply", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean reApply(HttpSession httpSession,
+			@RequestBody RepayProcessReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 获取当前用户
+		String userName = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		JSONObject jsonObject = new JSONObject(reqBean);
+		respBean = repayManagerService.reApply(jsonObject);
+		return respBean;
+	}
+
+	@RequestMapping(value = "/import", method = RequestMethod.POST)
+	public void binUpload(
+			@RequestParam(value = "file", required = false) MultipartFile file,
+			HttpServletRequest request, HttpServletResponse response,
+			HttpSession httpSession) {
+		response.setContentType("text/html");
+		response.setCharacterEncoding("UTF-8");
+		BaseRespBean resp = new BaseRespBean();
+		// 获取当前经销商ID
+		String corpId = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_CORP_ID);
+		// 得到文件服务器存储目录
+		String uploadFilePath = getUploadFilePath(request);
+		String path = request.getSession().getServletContext()
+				.getRealPath(uploadFilePath);
+		String uploadName = file.getOriginalFilename();
+		int idx = uploadName.lastIndexOf(".");
+		String suffix = uploadName.substring(idx).toLowerCase();// 获得上传文件的后缀名
+		if (!(".xls".equals(suffix) || ".xlsx".equals(suffix))) {
+			resp.setResult(ErrorCodeEnum.EXCEL_ERROR);
+		} else {
+			String fileName = ScfUUID.generate() + suffix;
+			File targetFile = new File(path, fileName);
+			if (!targetFile.exists()) {
+				targetFile.mkdirs();
+			}
+
+			try {
+				file.transferTo(targetFile);
+				resp = repayManagerService.importExcel(fileName, targetFile,
+						corpId);
+			} catch (DataIntegrityViolationException e) {
+				log.error("batchImportProfit exception", e);
+				resp.setResult(ErrorCodeEnum.ADD_FAILED);
+			} catch (Exception e) {
+				log.error("parse file exception", e);
+				resp.setResult(ErrorCodeEnum.FAILED);
+				resp.setResultNote(e.getMessage());
+			}
+		}
+
+		try {
+			response.getWriter().print(
+					com.alibaba.fastjson.JSONObject.toJSONString(resp));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	@RequestMapping(value = "/getaddInfoList", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getaddInfoList(HttpSession httpSession,
+			@RequestBody RepayInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		String corpId = (String) httpSession.getAttribute(ScfConsts.SESSION_CORP_ID);
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		paramMap.put("corpId", corpId);
+		respBean = repayManagerService.getaddInfoList(paramMap, page);
+		
+		return respBean;
+	}
+	/**
+	 * 得到文件服务器存储目录
+	 * 
+	 * @param request
+	 * @return
+	 */
+	private String getUploadFilePath(HttpServletRequest request) {
+		// 得到路径规则
+		int pathId = 0; // 通用目录
+		try {
+			pathId = Integer.parseInt(request.getParameter("pathId"));
+		} catch (Exception e) {
+			log.warn("parse file path exception", e);
+		}
+
+		// 如果字典中没有目录规则，选择通用目录
+		String uploadFilePath;
+		if (!ScfCacheDict.uploadFilePathMap.containsKey(pathId)) {
+			uploadFilePath = "uploadFile/common/";
+		} else {
+			uploadFilePath = ScfCacheDict.uploadFilePathMap.get(pathId)
+					.getPathRule();
+		}
+
+		return uploadFilePath;
+	}
+	
+	
+	@RequestMapping(value = "/getSaleListDayList", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+
+	public  @ResponseBody BaseRespBean getSaleListDayList(
+			@RequestBody DykRepaymentInfo dykRepaymentInfo,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		//Map<String, Object> paramMap = BeanUtil.beanToMap(dykRepaymentInfo);
+		respBean = repayManagerService.getSaleListDayList(dykRepaymentInfo);
+		return respBean;
+	}
+	
+	@RequestMapping(value = "/getShangdailist", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getShangdailist(HttpSession httpSession,
+			@RequestBody DykRepaymentInfo dykRepaymentInfo,
+			BindingResult bindingResult) {
+		
+		
+		BaseRespBean respBean = new BaseRespBean();
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(dykRepaymentInfo.getPageNumber());
+		page.setPageSize(dykRepaymentInfo.getPageSize());
+		
+		String representId = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_REPRESENT_ID);
+		dykRepaymentInfo.setRepresent(representId);
+		Map<String, Object> paramMap = BeanUtil.beanToMap(dykRepaymentInfo);
+
+		respBean = repayManagerService.getShangdailist(paramMap,page);
+		return respBean;
+	}
+	
+	// 流程再申请
+		@RequestMapping(value = "/updateExpress", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+		public @ResponseBody BaseRespBean updateExpress(HttpSession httpSession,
+				@RequestBody DykRepaymentInfo dykRepaymentInfo,
+				BindingResult bindingResult) {
+			BaseRespBean respBean = new BaseRespBean();
+			respBean=repayManagerService.updateExpress(dykRepaymentInfo);
+			return respBean;
+		}
+	
+
+}

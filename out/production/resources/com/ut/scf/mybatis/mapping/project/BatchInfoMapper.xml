@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.project.IBatchInfoDao" >
+  <select id="getBatchInfoList"  parameterType="map" resultType="hashmap" >
+	   select temp.* from(SELECT
+			o.order_batch_id orderBatchId,
+			o.order_total_num orderTotalNum,
+			o.order_total_amt orderTotalAmt,
+			o.rec_order_num recOrderNum,
+			o.rec_order_amt recOrderAmt,
+			o.rej_order_num rejOrderNum,
+			o.rej_order_amt rejOrderAmt,
+			o.cr_req_total_amt crReqTotalAmt,
+			o.sync_date syncDate,
+			o.sel_date selDate
+		from
+			order_batch_info o
+		INNER JOIN repayment_plan_info r ON r.order_batch_id = o.order_batch_id
+		WHERE
+			NOT EXISTS (
+				SELECT
+					1
+				from
+					factor_contract_info f
+				WHERE
+					o.order_batch_id = f.order_batch_id
+			)
+		<if test="orderBatchId != null and orderBatchId !='' ">  
+        	 and o.order_batch_id LIKE CONCAT(CONCAT('%', #{orderBatchId}),'%')
+    	</if>
+    	<if test="syncDate != null and syncDate !='' ">  
+        	and DATE_FORMAT(o.sync_date, '%Y-%m-%d') >= #{syncDate}
+    	</if>
+    	<if test="selDate != null and selDate !='' ">  
+        	and DATE_FORMAT(o.sel_date, '%Y-%m-%d') >= #{selDate}
+    	</if>
+		GROUP BY r.order_batch_id) temp
+    
+
+  </select>
+  
+</mapper>

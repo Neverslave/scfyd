@@ -1,0 +1,49 @@
+package com.ut.scf.service.project.impl;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.project.ContractBpmReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+import com.ut.scf.service.project.IContractManagerService;
+
+@Service("contractManagerBpmService")
+public class ContractManagerBpmServiceImpl extends BaseActivitiService<ContractBpmReqBean>
+    implements IActivitiService<ContractBpmReqBean>{
+
+	@Resource
+	private IContractManagerService contractMagagerService;
+	
+	private static final String ADVANCE_APPLY_BPM = "contractManager";
+	
+	@Override
+	public String getProcessDefinitionKey() {
+		return ADVANCE_APPLY_BPM;
+	}
+
+	@Override
+	public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+		if (bpmProcessContext.isProcessEnd()) {
+			ContractBpmReqBean contractBpmReqBean = (ContractBpmReqBean)bpmProcessContext.getT();
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			Date signDate = null;
+			try {
+				signDate = sdf.parse(contractBpmReqBean.getSignDate());
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			Map<String, Object> map =BeanUtil.beanToMap(contractBpmReqBean);
+			map.put("signDate", signDate);
+			contractMagagerService.addFactorContract(map);
+		}
+	}
+}

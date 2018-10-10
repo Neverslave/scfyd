@@ -1,0 +1,56 @@
+<form class="form-horizontal" role="form" id="detailForm" data-toggle="validator">
+	<div class="form-group">
+		<label class="col-sm-3 control-label" for="repaymentDate" style="width:200px;"><span
+			class="required">*</span>收息日</label>
+		<div class="col-sm-3">
+			<input name="repaymentDate" class="form-control" id="repaymentDate" readonly="readonly" type="text">
+		</div>
+		<label class="col-sm-2 control-label" for="agency"><span
+			class="required">*</span>经销商名称</label>
+		<div class="col-sm-3">
+			<input type="text" name="agency" class="form-control" id="agency" readonly="readonly">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-sm-3 control-label" for="agencyNum" style="width:200px;"><span
+			class="required">*</span>社会统一信用代码证号</label>
+		<div class="col-sm-3">
+			<input type="text" name="agencyNum" class="form-control" id="agencyNum" readonly="readonly">
+		</div>
+		<label class="col-sm-2 control-label" for="repaySumAmt"><span
+			class="required">*</span>应还利息总额</label>
+		<div class="col-sm-3">
+			<input type="text" name="repaySumAmt" class="form-control" id="repaySumAmt" readonly="readonly">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-sm-3 control-label" for="actRepayAmt" style="width:200px;"><span
+			class="required">*</span>实收利息总额 </label>
+		<div class="col-sm-3">
+			<input type="text" name="actRepayAmt" class="form-control" id="actRepayAmt" readonly>
+		</div>
+		<label class="col-sm-2 control-label" for="note"><span
+			class="required">*</span>备注</label>
+		<div class="col-sm-3">
+			<textarea id="note" rows="3" name="note" readonly="readonly" class="form-control"></textarea>
+		</div>
+	</div>
+	<div class="form-group" id="divAdvice">
+        <label for="agree" class="col-sm-3 control-label" style="width:200px;">审核结果</label>
+        <div class="col-sm-3">
+            <select class="form-control" id="agree" name="agree" disabled="disabled">
+            	<option value="0">同意</option>
+            	<option value="1">拒绝</option>
+            </select>
+        </div>
+        <label class="col-sm-2 control-label"  for="advice">审批意见</label>
+        <div class="col-sm-3">
+        	<textarea id="advice" rows="3" name="advice" readonly="readonly" class="form-control"></textarea>
+     	</div>
+    </div>
+    <div style="margin-top: 50px;">
+	    <span style="margin-left: 5px; margin-bottom: 5px;">收息表</span>
+	    <table id="financeListTable_JB" class="table table-bordered" cellspacing="0">
+		</table>
+    </div>
+</form>

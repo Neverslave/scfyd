@@ -1,0 +1,110 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.dao.auto.TfCreditContractInfoMapper;
+import com.ut.scf.dao.auto.TfFactoringContractInfoMapper;
+import com.ut.scf.dao.tradfact.IProjectSignDao;
+import com.ut.scf.pojo.auto.TfCreditContractInfo;
+import com.ut.scf.pojo.auto.TfCreditContractInfoExample;
+import com.ut.scf.pojo.auto.TfFactoringContractInfo;
+import com.ut.scf.pojo.auto.TfFactoringContractInfoExample;
+import com.ut.scf.pojo.auto.TfFactoringContractInfoExample.Criteria;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.ICommonService;
+import com.ut.scf.service.tradfact.IProjectSignService;
+
+@Service("projectSignService")
+public class ProjectSignServiceImpl implements IProjectSignService {
+
+	private static final Logger log = LoggerFactory.getLogger(ProjectSignServiceImpl.class);
+
+	// 签约推送对象：风险部长、风险分管领导
+	private static List<String> TARGET_ROLE_IDS_REPLY = Arrays.asList("ROLE000009", "ROLE000022");
+	
+	@Resource
+	private IProjectSignDao projectSignDao;
+
+	@Resource
+	private TfCreditContractInfoMapper tfCreditContractInfoMapper;
+
+	@Resource
+	private TfFactoringContractInfoMapper tfFactoringContractInfoMapper;
+	
+	@Resource
+	private ICommonService commonService;
+
+	@Override
+	public BaseRespBean projectSignList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = projectSignDao.selectProjectSignList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	public TfFactoringContractInfo factoringNo(String factoringContractNo) {
+		TfFactoringContractInfoExample tfFactoringContractInfoExample = new TfFactoringContractInfoExample();
+		Criteria criteria = tfFactoringContractInfoExample.createCriteria();
+		criteria.andFactoringContractNoEqualTo(factoringContractNo);
+		int exampleNum = tfFactoringContractInfoMapper.countByExample(tfFactoringContractInfoExample);
+		if (exampleNum > 0) {
+			throw new BizException(ErrorCodeEnum.FACTORING_NO_EXIST);
+		}
+		return null;
+	}
+
+	@Override
+	public TfCreditContractInfo isExist(String projectId, String creditContractNo) {
+		TfCreditContractInfoExample tfCreditContractInfoExample = new TfCreditContractInfoExample();
+		com.ut.scf.pojo.auto.TfCreditContractInfoExample.Criteria criteria = tfCreditContractInfoExample.createCriteria();
+		criteria.andProjectIdEqualTo(projectId);
+		int exampleNum = tfCreditContractInfoMapper.countByExample(tfCreditContractInfoExample);
+		if (exampleNum <= 0) {
+			creditNo(creditContractNo);
+		}
+		return null;
+
+	}
+
+	public TfCreditContractInfo creditNo(String creditContractNo) {
+		TfCreditContractInfoExample tfCreditContractInfoExample = new TfCreditContractInfoExample();
+		com.ut.scf.pojo.auto.TfCreditContractInfoExample.Criteria criteria = tfCreditContractInfoExample.createCriteria();
+		criteria.andCreditContractNoEqualTo(creditContractNo);
+		int exampleNum = tfCreditContractInfoMapper.countByExample(tfCreditContractInfoExample);
+		if (exampleNum > 0) {
+			throw new BizException(ErrorCodeEnum.CREDIT_NO_EXIST);
+		}
+		return null;
+	}
+
+	public int updateProjectStatus(Map<String, Object> paramMap) {
+		return projectSignDao.updateProjectStatus(paramMap);
+	}
+
+	@Override
+	public void overdueWarningInfo(String msg) {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("roleList", TARGET_ROLE_IDS_REPLY);
+		paramMap.put("warnType", 10);
+		paramMap.put("warnMsg", msg);
+		commonService.insertWarningInfo(paramMap);
+		
+	}
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.pub.IBusinessInfoDao" >
+  
+  <resultMap id="PrdInfoResultMap" type="com.ut.scf.pojo.auto.BusinessTypeInfo">
+   	<id column="type_id" jdbcType="VARCHAR" property="typeId" />
+    <result column="type_name" jdbcType="VARCHAR" property="typeName" />
+    <result column="type_describe" jdbcType="VARCHAR" property="typeDescribe" />
+  </resultMap>
+  
+  <select id="getBusinessIfnoPageList" resultType="hashmap"  parameterType="hashmap">
+    select type_id typeId, type_name typeName, type_describe typeDescribe
+    from  business_type_info
+    where 1=1
+    <if test="typeName != null and typeName != ''">
+	  and type_name LIKE CONCAT(CONCAT('%', #{typeName}),'%')
+	</if>
+	<if test="typeDescribe != null and typeDescribe != ''">
+	  and type_describe = #{typeDescribe}
+	</if>
+  </select>
+  
+</mapper>

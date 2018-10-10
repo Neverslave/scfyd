@@ -1,0 +1,89 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.TfNoticeSendInfoMapper;
+import com.ut.scf.dao.tradfact.ISendBookDao;
+import com.ut.scf.pojo.auto.TfNoticeSendInfo;
+import com.ut.scf.reqbean.tradfact.SendBookBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.ICommonService;
+import com.ut.scf.service.tradfact.ISendBookService;
+
+@Service("sendBookService")
+public class SendBookServiceImpl implements ISendBookService {
+
+	// 通知书推送对象：风险经理、风险合规部部长助理、风险合规部部长、业务经理、业务部门负责人
+	private static List<String> TARGET_ROLE_NOTICE = Arrays.asList("ROLE000014", "ROLE000007", "ROLE000008", "ROLE0000024", "ROLE0000025");
+
+	@Resource
+	private TfNoticeSendInfoMapper tfNoticeSendInfoMapper;
+
+	@Resource
+	private ISendBookDao sendBookDao;
+
+	@Resource
+	private ICommonService commonService;
+
+	@Override
+	@Transactional
+	public BaseRespBean addBookInfo(SendBookBean sendBookBean) {
+		BaseRespBean respBean = new BaseRespBean();
+		// 添加到通知书表
+		TfNoticeSendInfo tfNoticeSendInfo = new TfNoticeSendInfo();
+		tfNoticeSendInfo.setCreateTime(new Date());
+		tfNoticeSendInfo.setExpressName(sendBookBean.getExpressName());
+		tfNoticeSendInfo.setExpressNo(sendBookBean.getExpressNo());
+		tfNoticeSendInfo.setNoticeNo(sendBookBean.getNoticeNo());
+		tfNoticeSendInfo.setSendDate(sendBookBean.getSendDate());
+		tfNoticeSendInfo.setId(ScfUUID.generate());
+		tfNoticeSendInfoMapper.insert(tfNoticeSendInfo);
+
+		// 更改通知书寄送状态
+		// TfNoticeSendInfo noticeSendInfo = new TfNoticeSendInfo();
+		// noticeSendInfo.setContractNo(sendBookBean.getContractId());
+		// noticeSendInfo.setNoticeStatus("0");
+		// tfNoticeSendInfoMapper.updateByPrimaryKeySelective(noticeSendInfo);
+
+		// 消息推送
+		addSendBookWarningInfo(sendBookBean.getProjectName() + "支付通知书已交由" + sendBookBean.getExpressName() + "寄送，运单号为" + sendBookBean.getExpressNo()
+		        + "，请提醒客户查收并盖章回执", sendBookBean.getNoticeNo());
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean getBookInfoList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = sendBookDao.getBookInfoList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Transactional
+	private void addSendBookWarningInfo(String msg, String noticeNo) {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("roleList", TARGET_ROLE_NOTICE);
+		paramMap.put("warnType", 8);
+		paramMap.put("warnMsg", msg);
+		paramMap.put("noticeNo", noticeNo);
+		paramMap.put("projectType", "0");
+		String userName = sendBookDao.selectAssignUser(paramMap);
+		paramMap.put("userName", userName);
+		commonService.insertWarningInfo(paramMap);
+	}
+
+}

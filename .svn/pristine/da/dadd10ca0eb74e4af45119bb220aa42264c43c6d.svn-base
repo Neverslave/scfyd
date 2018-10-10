@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.project.ISignContractDao" >
+
+
+  <select id="orderInfoByBatchId" resultType="hashmap" parameterType="hashmap" >
+ 
+	   	select
+			a.order_id orderId,
+	
+			a.goods_name goodsName,
+			a.product_amt productAmt,
+			a.finance_period financePeriod,
+			a.total_price totalPrice,
+			a.contract contract,
+		
+			a.start_pay_amt startPayAmt,
+			a.people_type peopleType,
+			a.paytime paytime,
+			a.state state,
+			a.batch_id batchId,
+			a.stu_id stuId,
+			a.umm_truename ummTruename,
+			a.paid_period paidPeriod,
+			a.tongdun_res tongdunRes,
+			a.needmoney needmoney,
+			a.service_money serviceMoney,
+			a.ensure_money ensureMoney,
+			a.loan_money loanMoney,
+			a.store_id storeId,
+		
+			stu.name name,
+			stu.sex sex,
+			stu.age age,
+			stu.idcard_birthday idcardBirthday,
+			stu.id_card idCard,
+			stu.nation nation,
+			stu.mobile mobile,
+			stu.t_univs_name tUnivsName,
+			stu.t_univs_grade tUnivsGrade,
+			stu.t_univs_room tUnivsRoom,
+			stu.t_univs_finishtime tUnivsFinishtime
+			
+			
+			from
+			order_info a
+		LEFT JOIN stu_info stu ON a.stu_id = stu.stu_id
+		where 1 = 1 
+		<if test="state!=null and state!= ''">
+			and a.state = #{state} 
+		</if>
+	   
+	   	<if test="batchId!=null and batchId!= ''">
+	   		and	a.batch_id= #{batchId}
+	   	</if>
+	
+	   	<if test="orderId!=null and orderId!= ''">
+	   		and a.order_id in
+	   		 <foreach item="item" index="index" collection="orderId" open="(" separator="," close=")">  
+	 			 #{item}  
+			 </foreach>
+	   	</if>
+	   	   	<if test="storeId!=null and storeId!= ''">
+	   		and	a.store_id= #{storeId}
+	   	</if>
+	   	<if test="stuId!=null and stuId!= ''">
+	   		and	a.stu_id= #{stuId}
+	   	</if>
+	   	 <if test="orderBy =='desc'">
+		 ORDER BY ${orderByName} desc
+		</if>
+		<if test="orderBy =='asc'">
+		 ORDER BY ${orderByName} asc
+		</if>
+  
+   
+	
+	  </select>
+  
+  <select id="getMaxContratNo" resultType="string" parameterType="hashmap" >
+  	select MAX(contract_no)
+		from 
+		best_sign_status
+		WHERE 1=1
+	 	<if test="contractNo!=null and contractNo!= ''">
+   		 and contract_no LIKE CONCAT(CONCAT('%', #{contractNo}),'%')
+  	 	</if>
+  </select>
+  
+    <select id="getRejOrderSum" resultType="hashmap" parameterType="hashmap" >
+  	select sum(needmoney) as sumNeedMoney,
+  			count(*) as sumCount
+		from 
+		order_info
+		WHERE 1=1
+		and state ='0'
+	 	<if test="batchId!=null and batchId!= ''">
+   		 and batch_id LIKE CONCAT(CONCAT('%', #{batchId}),'%')
+  	 	</if>
+  </select>
+      <select id="getRecOrderSum" resultType="hashmap" parameterType="hashmap" >
+  	  	select sum(needmoney) as sumNeedMoney,
+  			count(*) as sumCount
+		from 
+		order_info
+		WHERE 1=1
+		and state !='0'
+	 	<if test="batchId!=null and batchId!= ''">
+   		 and batch_id LIKE #{batchId}
+  	 	</if>  
+  </select>
+        <select id="getRecOrderAndPeopleType" resultType="hashmap" parameterType="hashmap" >
+  	  	select
+  	  	 order_id orderId ,
+  	  	 people_type peopleType
+		from 
+		order_info
+		WHERE 1=1
+		and state !='0'
+	 	<if test="batchId!=null and batchId!= ''">
+   		 and batch_id LIKE #{batchId}
+  	 	</if>  
+  </select>
+  
+</mapper>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.statistics.IAmitYuQiDao" >
+  <select id="getYuQiList" resultType="hashmap" parameterType="hashmap" >
+		select
+		finance.cpr_year AS cprYear,
+		finance.cpr_month As cprMonth,
+		business.type_name AS typeName,
+		corp.corp_name as corpName,
+		finance.pay_id as payId,
+		finance.pay_amt as pay_amt,
+		 
+		(CASE WHEN yuqi.yuqi_day<![CDATA[>]]>0 AND yuqi.yuqi_day<![CDATA[<=]]>30
+		THEN yuqi.yuqi_amit
+		ELSE
+		''
+		END
+		) as yuqiAmitM1,
+		(CASE WHEN yuqi.yuqi_day<![CDATA[>]]>30 AND yuqi.yuqi_day<![CDATA[<=]]>60
+		THEN yuqi.yuqi_amit
+		ELSE
+		''
+		END
+		) as yuqiAmitM2,
+		(CASE WHEN yuqi.yuqi_day<![CDATA[>]]>60 AND yuqi.yuqi_day<![CDATA[<=]]>90
+		THEN yuqi.yuqi_amit
+		ELSE
+		''
+		END
+		) as yuqiAmitM3,
+		(CASE WHEN yuqi.yuqi_day<![CDATA[>]]>90
+		THEN yuqi.yuqi_amit
+		ELSE
+		''
+		END
+		) as yuqiAmitM4
+		from
+			yuqi_history yuqi
+		LEFT JOIN finance_info finance ON yuqi.finance_id = finance.finance_id
+		LEFT JOIN business_type_info business on finance.ywlx_id=business.type_id
+		LEFT JOIN corp_info corp ON corp.corp_id=finance.corp_id		
+		 where 1=1 
+		 	<if test="cprYear != null and cprYear != ''">
+			AND finance.cpr_year =  #{cprYear}
+			</if>
+				<if test="yuqiDate != null and yuqiDate != ''">
+			AND yuqi.yuqi_date =  #{yuqiDate}
+			</if>
+		ORDER BY finance.cpr_year ,	finance.cpr_month 	
+  </select>
+  
+    <select id="getYuQiHistoryList" resultType="hashmap" parameterType="hashmap" >
+				select temp.* from 
+				(
+				SELECT
+			finance.corp_id as corpId,
+			corp.corp_name as corpName,
+			corp.agency_num as agencyNum,
+			corp.area as area,
+			areadata.area_name as areaName,
+			corp.represent as represent,
+			representdata.represent_name as representName,
+			finance.finance_status as financeStatus,
+			count(*) as yuqiTimes
+			FROM
+			(
+				SELECT
+					finance_id,
+					MAX(yuqi_day)
+				FROM
+					yuqi_history
+				GROUP BY
+					finance_id
+			) base
+		LEFT JOIN finance_info finance ON finance.finance_id = base.finance_id
+		LEFT JOIN corp_info corp ON corp.corp_id = finance.corp_id
+		LEFT JOIN dyk_area areadata ON areadata.area_id = corp.area
+		LEFT JOIN dyk_represent representdata ON representdata.represent_id = corp.represent
+		GROUP BY
+			corp.corp_id
+			
+		ORDER BY yuqiTimes
+				)temp
+				
+  </select>
+  
+  
+  	<select  id="getYuQiRepaySum" resultType="hashmap" parameterType="hashmap" >
+		select TEMP.* from
+		(
+			SELECT
+				order_id orderId,
+				batch_id batchId,
+				people_id peopleType,
+					max(TIMESTAMPDIFF(DAY,repayment_date,NOW())) as outerDay,
+					 count(*) orderRepayCount,
+					SUM(repayment_price)+SUM(commission)-SUM(paid_price)-SUM(paid_commission)  sumYuQiMoney
+			FROM
+				repayment_plan_user_info
+			WHERE state in('0')
+			AND repayment_date is not null
+			AND DATE_FORMAT(repayment_date, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d')			
+			<if test="orderId!=null and orderId!= ''">
+	   		 and order_id LIKE CONCAT(CONCAT('%', #{orderId}),'%')
+	  	 	</if>
+			<if test="peopleType!=null and peopleType!= ''">
+	   		 and people_id LIKE #{peopleType}
+	  	 	</if>
+			
+		GROUP BY order_id
+		) temp	
+		where 1=1
+		AND NOT EXISTS (
+			SELECT
+				1
+			FROM
+				order_info o
+			WHERE
+				temp.orderId = o.order_id
+			AND o.state = '0'
+				<if test="peopleType!=null and peopleType!= ''">
+	   		 and o.people_type LIKE #{peopleType}
+	  	 	</if>
+	
+		)
+		<if test="outerDayBetween!=null and outerDayBetween!= ''">
+   		 and outerDay between ${outerDayBetween}
+  	 	</if>
+		 <if test="orderBy =='desc'">
+		 ORDER BY ${orderByName}+0 desc
+		</if>
+		<if test="orderBy =='asc'">
+		 ORDER BY ${orderByName}+0 asc
+		</if>
+		</select>
+		
+<select id="getLsYuQiList" resultType="hashmap" parameterType="hashmap">
+	call dyk_yuqi_tongji_yuefen(#{startTime},#{endTime},#{ywlxId})
+</select>
+
+<select id="getLsYuQiXiangXiList" resultType="hashmap" parameterType="hashmap">
+	call dyk_yuqi_tongji(#{startTime},#{ywlxId})
+</select>
+  
+  
+  <select id="getQuYuHuanKuanLsList" resultType="hashmap" parameterType="hashmap">
+  call dyk_huankuan_quyu_tongji(#{ywlxId})
+</select>
+</mapper>

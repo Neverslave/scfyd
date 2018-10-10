@@ -1,0 +1,26 @@
+package com.ut.scf.web.controller.wechat;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.ut.scf.reqbean.project.ContractBpmReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.web.controller.ActivitiController;
+
+@Controller
+@RequestMapping(value = "/wechat/contractManager")
+public class ContractManagerWechatController extends ActivitiController<ContractBpmReqBean>{
+
+	@Resource(name = "contractManagerBpmService")
+	private IActivitiService<ContractBpmReqBean> activitiService;
+	
+	@Override
+	protected IActivitiService<ContractBpmReqBean> getBpmProcessService() {
+		return activitiService;
+	}
+	
+	
+	
+}

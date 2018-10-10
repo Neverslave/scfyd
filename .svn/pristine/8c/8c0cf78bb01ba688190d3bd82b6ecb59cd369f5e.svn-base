@@ -1,0 +1,85 @@
+package com.ut.scf.web.controller.wechat;
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.pojo.auto.SysMenu;
+import com.ut.scf.reqbean.pub.ProcessListReqBean;
+import com.ut.scf.reqbean.pub.TaskInfoReqBean;
+import com.ut.scf.reqbean.sys.MenuListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.sys.IDictionaryService;
+import com.ut.scf.service.sys.IMenuService;
+import com.ut.scf.web.controller.BaseJsonController;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+@Controller
+@RequestMapping("/wechat/activiti")
+public class WeChatController extends BaseJsonController {
+
+    @Resource
+    IActivitiService activitiService;
+
+    @Resource
+    private IDictionaryService dictionaryService;
+
+    @Resource
+    private IMenuService menuService;
+
+    //代办任务列表
+    @RequestMapping(value = "/getAgencyTaskList")
+    @ResponseBody
+    public BaseRespBean getAgencyTaskList(
+            HttpSession httpSession, @RequestBody ProcessListReqBean reqBean) {
+
+        // 获取当前用户
+        String userName = (String) httpSession
+                .getAttribute(ScfConsts.SESSION_USERNAME);
+        String roleId = (String) httpSession
+                .getAttribute(ScfConsts.SESSION_ROLE_ID);
+//        Map<String, Object> map = BeanUtil.beanToMap();
+        Map<String, Object> map = BeanUtil.beanToMap(reqBean);
+//		map.put("userId", roleId+userName);
+
+        return activitiService.getAgencyTaskList(map);
+    }
+
+    // 点击查看代办数据
+    @RequestMapping(value = "/getTaskDataByTaskId")
+    @ResponseBody
+    public BaseRespBean getTaskDataByTaskId(HttpSession httpSession, @RequestBody TaskInfoReqBean reqBean) {
+        return activitiService.getDataByTaskId(reqBean.getTaskId());
+    }
+
+    // 获取角色列表
+    @RequestMapping(value = "/getRoleList")
+    @ResponseBody
+    public Map<String,Object> getRoleList(HttpSession httpSession) {
+        Map<String,Object> resultMap = new HashMap<>();
+        resultMap.put("roleList",httpSession.getAttribute("roleList"));
+        resultMap.put("roleId",httpSession.getAttribute("roleId"));
+        return resultMap;
+    }
+    //加载字典信息
+    @RequestMapping(value = "/loadAll")
+    @ResponseBody
+    public BaseRespBean loadAllDict() {
+        return dictionaryService.loadAllDict();
+    }
+
+    //获取统计查询的菜单列表
+    @RequestMapping(value = "/loadMenu")
+    @ResponseBody
+    public List<SysMenu> loadMenu(@RequestBody MenuListReqBean reqBean) {
+        return menuService.getMenuListByParentId(reqBean.getParentId());
+    }
+
+
+}

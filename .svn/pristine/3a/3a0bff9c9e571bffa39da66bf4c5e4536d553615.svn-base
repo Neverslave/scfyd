@@ -1,0 +1,195 @@
+package com.ut.scf.service.project.thread;
+
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.core.util.SignUtil;
+import com.ut.scf.dao.auto.FqcrRepayInfoMapper;
+import com.ut.scf.dao.auto.RepaymentPlanInfoMapper;
+import com.ut.scf.dao.auto.RepaymentPlanUserInfoMapper;
+import com.ut.scf.pojo.auto.RepaymentPlanInfo;
+import com.ut.scf.pojo.auto.RepaymentPlanUserInfo;
+import com.ut.scf.pojo.auto.RepaymentPlanUserInfoExample;
+import com.ut.scf.service.project.ISSMHttpConnService;
+
+@Service("operateOrderThread")
+public class OperateOrderThread implements Runnable {
+
+	@Resource
+	private ISSMHttpConnService issmHttpConnService;
+	
+	@Resource
+	private RepaymentPlanInfoMapper repaymentPlanInfoMapper;
+	@Resource
+	private RepaymentPlanUserInfoMapper repaymentPlanUserInfoMapper;
+	@Resource
+	private FqcrRepayInfoMapper fqcrRepayInfoMapper;
+	private List<Map<String, String>> checkList;
+	
+	private String batchId;
+
+	public void setCheckList(List<Map<String, String>> checkList) {
+		this.checkList = checkList;
+	}
+
+	private List<Map<String, String>> statusList;
+
+	public void setStatusList(List<Map<String, String>> statusList) {
+		this.statusList = statusList;
+	}
+
+	@Override
+	public void run() {
+		try {
+			
+			Thread.sleep(1000*60*60);			 
+			getRepaymentPlan(statusList);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void getRepaymentUserPlan(String orderId,String batchId,Integer peopleType) throws Exception{
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		RepaymentPlanUserInfoExample example=new RepaymentPlanUserInfoExample();
+		com.ut.scf.pojo.auto.RepaymentPlanUserInfoExample.Criteria criteria =example.createCriteria();
+		criteria.andOrderIdEqualTo(orderId);
+		long count=repaymentPlanUserInfoMapper.countByExample(example);
+		if(count==0){
+			Map<String, Object> paramMap = new HashMap<String, Object>();
+			paramMap.put("order_id", orderId);
+			com.alibaba.fastjson.JSONObject jsonObject = SignUtil.requestInterface(paramMap, SignUtil.repaymentUserPlan);
+			if(jsonObject.getString("code").equals("200"))
+			{
+				String  data=SignUtil.parseData(jsonObject.getString("data")); 
+				System.out.println(data);
+				com.alibaba.fastjson.JSONArray repaymentPlayJsonArray= com.alibaba.fastjson.JSONArray.parseArray(data);
+				if(repaymentPlayJsonArray!=null&&repaymentPlayJsonArray.size()>0)
+				{
+					List<RepaymentPlanUserInfo> repaymentUsereList = new ArrayList<RepaymentPlanUserInfo>();
+					for(int j=0 ;j<repaymentPlayJsonArray.size();j++)
+					{
+						com.alibaba.fastjson.JSONObject object=repaymentPlayJsonArray.getJSONObject(j);
+						RepaymentPlanUserInfo repaymentPlanUserInfo=new RepaymentPlanUserInfo();
+						repaymentPlanUserInfo.setId(ScfUUID.generate());
+						repaymentPlanUserInfo.setBatchId(batchId);
+						repaymentPlanUserInfo.setOrderId(orderId);
+						repaymentPlanUserInfo.setPeopleId(peopleType);
+						repaymentPlanUserInfo.setLoanTenor(object.getInteger("loan_tenor"));
+						repaymentPlanUserInfo.setRepaymentPrice(StringUtils.isBlank(object.getString("repayment_price"))?null:(object.getBigDecimal("repayment_price")));
+						repaymentPlanUserInfo.setCommission(StringUtils.isBlank(object.getString("commission"))?null:(object.getBigDecimal("commission")));
+						repaymentPlanUserInfo.setInsurance(StringUtils.isBlank(object.getString("insurance"))?null:(object.getBigDecimal("insurance")));
+						repaymentPlanUserInfo.setRepaymentDamages(StringUtils.isBlank(object.getString("repayment_damages"))?null:(object.getBigDecimal("repayment_damages")));
+						String repayment_date = StringUtils.isBlank(object.getString("repayment_date"))?null:sdf.format(new Date(new Long(object.getString("repayment_date")+"000")));
+						repaymentPlanUserInfo.setRepaymentDate(repayment_date);
+						repaymentPlanUserInfo.setPaidPrice(StringUtils.isBlank(object.getString("paid_price"))?null:(object.getBigDecimal("paid_price")));
+						repaymentPlanUserInfo.setPaidCommission(StringUtils.isBlank(object.getString("paid_commission"))?null:(object.getBigDecimal("paid_commission")));
+						repaymentPlanUserInfo.setPaidInsurance(StringUtils.isBlank(object.getString("paid_insurance"))?null:(object.getBigDecimal("paid_insurance")));
+						repaymentPlanUserInfo.setPaidDamages(StringUtils.isBlank(object.getString("paid_damages"))?null:(object.getBigDecimal("paid_damages")));
+						String paid_date = StringUtils.isBlank(object.getString("paid_date"))?null:sdf.format(new Date(new Long(object.getString("paid_date")+"000")));
+						repaymentPlanUserInfo.setPaidDate(paid_date);
+						repaymentPlanUserInfo.setSystemtype(object.getInteger("systemtype"));
+						repaymentPlanUserInfo.setRemark(object.getString("remark"));
+						repaymentPlanUserInfo.setState(object.getInteger("state"));
+
+						repaymentUsereList.add(repaymentPlanUserInfo);
+					}
+					int re=repaymentPlanUserInfoMapper.insertListRepayment(repaymentUsereList);
+					
+				}
+			}
+		}
+	}
+	
+	
+	
+	
+	public void getRepaymentPlan(List<Map<String, String>> statusList) throws Exception {
+		// TODO Auto-generated method stub
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		if(statusList.size()>0){
+			for(int i=0;i<statusList.size();i++){
+				Map<String, String> map = statusList.get(i);
+				String orderId = map.get("orderId"); 
+				//判定还款计划表中是否存在这个订单号，如果有则视为已经存在还款计划表
+				List<RepaymentPlanInfo> repayments = repaymentPlanInfoMapper.selectByOrderId(orderId);
+				if (repayments == null || repayments.size()==0) {
+
+					if (orderId != null || orderId != "") {
+						//通过订单号，获取还款计划。
+						Map<String, Object> paramMap = new HashMap<String, Object>();
+						paramMap.put("order_id", orderId);
+						JSONObject jsonObject = SignUtil.requestInterface(paramMap, SignUtil.repaymentPlan);
+						/*JSONObject jsonObject = SignUtil.requestInterface(paramMap, SignUtil.userkhReplaymant);*/
+						if(jsonObject.getString("code").equals("200"))
+						{
+							String  data=SignUtil.parseData(jsonObject.getString("data")); 
+							System.out.println(data);
+							JSONArray repaymentPlayJsonArray= JSONArray.parseArray(data);
+							if(repaymentPlayJsonArray!=null&&repaymentPlayJsonArray.size()>0)
+							{
+								List<RepaymentPlanInfo> repaymentList = new ArrayList<RepaymentPlanInfo>();
+								for(int j=0 ;j<repaymentPlayJsonArray.size();j++)
+								{
+									RepaymentPlanInfo repaymentPlanInfo=new RepaymentPlanInfo();
+									com.alibaba.fastjson.JSONObject object=repaymentPlayJsonArray.getJSONObject(j);
+									repaymentPlanInfo.setRepaymentId(ScfUUID.generate());
+									repaymentPlanInfo.setOrderId(object.getString("order_id"));
+									repaymentPlanInfo.setPeriod(StringUtils.isBlank(object.getString("current_period"))?null:(byte)object.getIntValue("current_period"));
+									
+									
+									
+									String date = (StringUtils.isBlank(object.getString("should_pay_time"))||object.getString("should_pay_time").equals("0"))?null:sdf.format(new Date(new Long(object.getString("should_pay_time")+"000")) );
+									repaymentPlanInfo.setCurrentRepayDate(sdf.parse(date));
+									repaymentPlanInfo.setInterest(StringUtils.isBlank(object.getString("interest"))?null:(new BigDecimal(object.getIntValue("interest")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setLcMoney(StringUtils.isBlank(object.getString("lc_money"))?null:(new BigDecimal(object.getIntValue("lc_money")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setCurrentMoney(StringUtils.isBlank(object.getString("current_money"))?null:(new BigDecimal(object.getIntValue("current_money")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setEnsureMoney(StringUtils.isBlank(object.getString("ensure_money"))?null:(new BigDecimal(object.getIntValue("ensure_money")).divide(new BigDecimal(100))));
+									String payed_time = (StringUtils.isBlank(object.getString("payed_time"))||object.getString("payed_time").equals("0"))?null:sdf.format(new Date(new Long(object.getString("payed_time")+"000")));
+									repaymentPlanInfo.setPayedTime(payed_time);
+									repaymentPlanInfo.setOrderBatchId(batchId);
+									repaymentPlanInfo.setRepaymentMoney(StringUtils.isBlank(object.getString("repayment_money"))?null:(new BigDecimal(object.getIntValue("repayment_money")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setPaidMoney(StringUtils.isBlank(object.getString("paid_money"))?null:(new BigDecimal(object.getIntValue("paid_money")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setState(StringUtils.isBlank(object.getString("state"))?null:object.getIntValue("state"));
+									repaymentPlanInfo.setMarketingFeeYi(StringUtils.isBlank(object.getString("marketing_fee_yi"))?null:(new BigDecimal(object.getIntValue("marketing_fee_yi")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setServiceChargeYi(StringUtils.isBlank(object.getString("service_charge_yi"))?null:(new BigDecimal(object.getIntValue("service_charge_yi")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setPeopleType( (byte) Integer.parseInt(map.get("peopleType")));
+									
+									repaymentList.add(repaymentPlanInfo);
+								}
+								int re=repaymentPlanInfoMapper.insertListRepayment(repaymentList);
+								
+								System.out.println(re);
+							}
+						}
+					}
+				}
+				
+			}
+		}
+	}
+
+	
+
+	public String getBatchId() {
+		return batchId;
+	}
+
+	public void setBatchId(String batchId) {
+		this.batchId = batchId;
+	}
+}

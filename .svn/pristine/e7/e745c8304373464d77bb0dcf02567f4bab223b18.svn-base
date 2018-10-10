@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.query.IFinanceRepayDao" >
+<!-- 当期有效订单,当期有效金额 -->
+<select  id="fqcrYXFFinanceOrderList" resultType="hashmap" parameterType="hashmap" >
+	select
+		COUNT(*) as totalCount,	
+		SUM(needmoney) as sumNeedMoney
+	from
+		order_info
+	WHERE
+		order_id_yi IN (
+			SELECT
+				order_id_yi
+			FROM
+				order_info_yi
+		<!-- 	WHERE
+				order_date <= DATE_FORMAT('2018-08-01', '%Y%m%d')
+			AND order_date > DATE_FORMAT('2018-07-01', '%Y%m%d') -->
+		)
+	AND state = '1'
+</select>
+<select id="fqcrYIFTiqianjqOrderList" resultType="hashmap" parameterType="hashmap" >
+
+		select
+		temp1.batchId,
+		temp1.orderId,
+		temp1.orderIdYi,
+		temp1.goodsName,
+		temp1.financePeriod,
+		ifnull(temp1.needmoney,'0.00') as needmoney,
+		ifnull(temp2.restCurrentMoney,'0.00') as restCurrentMoney,
+		ifnull(temp2.restInterest,'0.00') as restInterest,
+		ifnull(temp2.restMarketingFeeYi,'0.00') as restMarketingFeeYi,
+		temp2.totalCount
+		 from (SELECT
+					bbbb.batch_id as batchId,
+					aaaa.order_id as  orderId,
+		bbbb.order_id_yi as orderIdYi,
+		bbbb.goods_name as goodsName,
+		bbbb.finance_period as financePeriod,
+		bbbb.needmoney as needmoney
+				FROM
+					repayment_plan_user_info aaaa
+				LEFT JOIN order_info bbbb ON aaaa.order_id = bbbb.order_id
+				WHERE
+					DATE_FORMAT(repayment_date, '%Y-%m-%d')  <![CDATA[>=]]>  DATE_FORMAT(#{dateBegin}, '%Y-%m-%d')
+				AND DATE_FORMAT(repayment_date, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(#{dateEnd}, '%Y-%m-%d')
+				AND people_id = '3'
+				AND loan_tenor = '99'
+				AND bbbb.state = '1'
+		)temp1
+		LEFT JOIN(
+		SELECT
+		reInfo.order_id as orderId,
+		COUNT(*) as totalCount,
+		SUM(reInfo.current_money) as restCurrentMoney,
+		reInfo.interest as restInterest,
+		SUM(reInfo.marketing_fee_yi) as restMarketingFeeYi
+		FROM
+			repayment_plan_info   reInfo
+		LEFT JOIN
+		repayment_plan_user_info reUserInfo ON reInfo.order_id=reUserInfo.order_id and reInfo.period=reUserInfo.loan_tenor
+		WHERE
+			reInfo.order_id IN (
+				SELECT
+					aaaa.order_id
+				FROM
+					repayment_plan_user_info aaaa
+				LEFT JOIN order_info bbbb ON aaaa.order_id = bbbb.order_id
+				WHERE
+					DATE_FORMAT(repayment_date, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(#{dateBegin}, '%Y-%m-%d')
+				AND DATE_FORMAT(repayment_date, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(#{dateEnd}, '%Y-%m-%d')
+				AND people_id = '3'
+				AND loan_tenor = '99'
+				AND bbbb.state = '1'
+			)
+		AND DATE_FORMAT(reUserInfo.repayment_date, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(#{dateBegin}, '%Y-%m-%d')	
+		AND period<![CDATA[<>]]>99	
+		GROUP BY reInfo.order_id
+		)temp2 on  temp1.orderId=temp2.orderId
+		ORDER BY temp1.batchId,temp1.orderId
+</select>
+  
+  <select id="fqcrSumYIFTiqianjqOrderList" resultType="hashmap" parameterType="hashmap" >
+	select 
+	COUNT(*) AS sumCount,
+	sum(tempAA.sum_current_money) as sumCurrentMoney,
+	sum(tempAA.interest) as sumInterest,
+	sum(tempAA.sum_marketing_fee_yi) as sumMarketingFeeYi
+	 from ( 
+		select
+		SUM(reInfo.current_money) as sum_current_money,
+		reInfo.interest as interest,
+		SUM(reInfo.marketing_fee_yi) as sum_marketing_fee_yi
+		from
+			repayment_plan_info   reInfo
+		LEFT JOIN
+		repayment_plan_user_info reUserInfo ON reInfo.order_id=reUserInfo.order_id and reInfo.period=reUserInfo.loan_tenor
+		WHERE
+			reInfo.order_id IN (
+				SELECT
+		
+					aaaa.order_id
+				FROM
+					repayment_plan_user_info aaaa
+				LEFT JOIN order_info bbbb ON aaaa.order_id = bbbb.order_id
+				WHERE
+					DATE_FORMAT(paid_date, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(#{dateBegin}, '%Y-%m-%d')
+				AND DATE_FORMAT(paid_date, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(#{dateEnd}, '%Y-%m-%d')
+				AND people_id = '3'
+				AND loan_tenor = '99'
+				AND bbbb.state = '1'
+			)
+		AND DATE_FORMAT(reUserInfo.repayment_date, '%Y-%m-%d')<![CDATA[>=]]> DATE_FORMAT(#{dateBegin}, '%Y-%m-%d')
+		
+		AND period<![CDATA[<>]]>99
+		
+		GROUP BY reInfo.order_id
+	)tempAA
+		
+
+</select>
+  
+  
+  
+  
+  <select id="fqcrYIFZCJSRepayList" resultType="hashmap" parameterType="hashmap">
+	select temp.order_id as orderId,temp.loan_tenor as loanTenor,temp.repayment_date as repaymentDate,temp.batch_id as batchId,ifnull(temp2.interest,'0.00') as interest,ifnull(temp2.current_money,'0.00') as currentMoney,ifnull(temp2.marketing_fee_yi,'0.00')  as marketingFeeYi,ifnull(temp2.service_charge_yi,'0.00') as serviceChargeYi  from (
+		SELECT
+			order_id,loan_tenor,repayment_date,batch_id FROM repayment_plan_user_info
+		WHERE 
+		people_id='3' and 
+			DATE_FORMAT(repayment_date, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(#{dateBegin}, '%Y-%m-%d')
+		AND DATE_FORMAT(repayment_date, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(#{dateEnd}, '%Y-%m-%d')
+		
+		)temp
+		LEFT JOIN repayment_plan_info  temp2 ON temp.order_id=temp2.order_id and temp.loan_tenor=temp2.period AND temp.batch_id=temp2.order_batch_id
+		LEFT JOIN order_info temp3 on temp.order_id=temp3.order_id
+		WHERE
+		temp3.state='1' AND
+		
+		temp.order_id NOT IN (
+				SELECT
+					aaaa.order_id
+				FROM
+					repayment_plan_user_info aaaa
+				LEFT JOIN order_info bbbb ON aaaa.order_id = bbbb.order_id
+				WHERE
+				DATE_FORMAT(repayment_date, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(#{dateEnd}, '%Y-%m-%d')
+				AND people_id = '3'
+				AND loan_tenor = '99'
+				AND bbbb.state = '1'
+			)
+		ORDER BY temp.batch_id,temp.order_id,temp.loan_tenor
+  
+  </select>
+  
+  
+    <select id="fqcrSumYIFZCJSRepayList" resultType="hashmap" parameterType="hashmap">
+	select  count(*) as sumCount, sum(temp2.interest) as sumInterest,sum(temp2.current_money) as sumCurrentMoney,sum(temp2.marketing_fee_yi) sumMarketingFeeYi  from (
+		SELECT
+			order_id,loan_tenor,repayment_date,batch_id FROM repayment_plan_user_info
+		WHERE 
+		people_id='3' and 
+			DATE_FORMAT(repayment_date, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(#{dateBegin}, '%Y-%m-%d')
+		AND DATE_FORMAT(repayment_date, '%Y-%m-%d') <![CDATA[<]]>DATE_FORMAT(#{dateEnd}, '%Y-%m-%d')
+		
+		)temp
+		LEFT JOIN repayment_plan_info  temp2 ON temp.order_id=temp2.order_id and temp.loan_tenor=temp2.period AND temp.batch_id=temp2.order_batch_id
+		LEFT JOIN order_info temp3 on temp.order_id=temp3.order_id
+		WHERE
+		temp3.state='1' AND
+		
+		temp.order_id NOT IN (
+				SELECT
+					aaaa.order_id
+				FROM
+					repayment_plan_user_info aaaa
+				LEFT JOIN order_info bbbb ON aaaa.order_id = bbbb.order_id
+				WHERE
+				DATE_FORMAT(repayment_date, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(#{dateEnd}, '%Y-%m-%d')
+				AND people_id = '3'
+				AND loan_tenor = '99'
+				AND bbbb.state = '1'
+			)  
+  </select>
+  <select  id="getFqcrFinaceRepayHistoryList" resultType="hashmap" parameterType="hashmap" >
+
+	select
+		finance_date financeDate,
+		people_type peopleType,
+		finance_date_begin financeDateBegin,
+		finance_date_end financeDateEnd,
+		repay_count repayCount,
+		repay_current_money repayCurrentMoney,
+		repay_interest repayInterest,
+		repay_marketing_fee_yi repayMarketingFeeYi,
+		ti_repay_count tiRepayCount,
+		ti_rest_current_money tiRestCurrentMoney,
+		ti_rest_interest tiRestInterest,
+		ti_rest_marketing_fee_yi tiRestMarketingFeeYi,
+		repay_current_money_aut repayCurrentMoneyAut,
+		repay_interest_aut repayInterestAut,
+		repay_marketing_fee_yi_aut repayMarketingFeeYiAut,
+		ti_rest_current_money_aut tiRestCurrentMoneyAut,
+		ti_rest_interest_aut tiRestInterestAut,
+		ti_rest_marketing_fee_yi_aut tiRestMarketingFeeYiAut,
+		note note,
+		bank_statement bankStatement,
+		file_path filePath
+	
+	from
+		fqcr_finance_repay_hisotory
+		where 1=1
+		 <if test="financeDateBegin != null and financeDateBegin !='' ">  
+	        and DATE_FORMAT(finance_date_begin, '%Y-%m-%d') <![CDATA[>=]]>DATE_FORMAT(#{financeDateBegin}, '%Y-%m-%d')
+	    </if>
+	     <if test="financeDateEnd != null and financeDateEnd !='' ">  
+	        and DATE_FORMAT(finance_date_end, '%Y-%m-%d') <![CDATA[<=]]> DATE_FORMAT(#{financeDateEnd}, '%Y-%m-%d')
+	    </if>
+	      <if test="peopleType != null and peopleType !='' ">  
+  	    and people_type = #{peopleType}
+   		 </if>
+		order by finance_date desc
+  </select>
+  
+  <select id="getfqcrJtkdFinanceRepay"  resultType="hashmap" parameterType="hashmap" >
+  
+	select
+	order_batch_id as batchId,
+	order_id as orderId,
+	period as period,
+	current_repay_date as currentRepayDate,
+	interest as interest,
+	current_money as currentMoney
+	from
+		repayment_plan_info
+	WHERE
+		people_type = '2'
+	AND DATE_FORMAT(current_repay_date, '%Y-%m-%d') <![CDATA[>]]> DATE_FORMAT(#{dateBegin}, '%Y-%m-%d')
+	AND DATE_FORMAT(current_repay_date, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(#{dateEnd}, '%Y-%m-%d')
+  
+  </select>
+  
+  
+    <select id="getfqcrSumJtkdFinanceRepay"  resultType="hashmap" parameterType="hashmap" >
+  
+	select
+	COUNT(*) as sumCount,
+	SUM(interest) as sumInterest,
+	SUM(current_money) as sumCurrentMoney
+	from
+		repayment_plan_info
+	WHERE
+		people_type = '2'
+	AND DATE_FORMAT(current_repay_date, '%Y-%m-%d') <![CDATA[>]]> DATE_FORMAT(#{dateBegin}, '%Y-%m-%d')
+	AND DATE_FORMAT(current_repay_date, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(#{dateEnd}, '%Y-%m-%d')
+  
+  </select>
+  
+</mapper>

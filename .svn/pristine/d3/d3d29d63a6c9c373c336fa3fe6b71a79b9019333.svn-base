@@ -1,0 +1,152 @@
+$(document).ready(function() {
+    CloudUtils.getMenuNames("nav");
+
+    initTable();
+
+});
+function searchFun() {
+    initTable();
+
+}
+var orderBy ="";
+var orderByName="";
+function initTable() {
+    $('#businessHallListTable').bootstrapTable('destroy');
+    $("#businessHallListTable").bootstrapTable({
+        method: "post",
+        url: "../../businessHall/list",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 5, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [5, 10, 15, 20, 25], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+            jsonData.pageNumber = params.pageNumber;
+            jsonData.pageSize = params.pageSize;
+            jsonData.orderBy = orderBy;
+            jsonData.orderByName=orderByName;
+             return JSON.stringify(jsonData);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+        	   field: 'storeId',
+               title: '门店id',
+               align: 'center',
+               valign: 'middle',
+               sortable : true,
+               formatter: function(value, row, index) {
+               	if(value!=null&&value!=""){
+               	      var m = '<a class = "detail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)">'+value+'</a>';
+
+                         return m;
+               	}else{
+               		return '';
+               	}
+             
+               },
+               events: 'operateEvents2',
+          
+            sortable: true
+        }, {
+            field: 'fullname',
+            title: '商家名称',
+            align: 'center',
+            valign: 'middle',
+            sortable: true
+        },  {
+            field: 'sellerType',
+            title: '商家类型',
+            align: 'center',
+            valign: 'middle',
+            sortable: true
+        }, {
+            field: 'address',
+            title: '商家地址',
+            align: 'center',
+            valign: 'middle',
+            sortable: true
+        }, {
+            field: 'contact',
+            title: '联系人',
+            align: 'center',
+            valign: 'middle',
+            sortable: true
+     
+        }, {
+            field: 'contactMobile',
+            title: '联系人电话',
+            align: 'center',
+            valign: 'middle',
+            sortable: true
+        }, {
+            field: 'storeCity',
+            title: '门店所属城市',
+            align: 'center',
+            valign: 'middle',
+            sortable: true
+        }, {
+            field: 'bank',
+            title: '银行开户行',
+            align: 'center',
+            valign: 'middle',
+            sortable: true
+        }, {
+            field: 'account',
+            title: '银行收款人',
+            align: 'center',
+            valign: 'middle',
+            sortable: true
+        }, {
+            field: 'card',
+            title: '银行账户',
+            align: 'center',
+            valign: 'middle',
+            sortable: true
+        },{
+            field: 'operation',
+            title: '详情',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row, index) {
+                var m = '<a class = "fa fa-list-ul detail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+
+                return m;
+            },
+            events: 'operateEvents'
+        }],
+        onSort:function(name, order){
+            orderBy = order;
+            orderByName=name;
+        },
+    });
+}
+
+window.operateEvents = {
+    'click .detail': function(e, value, row, index) {
+  	  store.set('businessHallDeatilRow', row); //把数据存储在缓存中
+	    $('#mainFrame', top.document).attr('src', 'project/ssmManager/BusinessHallDetail.html');
+    }
+};

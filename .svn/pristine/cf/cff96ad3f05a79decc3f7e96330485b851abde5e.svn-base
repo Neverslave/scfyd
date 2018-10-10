@@ -1,0 +1,253 @@
+$(document).ready(function() {
+    CloudUtils.getMenuNames("nav");
+    dateload();
+    initTable();
+});
+
+
+function searchFun() {
+    initTable();
+}
+
+
+function initTable() {
+    $('#carInfoListTable').bootstrapTable('destroy');
+    $("#carInfoListTable").bootstrapTable({
+        method: "post",
+        url: "../carInfoStatistics/list",
+        contentType:"application/json;charset=UTF-8",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 10, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [50, 100, 200, 500, 1000], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: true, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+            var param = {    
+                pageNumber : params.pageNumber,
+				pageSize : params.pageSize,
+				corpName : jsonData.corpName,
+				agencyNum : jsonData.agencyNum,
+				cprYear : jsonData.cprYear,
+				cprMonth : jsonData.cprMonth,
+				saleStatus : jsonData.saleStatus,
+				ywlxId : jsonData.ywlxId,
+				carFrameNum : jsonData.carFrameNum,
+				represent : jsonData.represent,
+				repaymentDate:jsonData.repaymentDate,
+                };  
+            return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'agencyNum',
+            title: '经销商代码',
+            align: 'center',
+            width:90,
+            valign: 'middle'
+        }, {
+            field: 'corpName',
+            title: '经销商名称',
+            align: 'center',
+            width:220,
+            valign: 'middle'
+        }, {
+            field: 'represent',
+            title: '所属商代处',
+            align: 'center',
+            width:90,
+            valign: 'middle',
+//            formatter: function(value) {
+//                switch (value) {
+//                    case '0':
+//                        return "南京";
+//                    case '1':
+//                        return "上海";
+//                    case '2':
+//                        return "西安";
+//                    case '3':
+//                        return "成都";
+//                    case '4':
+//                        return "广州";
+//                    case '5':
+//                        return "武汉";
+//                    case '6':
+//                        return "郑州";
+//                    case '7':
+//                        return "北京";
+//                    case '8':
+//                        return "沈阳";
+//                    case '9':
+//                        return "济南";
+//
+//                }
+//                //return $.number(value, 2);
+//            }
+        }, {
+            field: 'payId',
+            title: '付款承诺函编号',
+            align: 'center',
+            width:180,
+            valign: 'middle'
+        }, {
+            field: 'payAmt',
+            title: '付款承诺函金额',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'carFrameNum',
+            title: '车架号',
+            align: 'center',
+            width:180,
+            valign: 'middle'
+        }, {
+            field: 'carActualPrice',
+            title: '实际提车价',
+            align: 'center',
+            valign: 'middle',
+            width:100,
+            formatter: function(value) {
+                return $.number(value, 2);
+            }
+        }, {
+            field: 'cprYear',
+            title: '合作年份',
+            align: 'center',
+            width:80,
+            valign: 'middle'
+        }, {
+            field: 'cprMonth',
+            title: '合作月份',
+            align: 'center',
+            width:80,
+            valign: 'middle'
+        },/* {
+            field: 'ywlxId',
+            title: '业务类型',
+            align: 'center',
+            width:80,
+            valign: 'middle',
+            visible:false
+        },*/{
+            field: 'typeName',
+            title: '业务类型',
+            align: 'center',
+            width:80,
+            valign: 'middle'
+        }, {
+            field: 'financeStartDate',
+            title: '付款承诺函起始日',
+            align: 'center',
+            width:130,
+            valign: 'middle',
+            visible:false,
+        }, {
+            field: 'financeEndDate',
+            title: '付款承诺函到期日',
+            align: 'center',
+            width:130,
+            valign: 'middle'
+        },{
+            field: 'repaymentDate',
+            title: '还款日期',
+            align: 'center',
+            width:130,
+            valign: 'middle'
+        },{
+            field: 'saleStatus',
+            title: '状态',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+                if (value == '0') {
+                    return "未售";
+                } else if (value == '1') {
+                    return "已售";
+                }
+            }
+        }]
+    });
+}
+
+function dateload() {
+	$('#repaymentDate').datetimepicker({
+	    format: 'yyyy-mm-dd',
+	    autoclose: true,
+	    todayBtn: true,
+	    startView: 'month',
+	    minView:'month',
+	    maxView:'decade',
+	    language:  'zh-CN',
+	     // 日期时间选择器所能够提供的最精确的时间选择视图。
+	    initialDate: new Date()
+	});
+	}
+
+function exportAllExcel(){
+    var dataTemp = CloudUtils.convertStringJson('searchForm');
+    var options = {
+        url: '../carInfo/exportExcel',
+        data: dataTemp,
+        callBackFun: function(data) {
+            if (data) {
+               window.open(data); 
+           }else{
+                 bootbox.alert("导出失败");
+           }    
+            
+        }
+    };
+    CloudUtils.ajax(options);
+}
+
+function exportExcel(){
+	$('#carInfoListTable').tableExport({
+		type:'excel',
+		excape:'false'
+	})
+}
+function changeArea(areaVal) {
+	$("#representSearch").empty();
+	if (areaVal == '0') {
+		$("#representSearch").append("<option value='0'>南京</option>")
+						.append("<option value='1'>上海</option>");
+	} else if (areaVal == '1') {
+		$("#representSearch").append("<option value='2'>西安</option>")
+						.append("<option value='3'>成都</option>");
+	} else if (areaVal == '2') {
+		$("#representSearch").append("<option value='4'>广州</option>")
+						.append("<option value='5'>武汉</option>")
+						.append("<option value='6'>郑州</option>");
+	} else if (areaVal == '3') {
+		$("#representSearch").append("<option value='7'>北京</option>")
+						.append("<option value='8'>沈阳</option>")
+						.append("<option value='9'>济南</option>");
+	}
+}

@@ -1,0 +1,83 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+    initTable();
+    dateload();
+    numFormat();
+});
+
+function searchFun() {
+    initTable();
+}
+function numFormat() {
+	$("#currentSumCount").number(true, 0);
+	$("#currentSumNeedMoney").number(true, 2);
+
+
+}
+function operateFun(){
+	var dataTemp = CloudUtils.convertStringJson('searchForm');
+    var jsonData = eval("(" + dataTemp + ")");
+var options = {
+
+     url: '../SSMSummaryInfo/createWingRepaymentYuqi',
+     data: JSON.stringify(jsonData),
+     callBackFun: function(data) {
+     	if(data.result==0){
+     		bootbox.alert("操作成功！");
+     	
+     	}else{
+     		bootbox.alert("操作失败！");
+     	}
+     	
+     },
+     errorCallback: function(data) {
+         bootbox.alert("error");
+     }
+ };
+ CloudUtils.ajax(options);
+}
+
+function initTable() {
+	
+
+	   var dataTemp = CloudUtils.convertStringJson('searchForm');
+	    var jsonData = eval("(" + dataTemp + ")");
+ var options = {
+
+         url: '../SSMSummaryInfo/wingRepaymentYuqiList',
+         data: JSON.stringify(jsonData),
+         callBackFun: function(data) {
+         	if(data.result==0){
+         		 CloudUtils.setForm(data.resultMap, 'detailFormMonthly');
+         	
+         	}else{
+         		bootbox.alert("操作失败！");
+         	}
+         	
+         },
+         errorCallback: function(data) {
+             bootbox.alert("error");
+         }
+     };
+     CloudUtils.ajax(options);
+
+	
+}
+
+
+
+function dateload() {
+    $('#syncDate').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        startView: 4,
+        minView: 4,
+         // 日期时间选择器所能够提供的最精确的时间选择视图。
+        initialDate: new Date()
+});
+
+}

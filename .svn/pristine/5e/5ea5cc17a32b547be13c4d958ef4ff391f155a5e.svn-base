@@ -1,0 +1,77 @@
+package com.ut.scf.service.test.pub;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.pub.PrdUpdateReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.pub.IPrdManagerService;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = {
+        "classpath:spring-mybatis-test.xml" })
+public class PrdManagerServiceTest {
+	
+	private static final Logger log = LoggerFactory.getLogger(PrdManagerServiceTest.class);
+	
+	@Autowired
+	private IPrdManagerService prdManagerService;
+	
+	@Test
+	public void getProductListTest(){
+		log.info("**********************************getProductListTest start*********************************");
+		Map<String, Object> paramMap = new HashMap<>();
+    	PageInfoBean page = new PageInfoBean();
+    	paramMap.put("productName", "23");
+    	page.setPageNumber(1);
+		page.setPageSize(10);
+    	BaseRespBean respBean = prdManagerService.getProductList(paramMap, page);
+    	log.info("getProductList : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************getProductListTest end*********************************");
+	}
+	
+	@Test
+	public void insertProductTest(){
+		log.info("**********************************insertProductTest start*********************************");
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("productName", "测试用的产品");
+		paramMap.put("productDesc", "很好用");
+		BaseRespBean respBean = prdManagerService.insertProduct(paramMap);
+    	log.info("insertProduct : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************insertProductTest end*********************************");
+	}
+	
+	@Test
+	public void updateProductTest(){
+		log.info("**********************************updateProductTest start*********************************");
+		PrdUpdateReqBean productUpdataBean = new PrdUpdateReqBean();
+		productUpdataBean.setProductId("2c9984b35d074501338d074501750000");
+		productUpdataBean.setProductName("测试用的产品123");
+		productUpdataBean.setProductDesc("很好用2333333");
+		BaseRespBean respBean = prdManagerService.updateProduct(productUpdataBean);
+    	log.info("updateProduct : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************updateProductTest end*********************************");
+	}
+	
+	@Test
+	public void deleteProductTest(){
+		log.info("**********************************deleteProductTest start*********************************");
+		BaseRespBean respBean = prdManagerService.deleteProduct("2c9984b35d074501338d074501750000");
+    	log.info("deleteProduct : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************deleteProductTest end*********************************");
+	}
+}

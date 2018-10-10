@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ut.scf.dao.tradfact.IProjectReviewDao">
+	<select id="selectProjectReviewList" parameterType="hashmap"
+		resultType="hashmap">
+		select 
+		pi.project_id projectId,
+		pi.project_name projectName,
+		tpc.credit_main creditMain,
+		tpc.credit_amount creditAmount,
+		tpc.credit_term creditTerm,
+		pi.factoring_type factoringType,
+		pi.financing_amount financingAmount,
+		ci.corp_name corpBuyName,
+		pi.financing_term financingTerm,
+		cii.corp_name corpSaleName,
+		tri.interest_rate interestRate,
+		tri.receipt_way receiptWay,
+		tri.manage_fee_amount manageFeeAmount,
+		tri.manage_fee_rate manageFeeRate,
+		tri.mng_fee_pay_way mngFeePayWay,
+		pi.repayment_way repaymentWay,
+		pi.reapyment_amount reapymentAmount,
+		pi.return_rate returnRate,
+		pi.risk_mitigation_measures riskMitigationMeasures,
+		pi.project_description projectDescription,
+		temp.realName realName,temp.userId userId
+		from
+		tf_project_and_corp pac join tf_project_info pi on pi.project_id = pac.project_id
+		join corp_info ci on pac.corp_buy_id = ci.corp_id
+		join corp_info cii on pac.corp_sale_id = cii.corp_id
+		join tf_project_credit tpc on pi.project_id = tpc.project_id
+		left join tf_rate_info tri on pi.rate_id = tri.rate_id
+		left join (select su.user_id userId,su.realname realName,tpa.project_id from sys_user su
+		left join tf_project_assign tpa on su.user_id = tpa.user_assign
+		where tpa.project_type = '0') temp on temp.project_id = pi.project_id
+		where (pi.project_status = '21' OR pi.project_status = '51')
+		<if test="projectId != null and projectId !='' ">
+			and pi.project_id = #{projectId}
+		</if>
+		<if test="projectName != null and projectName !='' ">
+			and pi.project_name LIKE CONCAT(CONCAT('%',
+			#{projectName}),'%')
+		</if>
+		<if test="corpBuyName != null and corpBuyName !='' ">
+			and ci.corp_name LIKE CONCAT(CONCAT('%',
+			#{corpBuyName}),'%')
+		</if>
+		<if test="corpSaleName != null and corpSaleName !='' ">
+			and cii.corp_name LIKE CONCAT(CONCAT('%',
+			#{corpSaleName}),'%')
+		</if>
+		<if test="factoringType != null and factoringType !='' ">
+			and pi.factoring_type = #{factoringType}
+		</if>
+	</select>
+	
+	<delete id="deleteReviewFiles" parameterType="hashmap">
+	delete from tf_project_files where project_id=#{projectId} and material_class='5'
+	</delete>
+</mapper>

@@ -1,0 +1,50 @@
+package com.ut.scf.web.controller.wechat.query;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.query.SaleInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.query.ISaleInfoQueryService;
+
+@Controller
+@RequestMapping("/wechat/saleInfo")
+public class WeChatSaleInfoController {
+
+	@Resource
+	private ISaleInfoQueryService saleInfoQueryService;
+
+	@RequestMapping(value = "/list")
+	@ResponseBody
+	public BaseRespBean getSaleQueryList(HttpSession httpSession, @RequestBody SaleInfoListReqBean reqBean) {
+		String corpId = (String) httpSession.getAttribute(ScfConsts.SESSION_CORP_ID);
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		if (!"corp00001".equals(corpId) && !"corp00002".equals(corpId) && !"corp00003".equals(corpId)) {// 经销商只能看自己
+			paramMap.put("corpId", corpId);
+		}
+		BaseRespBean respBean = saleInfoQueryService.saleInfoList(paramMap);
+		return respBean;
+	}
+
+	@RequestMapping(value = "/listAll")
+	@ResponseBody
+	public BaseRespBean getSaleAllQueryList(HttpSession httpSession, @RequestBody SaleInfoListReqBean reqBean) {
+		String corpId = (String) httpSession.getAttribute(ScfConsts.SESSION_CORP_ID);
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		if (!"corp00001".equals(corpId) && !"corp00002".equals(corpId) && !"corp00003".equals(corpId)) {// 经销商只能看自己
+			paramMap.put("corpId", corpId);
+		}
+		BaseRespBean respBean = saleInfoQueryService.saleAllQueryList(paramMap);
+		return respBean;
+	}
+}

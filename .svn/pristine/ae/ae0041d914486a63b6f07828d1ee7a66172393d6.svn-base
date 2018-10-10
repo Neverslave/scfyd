@@ -1,0 +1,196 @@
+package com.ut.scf.service.test.project;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.ContextLoaderListener;
+
+import com.ut.scf.reqbean.project.AgencyFlowReqBean;
+import com.ut.scf.reqbean.project.AgencySearchPageReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IAgencyService;
+import com.ut.scf.web.controller.project.AgencyManageController;
+
+@WebAppConfiguration
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class AgencyServiceTest {
+	private static final Logger log = LoggerFactory
+			.getLogger(AgencyManageController.class);
+
+	@Resource
+	private IAgencyService agencyService;
+	
+	@Resource
+	private IActivitiService activitiService;
+
+	@Test
+	public void agencyListTest() {
+		log.info("=============================agencyListTest start=============================");
+		try {
+
+			AgencySearchPageReqBean searchPage =new  AgencySearchPageReqBean();
+			BaseRespBean agencyList = agencyService.agencyList(searchPage);
+			log.info("agencyList:"+agencyList.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================agencyListTest end=============================");
+	};
+	
+	@Test
+	public void addAgency(){
+		log.info("=============================addAgency start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			
+			AgencyFlowReqBean reqBean = new AgencyFlowReqBean();
+			reqBean.setAgencyListInfo("[{'isEdit':'0','index':'','corpName':'测试类的经销商1'"
+					+ ",'agencyNum':'234214','maxCreditAmount':'112','officeAddress':'1222',"
+					+ "'contactInfo':'22272223222','fixedPhone':'222','area':'0','represent':'0',"
+					+ "'firstTwoYearsPickupNum':'22','firstTwoYearsRetailNum':'22',"
+					+ "'firstTwoYearsSaleRank':'22','thisYearPlanPickupNum':'22',"
+					+ "'thisYearPlanSales':'22','note':'22'}]");
+			reqBean.setNote("3243");
+			reqBean.setProcInstId("1422501");
+			agencyService.addAgency(reqBean);
+			
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================addAgency end=============================");
+	}
+	
+	@Test
+	public void reApply(){
+		log.info("=============================reApply start=============================");
+		try {
+			
+			MockServletContext sc = new MockServletContext("");
+			sc.addInitParameter(ContextLoader.CONFIG_LOCATION_PARAM, "/spring-mybatis-test.xml");
+			ServletContextListener listener = new ContextLoaderListener();
+			ServletContextEvent event = new ServletContextEvent(sc);
+			listener.contextInitialized(event);
+			
+			BaseRespBean respBean = new BaseRespBean();
+			
+			AgencyFlowReqBean reqBean = new AgencyFlowReqBean();
+			reqBean.setUserId("dyk");
+			reqBean.setActivitiKey("accAgencyProcess");
+			reqBean.setAgencyListInfo("[{'isEdit':'0','index':'','corpName':'测试类的经销商1'"
+					+ ",'agencyNum':'234214','maxCreditAmount':'112','officeAddress':'1222',"
+					+ "'contactInfo':'22272223222','fixedPhone':'222','area':'0','represent':'0',"
+					+ "'firstTwoYearsPickupNum':'22','firstTwoYearsRetailNum':'22',"
+					+ "'firstTwoYearsSaleRank':'22','thisYearPlanPickupNum':'22',"
+					+ "'thisYearPlanSales':'22','note':'22'}]");
+			reqBean.setNote("3243");
+			reqBean.setProcInstId("1422501");
+			reqBean.setUserId("dyk");
+			reqBean.setTaskId("1432505");
+			JSONObject jsonObject = new JSONObject(reqBean);
+			log.info("jsonObject"+jsonObject);
+			respBean = agencyService.reApply(jsonObject);
+			
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================reApply end=============================");
+	}
+    
+	
+	@Test
+	public void startProcessTest(){
+		log.info("=============================startProcessTest start=============================");
+		try {
+			
+			MockServletContext sc = new MockServletContext("");
+			sc.addInitParameter(ContextLoader.CONFIG_LOCATION_PARAM, "/spring-mybatis-test.xml");
+			ServletContextListener listener = new ContextLoaderListener();
+			ServletContextEvent event = new ServletContextEvent(sc);
+			listener.contextInitialized(event);
+			
+			BaseRespBean respBean = new BaseRespBean();
+			
+			AgencyFlowReqBean reqBean = new AgencyFlowReqBean();
+			reqBean.setUserId("dyk");
+			reqBean.setActivitiKey("accAgencyProcess");
+			reqBean.setAgencyListInfo("[{'isEdit':'0','index':'','corpName':'测试类的经销商1'"
+					+ ",'agencyNum':'234214','maxCreditAmount':'112','officeAddress':'1222',"
+					+ "'contactInfo':'22272223222','fixedPhone':'222','area':'0','represent':'0',"
+					+ "'firstTwoYearsPickupNum':'22','firstTwoYearsRetailNum':'22',"
+					+ "'firstTwoYearsSaleRank':'22','thisYearPlanPickupNum':'22',"
+					+ "'thisYearPlanSales':'22','note':'22'}]");
+			reqBean.setNote("3243");
+			JSONObject jsonObject = new JSONObject(reqBean);
+			log.info("jsonObject"+jsonObject);
+			respBean = agencyService.startProcess(jsonObject);
+			
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================startProcessTest end=============================");
+	}
+	
+	
+
+	@Test
+	public void doAgree() {
+		log.info("=============================doAgree start=============================");
+		try {
+			MockServletContext sc = new MockServletContext("");
+			sc.addInitParameter(ContextLoader.CONFIG_LOCATION_PARAM, "/spring-mybatis-test.xml");
+			ServletContextListener listener = new ContextLoaderListener();
+			ServletContextEvent event = new ServletContextEvent(sc);
+			listener.contextInitialized(event);
+			
+			BaseRespBean respBean = new BaseRespBean();
+			AgencyFlowReqBean aencyFlowReqBean = new AgencyFlowReqBean();
+			aencyFlowReqBean.setProcInstId("1422501");
+			aencyFlowReqBean.setTaskId("1422518");
+			aencyFlowReqBean.setUserId("2c9984a75c1540de383b155f4dd80004");
+			aencyFlowReqBean.setAgree("1");
+			respBean = agencyService.doAgree(aencyFlowReqBean);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================doAgreeTest end=============================");
+	};
+
+	@Test
+	public void addAgencyTest() {
+		log.info("=============================addAgencyTest start=============================");
+		try {
+			AgencyFlowReqBean reqBean = new AgencyFlowReqBean();
+			
+			reqBean.setUserId("bly2017");
+
+			agencyService.addAgency(reqBean);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================addAgencyTest end=============================");
+	};
+}

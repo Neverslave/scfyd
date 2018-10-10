@@ -1,0 +1,41 @@
+package com.ut.scf.service.statistics.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.dao.statistics.ISSMProjectSummaryDao;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.statistics.ISSMProjectSummaryService;
+
+@Service("ssmProjectSummaryService")
+public class SSMProjectSummaryServiceImpl implements ISSMProjectSummaryService{
+
+	@Resource
+	private ISSMProjectSummaryDao ssmProjectSummaryDao;
+	
+	@Override
+	public BaseRespBean SummaryInfoList(Map<String, Object> paramMap,
+			PageInfoBean page) {
+		List<Map<String, Object>> list = ssmProjectSummaryDao.getSummaryInfoList(paramMap, page);
+		PageRespBean RespBean = new PageRespBean();
+		RespBean.setPages(page.getTotalPage());
+		RespBean.setRecords(page.getTotalRecord());
+		RespBean.setDataList(list);
+		return RespBean;
+	}
+
+	@Override
+	public BaseRespBean SummaryInfoList(Map<String, Object> paramMap) {
+		List<Map<String, Object>> list = ssmProjectSummaryDao.getSummaryInfoList(paramMap);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+}

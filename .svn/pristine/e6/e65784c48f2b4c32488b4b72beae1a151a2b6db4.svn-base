@@ -1,0 +1,13 @@
+package com.ut.scf.service.tradfact;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.tradfact.ProjectReplyReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IProjectReplyService {
+	public BaseRespBean projectReplyList(Map<String, Object> paramMap, PageInfoBean page);
+	
+	public BaseRespBean replyRemark(ProjectReplyReqBean projectReplyReqBean);
+}

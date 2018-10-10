@@ -1,0 +1,95 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.dao.auto.TfAdjustInfoMapper;
+import com.ut.scf.dao.auto.TfProjectInfoMapper;
+import com.ut.scf.dao.tradfact.IProjectAdjustDao;
+import com.ut.scf.pojo.auto.TfAdjustInfo;
+import com.ut.scf.pojo.auto.TfProjectInfo;
+import com.ut.scf.reqbean.tradfact.ProjectAdjustAddReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.tradfact.IProjectAdjustService;
+
+@Service
+public class ProjectAdjustServiceImpl implements IProjectAdjustService {
+
+	private static final Logger log = LoggerFactory
+			.getLogger(ProjectAdjustServiceImpl.class);
+	@Resource
+	private IProjectAdjustDao projectAdjustDao;
+	@Resource
+	private TfAdjustInfoMapper adjustInfoMapper;
+	@Resource
+	private TfProjectInfoMapper tfProjectInfoMapper;
+
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean searchAdjustInfo(Map<String, Object> paramMap,
+			PageInfoBean page) {
+		List<Map<String, Object>> list = projectAdjustDao.selectProjectInfo(
+				paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		log.debug("TotalPage:" + page.getTotalPage() + "TotalRecord:"
+				+ page.getTotalRecord());
+		log.debug("list:" + list);
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean interAdjustInfo(ProjectAdjustAddReqBean reqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+		TfAdjustInfo adjustInfo = new TfAdjustInfo();
+		BeanUtil.BeanToBean(adjustInfo, reqBean);
+		adjustInfo.setProjectId(reqBean.getProjectId());
+		adjustInfo.setCeateTime(new Date());
+		adjustInfo.setSiteInfo(reqBean.getSiteInfo());
+		adjustInfo.setClientInfo(reqBean.getClientInfo());
+		adjustInfo.setDicussInfo(reqBean.getDiscussInfo());
+		adjustInfo.setSiteRiskInfo(reqBean.getSiteRiskInfo());
+		adjustInfo.setClientRiskInfo(reqBean.getClientRiskInfo());
+		adjustInfo.setDiscussRiskInfo(reqBean.getDiscussRiskInfo());
+		int insertNum = adjustInfoMapper.insert(adjustInfo);
+		if (insertNum <= 0) {
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			return respBean;
+		}
+		TfProjectInfo tfProjectInfo = new TfProjectInfo();
+		tfProjectInfo.setProjectId(reqBean.getProjectId());
+		tfProjectInfo.setProjectStatus("21");
+		tfProjectInfoMapper.updateByPrimaryKeySelective(tfProjectInfo);
+		return respBean;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean searchRiskManagerInfo(Map<String, Object> paramMap,
+			PageInfoBean page) {
+		List<Map<String, Object>> list = projectAdjustDao.selectRiskManagerInfo(
+				paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+}

@@ -1,0 +1,38 @@
+package com.ut.scf.service.project.impl;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.reqbean.project.RefundDepositAgreeReqBean;
+import com.ut.scf.reqbean.tradfact.RecomMeetDetailReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+import com.ut.scf.service.project.IRefundDepositService;
+
+@Service("refundDepositBpmService")
+public class RefundDepositBpmServiceImpl extends BaseActivitiService<RefundDepositAgreeReqBean>
+		implements IActivitiService<RefundDepositAgreeReqBean> {
+	@Resource
+	private IRefundDepositService refundDepositService;
+	private static final String ADVANCE_APPLY_BPM = "refundDeposit";
+
+	@Override
+	public String getProcessDefinitionKey() {
+		return ADVANCE_APPLY_BPM;
+	}
+
+	@Override
+	public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+		if (bpmProcessContext.isProcessEnd()) {
+			RefundDepositAgreeReqBean refundDepositAgreeReqBean = (RefundDepositAgreeReqBean) bpmProcessContext.getT();
+//			RecomMeetingAddReqBean ReqBean = new RecomMeetingAddReqBean();
+//			ReqBean.setProjectId(recomMeetDetailReqBean.getProjectId());
+//			ReqBean.setUpwardsInfo(recomMeetDetailReqBean.getUpwardsInfo());
+//			recomMeetService.interMeetInfo(ReqBean);
+			
+			refundDepositService.modRef(refundDepositAgreeReqBean);
+		}
+	}
+}

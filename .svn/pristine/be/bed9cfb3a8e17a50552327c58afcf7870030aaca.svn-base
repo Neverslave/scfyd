@@ -1,0 +1,15 @@
+package com.ut.scf.service.query;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.query.OrderInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IFinanceRepayService {
+
+	public void getCurrentSum(Map<String, Object> paramMap, String path)  throws Exception ;
+
+	public Map<String, Object> exportExcel(Map<String, Object> paramMap, String path)  throws Exception ;
+	
+}

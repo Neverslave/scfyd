@@ -1,0 +1,219 @@
+package com.ut.scf.service.project.impl;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.dao.auto.GuaranteeInfoMapper;
+import com.ut.scf.dao.project.IFinanceInfoDao;
+import com.ut.scf.pojo.auto.GuaranteeInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.reqbean.project.RefundDepositAgreeReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.project.IRefundDepositService;
+
+@Service("refundDepositService")
+public class RefundDepositServiceImpl implements IRefundDepositService {
+	@Resource IFinanceInfoDao financeInfoDao;
+	@Resource GuaranteeInfoMapper guaranteeInfoMapper;
+	@Resource IActivitiService activitiService;
+	@Resource
+	private IProcessRepeatChkService processRepeatChkService;
+	@Resource
+	private ProcessEngine processEngine;
+	@Resource
+	private RuntimeService runtimeService;
+	@Resource
+	private TaskService taskService;
+	
+	private static final Logger log = LoggerFactory
+			.getLogger(RefundDepositServiceImpl.class);
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getRefundDepositInfo(Map<String, Object> paramMap,PageInfoBean page) {
+		List<Map<String, Object>> refundDepositInfo = financeInfoDao.getRefundDepositInfo(paramMap,page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(refundDepositInfo);
+		return respBean;
+	}
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean updateRefundDepositInfo(GuaranteeInfo guaranteeInfo) {
+		BaseRespBean respBean = new BaseRespBean();
+		int updateByPrimaryKeySelective = guaranteeInfoMapper.updateByPrimaryKeySelective(guaranteeInfo);
+		log.debug("update im num {}", updateByPrimaryKeySelective);
+		if (updateByPrimaryKeySelective <= 0) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		return respBean;
+	}
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean agreeThenMod(RefundDepositAgreeReqBean refundDepositAgreeReqBean) {
+		String taskId = refundDepositAgreeReqBean.getTaskId();
+		String procInstId = processEngine.getHistoryService().createHistoricTaskInstanceQuery().
+				taskId(taskId).singleResult().getProcessInstanceId();
+//		同意流程
+		JSONObject jsonObject = new JSONObject(refundDepositAgreeReqBean);
+		activitiService.doAgree(jsonObject);
+//		修改业务
+		GuaranteeInfo guaranteeInfo = new GuaranteeInfo();
+		BigDecimal PayActGuarantee = new BigDecimal(refundDepositAgreeReqBean.getPayActGuarantee()==null?0:refundDepositAgreeReqBean.getPayActGuarantee());
+		BigDecimal GuaranteeBalance = new BigDecimal(refundDepositAgreeReqBean.getGuaranteeBalance()==null?0:refundDepositAgreeReqBean.getGuaranteeBalance());
+		BigDecimal ReturnGuaranteeAmt = new BigDecimal(refundDepositAgreeReqBean.getReturnGuaranteeAmt()==null?0:refundDepositAgreeReqBean.getReturnGuaranteeAmt());
+		guaranteeInfo.setPayActGuarantee(PayActGuarantee.subtract(ReturnGuaranteeAmt));
+		guaranteeInfo.setGuaranteeBalance(GuaranteeBalance.subtract(ReturnGuaranteeAmt));
+		guaranteeInfo.setFinanceId(refundDepositAgreeReqBean.getFinanceId());
+		BaseRespBean updateRefundDepositInfo = updateRefundDepositInfo(guaranteeInfo);
+//		删除process_repeat_check数据
+		int result = processRepeatChkService.deleteByProcInstId(procInstId);
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+		return updateRefundDepositInfo;
+	}
+	
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean modRef(RefundDepositAgreeReqBean refundDepositAgreeReqBean) {
+//		修改业务
+		GuaranteeInfo guaranteeInfo = new GuaranteeInfo();
+		BigDecimal PayActGuarantee = new BigDecimal(refundDepositAgreeReqBean.getPayActGuarantee()==null?0:refundDepositAgreeReqBean.getPayActGuarantee());
+		BigDecimal GuaranteeBalance = new BigDecimal(refundDepositAgreeReqBean.getGuaranteeBalance()==null?0:refundDepositAgreeReqBean.getGuaranteeBalance());
+		BigDecimal ReturnGuaranteeAmt = new BigDecimal(refundDepositAgreeReqBean.getReturnGuaranteeAmt()==null?0:refundDepositAgreeReqBean.getReturnGuaranteeAmt());
+		guaranteeInfo.setPayActGuarantee(PayActGuarantee.subtract(ReturnGuaranteeAmt));
+		guaranteeInfo.setGuaranteeBalance(GuaranteeBalance.subtract(ReturnGuaranteeAmt));
+		guaranteeInfo.setFinanceId(refundDepositAgreeReqBean.getFinanceId());
+		BaseRespBean updateRefundDepositInfo = updateRefundDepositInfo(guaranteeInfo);
+//		删除process_repeat_check数据
+		int result = processRepeatChkService.deleteByProcInstId(refundDepositAgreeReqBean.getProcInstId());
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+		return updateRefundDepositInfo;
+	}
+	
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean startProcess(JSONObject jsonObject) {
+//		先查表，是否已经发起过了
+		List<ProcessRepeatCheck> checks = new ArrayList<ProcessRepeatCheck>();
+		BaseRespBean respBean = new BaseRespBean();
+		String financeId = jsonObject.getString("financeId");
+		respBean = checkFinanceId(financeId, checks);
+		if (respBean.getResult() != 0) {
+			return respBean;
+		}
+		String userName = (String) jsonObject.get("userId");
+		String key = (String) jsonObject.get("activitiKey");
+		// 加上当前用户
+		ProcessInstance pi = processEngine.getRuntimeService()// 管理流程实例和执行对象，也就是表示正在执行的操作
+				.startProcessInstanceByKey(key);
+		String procInstId = pi.getProcessInstanceId();
+		Task task = taskService.createTaskQuery().processInstanceId(pi.getId())
+				.singleResult();
+
+		// 拾取用户
+		taskService.claim(task.getId(), userName);
+		// 设置变量
+		taskService.setVariable(task.getId(), "launchUser", userName);//发起者
+		taskService.setVariableLocal(task.getId(), "agencyJson",
+				jsonObject.toString());
+		// 完成节点
+		taskService.complete(task.getId());
+		
+		//插入process_repeat_check数据库
+		for (ProcessRepeatCheck check : checks) {
+			check.setProcInstId(procInstId);
+			int result = processRepeatChkService.insert(check);
+			if (result < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		}
+		return respBean;
+	}
+
+	private BaseRespBean checkFinanceId(String financeId, List<ProcessRepeatCheck> checks) {
+		BaseRespBean respBean = new BaseRespBean();
+		ProcessRepeatCheck check = new ProcessRepeatCheck();
+		check.setProcessKey("refundDeposit");
+		check.setItemKey("FINANCE_ID");
+		check.setItemValue(financeId);
+		checks.add(check);
+		if (processRepeatChkService.isProcessExist(check)) {
+			respBean.setResult(ErrorCodeEnum.FINANCE_ID_EXIST_IN_REF);
+			return respBean;
+		}else {
+			check = new ProcessRepeatCheck();
+			check.setProcessKey("OffsetDeposit");
+			check.setItemKey("FINANCE_ID");
+			check.setItemValue(financeId);
+			if(processRepeatChkService.isProcessExist(check)){
+				respBean.setResult(ErrorCodeEnum.FINANCE_ID_EXIST_IN_OFFSET);
+				return respBean;
+			}
+		}
+		return respBean;
+	}
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean reApply(JSONObject jsonObject) {
+		// TODO Auto-generated method stub
+		BaseRespBean respBean = new BaseRespBean();
+		// 1.获取taskId和userId
+		String taskId = (String) jsonObject.get("taskId");
+		String financeId = jsonObject.getString("financeId");
+		//根据taskId获取procInstId
+		String procInstId = processEngine.getHistoryService().createHistoricTaskInstanceQuery().
+				taskId(taskId).singleResult().getProcessInstanceId();
+		int deleteCnt = processRepeatChkService.deleteByProcInstId(procInstId);
+		if (deleteCnt < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+		List<ProcessRepeatCheck> checks = new ArrayList<ProcessRepeatCheck>();
+		respBean = checkFinanceId(financeId,checks);
+		if (respBean.getResult() != 0) {
+			return respBean;
+		}
+		String userId = (String) jsonObject.get("userId");
+		// 2.拾取用户
+		taskService.claim(taskId, userId);
+		// 3.设置流程变量
+		taskService.setVariableLocal(taskId, "agencyJson",
+				jsonObject.toString());
+		// 4.完成流程
+		taskService.complete(taskId);
+		for (ProcessRepeatCheck check : checks) {
+			check.setProcInstId(procInstId);
+			int result = processRepeatChkService.insert(check);
+			if (result < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		}
+		return respBean;
+	}
+	
+}

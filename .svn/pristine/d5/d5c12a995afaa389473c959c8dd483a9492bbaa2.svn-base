@@ -1,0 +1,181 @@
+$(document).ready(function() {
+    initTable();
+    dateload();
+
+	
+});
+
+function searchFun() {
+    initTable();
+
+}
+
+function initTable() {
+    $('#financeRepayHistoryTable').bootstrapTable('destroy');
+    
+
+	$("#financeRepayHistoryTable").bootstrapTable({
+        method: "post",
+        url: "../../orderAssets/getFqcrOrderComputeHistoryList",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 5, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [5, 10, 15, 20, 25], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求 
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+            jsonData.pageNumber = params.pageNumber;
+            jsonData.pageSize = params.pageSize;
+             return JSON.stringify(jsonData);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'p_people_type',
+            title: '订单类型',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                if(value=="1")
+             	   {
+             	   return "学生";
+             	   }
+                else if(value=="2")
+ 	        	   {
+ 	        	   return "家庭宽带";
+ 	        	   }
+                else if(value=="3")
+ 	        	   {
+ 	        	   return "翼支付";
+ 	        	   }
+                else
+             	   {
+             	   return value;
+             	   }
+             }
+        }, {
+            field: 'p_order_begin',
+            title: '订单开始日期',
+            align: 'center',
+            valign: 'middle'
+        },  {
+            field: 'p_order_date',
+            title: '订单结束日期',
+            align: 'center',
+            valign: 'middle'
+        },  {
+            field: 'p_order_date_end',
+            title: '还款截止日期',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'file_path',
+            title: '附件',
+            align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+        	   if(value!=""&&value!=null)
+    		   {
+        		   var n = '<a  class = "downloadfile" >下载</a>';
+        		   return n;
+    		   }
+    	        else
+     		   {	        	
+    	        	return '';
+     		   } 
+    	     },
+    	        events: 'operateEvents'
+        }]
+    });
+
+    
+}
+
+function dateload() {
+    $('#dateBegin').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyymmdd',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+    $('#dateEnd').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyymmdd',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+    $('#repayEnd').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyymmdd',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+
+}
+
+function exportFinacneRepayExcel(){
+    var dataTemp = CloudUtils.convertStringJson('financeFrom');
+    var options = {
+        url: '../../orderAssets/exportOrderAssetsExcel',
+        data: dataTemp,
+        callBackFun: function(data) {
+            if (data.result==0) {
+
+            	bootbox.alert("统计成功");
+            	initTable();
+                
+            } else {
+                bootbox.alert(data.resultNote);
+            }
+
+        }
+    };
+    CloudUtils.ajax(options);
+}
+
+function download(){	
+	 window.open($('#detailModal #filePath').val());
+}
+
+window.operateEvents = {
+	    'click .downloadfile': function (e, value, row, index) {
+	    	window.open(value);
+	    },
+
+
+	};
+
+

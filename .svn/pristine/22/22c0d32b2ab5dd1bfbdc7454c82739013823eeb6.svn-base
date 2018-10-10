@@ -1,0 +1,15 @@
+package com.ut.scf.service.tradfact;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IProjectFileService {
+
+	BaseRespBean selectProjectFile(Map<String, Object> paramMap);
+
+	BaseRespBean selectContractProjectFile(Map<String, Object> paramMap);
+
+	BaseRespBean selectLoanProjectFile(Map<String, Object> paramMap, PageInfoBean page);
+}

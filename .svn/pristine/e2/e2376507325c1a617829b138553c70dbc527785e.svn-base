@@ -1,0 +1,100 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.TfProjectAssignMapper;
+import com.ut.scf.dao.auto.TfProjectInfoMapper;
+import com.ut.scf.dao.auto.TfUpwardsInfoMapper;
+import com.ut.scf.pojo.auto.TfProjectAssign;
+import com.ut.scf.pojo.auto.TfProjectInfo;
+import com.ut.scf.reqbean.tradfact.ProjectReviewDetailReqBean;
+import com.ut.scf.reqbean.tradfact.RecomMeetDetailReqBean;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.reqbean.tradfact.RecomMeetingAddReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+import com.ut.scf.service.bpm.impl.Target;
+
+@Service("recomMeetBpmService")
+public class RecomMeetBpmServiceImpl extends BaseActivitiService<RecomMeetDetailReqBean> implements IActivitiService<RecomMeetDetailReqBean> {
+    @Resource
+    private RecomMeetServiceImpl recomMeetService;
+    private static final String ADVANCE_APPLY_BPM = "recommendMeeting";
+
+    @Resource
+    private TfProjectInfoMapper tfProjectInfoMapper;
+
+    @Resource
+    private TfUpwardsInfoMapper tfUpwardsInfoMapper;
+    
+    @Resource
+    private TfProjectAssignMapper  assignMapper;
+    @Override
+    public String getProcessDefinitionKey() {
+        return ADVANCE_APPLY_BPM;
+    }
+
+    @Override
+    public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+        if (bpmProcessContext.isProcessEnd()) {
+            RecomMeetDetailReqBean recomMeetDetailReqBean = (RecomMeetDetailReqBean) bpmProcessContext.getT();
+            RecomMeetingAddReqBean ReqBean = new RecomMeetingAddReqBean();
+            ReqBean.setProjectId(recomMeetDetailReqBean.getProjectId());
+            ReqBean.setUpwardsInfo(recomMeetDetailReqBean.getUpwardsInfo());
+            //先删除
+            tfUpwardsInfoMapper.deleteByPrimaryKey(recomMeetDetailReqBean.getProjectId());
+            recomMeetService.interMeetInfo(ReqBean);
+            addProjectAssign(recomMeetDetailReqBean.getProjectId(),recomMeetDetailReqBean.getUserId());
+        }
+    }
+
+    @Override
+    public void doAgreeBefore(BpmProcessContext bpmProcessContext) {
+        Target target1 = new Target();
+        target1.setNode("usertask3");
+        target1.setVariable("reviewUser");
+        Target target2 = new Target();
+        target2.setNode("usertask6");
+        target2.setVariable("jxsUser");
+        List<Target> targets = new ArrayList<Target>();
+        targets.add(target1);
+        targets.add(target2);
+        setTargetlist(targets);
+    }
+
+    @Override
+    public void doStartAfter(BpmProcessContext bpmProcessContext) {
+        RecomMeetDetailReqBean recomMeetDetailReqBean = (RecomMeetDetailReqBean) bpmProcessContext.getT();
+        TfProjectInfo tfProjectInfo = new TfProjectInfo();
+        tfProjectInfo.setProjectId(recomMeetDetailReqBean.getProjectId());
+        tfProjectInfo.setProjectStatus("40");
+        tfProjectInfoMapper.updateByPrimaryKeySelective(tfProjectInfo);
+    }
+
+    @Override
+    public void deleteProcessAfter(JSONObject jsonObject){
+        String projectId =  (String) jsonObject.get("projectId");
+        TfProjectInfo tfProjectInfo = new TfProjectInfo();
+        tfProjectInfo.setProjectId(projectId);
+        tfProjectInfo.setProjectStatus("31");
+        tfProjectInfoMapper.updateByPrimaryKeySelective(tfProjectInfo);
+    }
+  //指派风险经理
+    private void addProjectAssign(String projectId,String userId){
+        TfProjectAssign projectAssign = new TfProjectAssign();
+        projectAssign.setId(ScfUUID.generate());
+        projectAssign.setProjectId(projectId);
+        projectAssign.setUserAssign(userId);
+        projectAssign.setProjectType("3");
+        assignMapper.insert(projectAssign);
+    }
+
+}

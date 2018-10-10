@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" style="background-color: #ffffff;">
+
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="ThemeBucket">
+<link rel="shortcut icon" href="#" type="image/png">
+<title>财务做账</title>
+<link href="../../css/style.css" rel="stylesheet">
+<link href="../../css/style-responsive.css" rel="stylesheet">
+<link href="../../css/bootstrap-table.css" rel="stylesheet">
+<link href="../../css/bootstrap.css" rel="stylesheet">
+<link href="../../css/validator/bootstrapValidator.css" rel="stylesheet">
+<link href="../../css/sysfun.css" rel="stylesheet">
+<link href="../../106/css/selectordie_theme_03.css" rel="stylesheet">
+<link href="../../js/bootstrap-datetimepicker/css/datetimepicker.css"
+	rel="stylesheet" />
+<script src="../../js/jquery-3.0.0.min.js" type="text/javascript"></script>
+<script src="../../106/js/selectordie.min.js" type="text/javascript"></script>
+<script src="../../js/bootstrap.min.js"></script>
+<script src="../../js/CloudUtils.js"></script>
+<script src="../../js/password.js"></script>
+<script src="../../js/store.js" type="text/javascript"></script>
+
+<script src="../../js/bootstrap-treeview.js" type="text/javascript"></script>
+<script type="text/javascript" src="../../js/jquery.validate.min.js"></script>
+<script src="../../js/validation-init.js"></script>
+<script type="text/javascript"
+	src="../../js/advanced-datatable/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="../../js/bootstrap-table.js"></script>
+<script type="text/javascript"
+	src="../../js/bootstrap-validator/bootstrapValidator.js"></script>
+<script type="text/javascript" src="../../js/bootstrap-validator/zh_CN.js"></script>
+<script type="text/javascript" src="../../js/bootbox-4.4.0/bootbox.js"></script>
+<script type="text/javascript" src="../../js/jquery.number.js"></script>
+<script type="text/javascript"
+	src="../../js/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>
+<script type="text/javascript"
+	src="../../js/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+<script src='../../js/referrer-killer.js'></script>
+<!--dynamic table initialization -->
+<script src="../../js/project/ssmManager/financeRepayManager.js" type="text/javascript"></script>
+</head>
+
+<body class="iframeBody" style="background-color: #ffffff;">
+	<section>
+		<div class="main-content-child">
+			<div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px;margin-bottom: 30px;padding-bottom: 20px;">
+				<div class="nav">
+                    <ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+                        <li class="tablename">财务做账</li>
+                    </ol>
+                </div>
+				<div class="whiteBgDiv row">
+				
+				<form class="form-horizontal" role="form" id="financeFrom">
+						<div class="form-group" >
+						 <label class="col-sm-2 control-label" for="peopleType">业务类型</label>
+							<div class="col-sm-3">
+							
+	                            <select id="peopleType01" name="peopleType" class="form-control" readonly onchange="getLastFinanceDate()">
+	                            
+	                            <option value="3">翼支付</option>
+	                            <option value="2">家庭宽带</option> 
+	                       
+	                   
+						        </select>
+	                      	
+							</div>
+							</div>
+						<div class="form-group" >
+                         <label class="col-sm-2 control-label" for="dateBegin">做账日期(从)</label>
+                         <div class="col-sm-3">
+                           
+                         <input type="text" name="dateBegin" class="form-control" id="dateBegin" readonly>
+						         
+                    
+                         </div>
+                          <label class="col-sm-2 control-label" for="dateEnd">做账日期(到)</label>
+                         <div class="col-sm-3">
+                           
+                             <input name="dateEnd" class="form-control addInput" id="dateEnd" style="cursor: pointer;" type="text" readonly>
+                             <span class="glyphicon glyphicon-calendar addIcon"></span>
+                         </div>
+                     </div>
+						<div class="col-sm-12">
+											<input type="button" onclick="exportFinacneRepayExcel()"
+							class="btn btn-default cancel pull-right"
+							style="margin-right: 5px;" value="统计数据"> 		
+				
+					</div>
+					</form>
+				
+				
+					<form class="form-horizontal" role="form" id="searchForm">
+						<div class="form-group" >
+						 <label class="col-sm-2 control-label" for="peopleType">业务类型</label>
+							<div class="col-sm-3">
+							
+	                            <select id="peopleType02" name="peopleType" class="form-control" readonly">
+	                                     <option value="3">翼支付</option>
+	                            <option value="2">家庭宽带</option> 
+	                   
+						        </select>
+	                      	
+							</div>
+							</div>
+						<div class="form-group" >
+                         <label class="col-sm-2 control-label" for="searchDateBegin">查找日期(从)</label>
+                         <div class="col-sm-3">
+                           
+                             <input name="searchDateBegin" class="form-control addInput" id="searchDateBegin" style="cursor: pointer;" type="text" readonly>
+                             <span class="glyphicon glyphicon-calendar addIcon"></span>
+                         </div>
+                          <label class="col-sm-2 control-label" for="searchDateEnd">查找日期(到)</label>
+                         <div class="col-sm-3">
+                           
+                             <input name="searchDateEnd" class="form-control addInput" id="searchDateEnd" style="cursor: pointer;" type="text" readonly>
+                             <span class="glyphicon glyphicon-calendar addIcon"></span>
+                         </div>
+                     </div>
+                     	<div class="col-sm-12">
+                     		<input type="button" onclick="searchFun()"
+							class="btn btn-default save pull-right" 
+							style="margin-right: 5px;" value="查找">
+						</div>
+					
+					</form>
+				</div>
+				<div class="panel-body">
+					<table id="financeRepayHistoryTable" class="table" cellspacing="0"
+						width="100%">
+					</table>
+				</div>
+			</div>
+
+		</div>
+	</section>
+	<form class="form-horizontal" role="form" id="detailForm" data-toggle="validator">
+				<div class="modal fade" id="detailModal" tabindex="-1" role="dialog"
+					aria-labelledby="detailModalLabel" aria-hidden="true" data-backdrop="static">
+					<div class="modal-dialog" role="document" style="width:1000px">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal"
+									aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+								<h4 class="modal-title" id="addModalLabel">统计结果查询</h4>
+							</div>
+							<div class="modal-body">
+							  <div class="form-group">
+						            <label class="col-sm-4 control-label" >统计区间：</label>
+						            <div class="col-sm-2">
+						            	<input type="text" name="financeDateBegin" class="form-control" id="financeDateBegin" readonly>
+						         
+						            </div>		
+						              <label class="col-sm-1 control-label" >到</label>
+						            <div class="col-sm-3">
+						          
+						            	<input type="text" name="financeDateEnd" class="form-control" id="financeDateEnd" readonly>
+						            </div>						      
+						          </div>	
+						          <div class="form-group">
+						            <label class="col-sm-4 control-label" for="peopleType">业务类型：</label>
+						            <div class="col-sm-6">
+						             <select id="peopleType" name="peopleType" class="form-control" readonly disabled="disabled">
+			                            <option value="2">家庭宽带</option> 
+			                            <option value="3">翼支付</option>
+			                   
+								        </select>
+						            </div>						      
+						          </div>
+						          	  <div class="form-group">
+						            <label class="col-sm-4 control-label" for="financeDate">当前做账日期：</label>
+						            <div class="col-sm-6">
+						            	<input type="text" name="financeDate" class="form-control" id="financeDate" readonly>
+						            </div>						      
+						          </div>
+								  <div class="form-group">
+						            <label class="col-sm-4 control-label" for="repayCount">应收账款数量（正常）：</label>
+						            <div class="col-sm-6">
+						            	<input type="text" name="repayCount" class="form-control" id="repayCount" readonly>
+						            </div>						      
+						          </div>	
+						           <div class="form-group">
+						            <label class="col-sm-4 control-label" for="repayCurrentMoney">应收账款本金总额（正常）：</label>
+						            <div class="col-sm-6">
+						            	<input type="text" name="repayCurrentMoney" class="form-control" id="repayCurrentMoney" readonly>
+						            </div>						      
+						          </div>	
+						           <div class="form-group">
+						            <label class="col-sm-4 control-label" for="sumInterest">应收账款利息总额（正常）：</label>
+						            <div class="col-sm-6">
+						            	<input type="text" name="repayInterest" class="form-control" id="repayInterest" readonly>
+						            </div>						      
+						          </div>	
+						          <div class="yzf-group">
+							          <div class="form-group ">
+							            <label class="col-sm-4 control-label" for="repayMarketingFeeYi">应收账款营销费总额（正常）：</label>
+							            <div class="col-sm-6">
+							            	<input type="text" name="repayMarketingFeeYi" class="form-control" id="repayMarketingFeeYi" readonly>
+							            </div>						      
+							          </div>	
+							           <div class="form-group">
+							            <label class="col-sm-4 control-label" for="tiRepayCount">提前结清数量：</label>
+							            <div class="col-sm-6">
+							            	<input type="text" name="tiRepayCount" class="form-control" id="tiRepayCount" readonly>
+							            </div>						      
+							          </div>	
+							           <div class="form-group">
+							            <label class="col-sm-4 control-label" for="tiRestCurrentMoney">提前结清剩余本金：</label>
+							            <div class="col-sm-6">
+							            	<input type="text" name="tiRestCurrentMoney" class="form-control" id="tiRestCurrentMoney" readonly>
+							            </div>						      
+							          </div>	
+							                <div class="form-group">
+							            <label class="col-sm-4 control-label" for="tiRestInterest">提前结清应收利息（一期）：</label>
+							            <div class="col-sm-6">
+							            	<input type="text" name="tiRestInterest" class="form-control" id="tiRestInterest" readonly>
+							            </div>						      
+							          </div>	
+							           <div class="form-group">
+							            <label class="col-sm-4 control-label" for="tiRestMarketingFeeYi">提前结清剩余营销费：</label>
+							            <div class="col-sm-6">
+							            	<input type="text" name="tiRestMarketingFeeYi" class="form-control" id="tiRestMarketingFeeYi" readonly>
+							            </div>						      
+							          </div>
+						           
+						          
+						          </div>
+						           	
+						           <div class="form-group">
+						            <label class="col-sm-4 control-label" for="filePath">应收账款明细：</label>
+						            <div class="col-sm-6">
+						            	<input type="text" name="filePath" class="form-control" id="filePath" readonly>
+						          		 <input type="button"  class="btn btn-default save" style="margin:auto;" value="下载"  onclick="download()">
+						            </div>
+						            						      
+						          </div>	
+						          <div id='financeRepayAut' style="display:none">
+						          <div class="form-group">
+						            <label class="col-sm-4 control-label" for="repayCurrentMoneyAut">实际入账应收账款本金总额：</label>
+						            <div class="col-sm-6">
+						            	<input type="text" name="repayCurrentMoneyAut" class="form-control" id="repayCurrentMoneyAut" >
+						            </div>						      
+						          </div>	
+						           <div class="form-group">
+						            <label class="col-sm-4 control-label" for=repayInterestAut>实际入账应收账款利息总额：</label>
+						            <div class="col-sm-6">
+						            	<input type="text" name="repayInterestAut" class="form-control" id="repayInterestAut" >
+						            </div>						      
+						          </div>	
+						          <div class="yzf-group">
+								          <div class="form-group">
+								            <label class="col-sm-4 control-label" for="repayMarketingFeeYiAut">实际入账应收账款营销费总额：</label>
+								            <div class="col-sm-6">
+								            	<input type="text" name="repayMarketingFeeYiAut" class="form-control" id="repayMarketingFeeYiAut" >
+								            </div>						      
+								          </div>	
+									
+								           <div class="form-group">
+								            <label class="col-sm-4 control-label" for="tiRestCurrentMoneyAut">实际入账提前结清剩余本金：</label>
+								            <div class="col-sm-6">
+								            	<input type="text" name="tiRestCurrentMoneyAut" class="form-control" id="tiRestCurrentMoneyAut" >
+								            </div>						      
+								          </div>	
+								                <div class="form-group">
+								            <label class="col-sm-4 control-label" for="tiRestInterestAut">实际入账提前结清应收利息：</label>
+								            <div class="col-sm-6">
+								            	<input type="text" name="tiRestInterestAut" class="form-control" id="tiRestInterestAut" >
+								            </div>						      
+								          </div>	
+								           <div class="form-group">
+								            <label class="col-sm-4 control-label" for="tiRestMarketingFeeYiAut">实际入账提前结清剩余营销费：</label>
+								            <div class="col-sm-6">
+								            	<input type="text" name="tiRestMarketingFeeYiAut" class="form-control" id="tiRestMarketingFeeYiAut" >
+								            </div>						      
+								          </div>	
+						          </div>
+						           
+						          
+						           <div class="form-group">
+							            <label class="col-sm-4 control-label" for="bankStatement">银行流水：</label>
+							            <div class="col-sm-6">
+							            	<input type="text" name="bankStatement" class="form-control" id="bankStatement" >
+							            </div>						      
+						          </div>
+						          
+						                 <div class="form-group">
+						            <label class="col-sm-4 control-label" for="note">备注：</label>
+						            <div class="col-sm-6">
+						            	<input type="text" name="note" class="form-control" id="note" >
+						            </div>						      
+						          </div>	
+						    
+						          
+						          </div>			        
+						          
+							</div>
+							<div class="modal-footer">
+	                    		<div class="form-group">
+	                      			<div class="col-sm-7">
+	                      			<button type="button" id="saveButton" style="display:none" class="btn btn-default save" onclick="saveFun()" data-dismiss="modal">确定</button>
+	                      			<button type="button" id="confirmButton" style="display:none" class="btn btn-default save" onclick="confirm()" data-dismiss="modal">入账</button>
+	                      			</div>
+	                      			<div class="col-sm-3">
+	                        			<button type="button" class="btn btn-default cancel" data-dismiss="modal">取消</button>
+	                        		</div>
+	                    		</div>
+	                 	 	</div>
+						</div>
+					</div>
+				</div>
+		</form>
+</body>
+
+</html>

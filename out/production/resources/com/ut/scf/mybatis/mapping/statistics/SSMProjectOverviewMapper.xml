@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.statistics.ISSMProjectOverviewDao" >
+	<select id="findThrowInfoList" resultType="hashmap" parameterType="hashmap">
+			SELECT
+				SUM(obi.rec_order_num) orderNumber,
+				SUM(fi.pay_amt) throwAmount,
+				SUM(temp1.current_payable_principal) guaranteeAmount,
+				SUM(temp1.current_payable_interest) paymentInterest,
+				SUM(temp1.current_payable_principal) principalRepayment,
+				SUM(fi.pay_amt)-SUM(temp1.current_payable_principal)-SUM(temp1.current_payable_principal) riskExposure
+			from
+				order_batch_info obi
+			LEFT JOIN factor_contract_info fci ON obi.order_batch_id = fci.order_batch_id
+			LEFT JOIN finance_info fi ON fci.contract_no = fi.finance_id
+			LEFT JOIN guarantee_info gi ON gi.finance_id = fi.finance_id
+			LEFT JOIN (
+				SELECT
+					order_batch_id,
+					SUM(current_payable_principal) current_payable_principal,
+				    SUM(current_payable_interest) current_payable_interest
+				FROM 
+					repayment_plan_info
+				WHERE
+					super_repay_status = 1
+					<choose>
+						<when test="payDate !=null and payDate !=''">
+							and DATE_FORMAT(current_repay_date, '%Y-%m-%d') <![CDATA[<=]]> #{payDate}
+						</when>
+						<otherwise>
+							and current_repay_date <![CDATA[<=]]> NOW()
+						</otherwise>
+					</choose>
+				GROUP BY order_batch_id
+			)temp1 ON obi.order_batch_id = temp1.order_batch_id
+	</select>
+
+	<select id="findOweInfoList" resultType="hashmap" parameterType="hashmap">
+		SELECT
+			SUM(
+				m.current_payable_principal
+			) amount ,
+			SUM(
+				r.current_payable_principal
+			) repayAmount,
+			SUM(m.periodAll) periodAll,
+			SUM(r.periodRepay) periodRepay,
+			SUM(m.periodAll)-SUM(r.periodRepay) arrearsNum,
+			round((SUM(m.periodAll)-SUM(r.periodRepay))/SUM(m.periodAll)*100,2) overdueRate,
+			SUM(m.current_payable_principal)-SUM(r.current_payable_principal) outstandingAmount,
+			round((SUM(m.current_payable_principal)-SUM(r.current_payable_principal))/SUM(m.current_payable_principal)*100,2) repayOverdueRate
+		from
+			v_student_money m LEFT JOIN 
+			v_stu_reapay r on m.current_repay_date = r.current_repay_date
+		WHERE
+			1=1
+			<choose>
+				<when test="payDate !=null and payDate !=''">
+					and DATE_FORMAT(m.current_repay_date, '%Y-%m-%d') <![CDATA[<=]]> #{payDate}
+				</when>
+				<otherwise>
+					and m.current_repay_date <![CDATA[<=]]> NOW()
+				</otherwise>
+			</choose>	
+	</select>
+
+	<select id="findOweInfoList2" resultType="hashmap" parameterType="hashmap">
+			SELECT
+				COUNT(0) counts,
+				temp1.counts arrearsNum,
+				SUM(
+					rpi.current_payable_interest
+				) interestPayable,
+				SUM(
+					rpi.current_payable_principal
+				) principalPayable,
+				temp1.current_payable_interest interestNot ,
+				temp1.current_payable_principal principalNot
+			from
+				repayment_plan_info rpi
+			JOIN (
+				SELECT
+					COUNT(0) counts,
+					SUM(current_payable_principal) current_payable_principal,
+					SUM(current_payable_interest) current_payable_interest
+				FROM
+					repayment_plan_info
+				WHERE
+					(student_repay_status = 2
+				OR student_repay_status = 0)
+				AND current_repay_date <![CDATA[<=]]> NOW()
+			) temp1
+			WHERE
+				1=1
+				<choose>
+					<when test="payDate !=null and payDate !=''">
+						and DATE_FORMAT(rpi.current_repay_date, '%Y-%m-%d') <![CDATA[<=]]> #{payDate}
+					</when>
+					<otherwise>
+						and rpi.current_repay_date <![CDATA[<=]]> NOW()
+					</otherwise>
+				</choose>
+	</select>
+	<select id="echartsOrderInfos" resultType="hashmap" parameterType="hashmap">
+		SELECT
+			SUM(order_total_num) y1,
+			SUM(rec_order_num) y2,
+			sync_date x
+		FROM
+			order_batch_info
+		where DATE_FORMAT(sync_date,'%Y') = #{year}
+		GROUP BY
+			sync_date
+	</select>
+
+
+	<select id="echartsAmtInfos" resultType="hashmap" parameterType="hashmap">
+		SELECT
+			SUM(temp2.y1) y1,
+			SUM(temp2.y2) y2,
+			temp2.x
+		FROM
+			(
+				SELECT
+					COALESCE (fi.pay_amt, 0) y1,
+					COALESCE (
+						temp.current_payable_principal,
+						0
+					) y2,
+					sync_date x
+				FROM
+					order_batch_info obi
+				LEFT JOIN factor_contract_info fci ON fci.order_batch_id = obi.order_batch_id
+				LEFT JOIN finance_info fi ON fi.finance_id = fci.contract_no
+				LEFT JOIN (
+					SELECT
+						SUM(cr_req_amt) cr_req_amt,
+						order_batch_id
+					FROM
+						order_info
+					WHERE
+						order_status = 1
+					GROUP BY
+						order_batch_id
+				) oi ON obi.order_batch_id = oi.order_batch_id
+				LEFT JOIN (
+					SELECT
+						SUM(current_payable_principal) current_payable_principal,
+						order_batch_id
+					FROM
+						repayment_plan_info
+					WHERE
+						super_repay_status = 1
+					GROUP BY
+						order_batch_id
+				) temp ON oi.order_batch_id = temp.order_batch_id
+			) temp2
+		where DATE_FORMAT(temp2.x,'%Y') = #{year}
+		GROUP BY
+			temp2.x
+	</select>
+	
+	<select id="echartsOverdueInfos" resultType="hashmap" parameterType="hashmap">
+		SELECT
+			SUM(temp2.y1) y1,
+			SUM(temp2.y2) y2,
+			temp2.x
+		FROM
+			(
+				SELECT
+					COALESCE (fi.pay_amt, 0) y1,
+					COALESCE (
+						temp.current_payable_principal,
+						0
+					) y2,
+					sync_date x
+				FROM
+					order_batch_info obi
+				LEFT JOIN factor_contract_info fci ON fci.order_batch_id = obi.order_batch_id
+				LEFT JOIN finance_info fi ON fi.finance_id = fci.contract_no
+				LEFT JOIN (
+					SELECT
+						SUM(current_payable_principal) current_payable_principal,
+						order_batch_id
+					FROM
+						repayment_plan_info
+					WHERE
+						super_repay_status = 0
+					and  current_repay_date <![CDATA[<=]]> NOW()
+					GROUP BY
+						order_batch_id
+				) temp ON obi.order_batch_id = temp.order_batch_id
+			) temp2
+		where DATE_FORMAT(temp2.x,'%Y') = #{year}
+		GROUP BY
+			temp2.x
+	</select>
+</mapper>

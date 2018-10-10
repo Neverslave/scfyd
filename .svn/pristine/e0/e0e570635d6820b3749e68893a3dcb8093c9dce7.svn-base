@@ -1,0 +1,314 @@
+$(document).ready(function() {
+	$("form").attr("autocomplete","off");
+	CloudUtils.getMenuNames("nav");
+	initTable(); 
+	dateload();
+	//modal绑定事件
+	$('#addModal').on('hidden.bs.modal', function(){
+		$("#addForm")[0].reset();
+	});
+	numFormat();
+} );
+
+window.operateEvents = {
+		'click .detail': function (e, value, row, index) {
+			detailFun(row);
+	    },
+	    'click .modify': function (e, value, row, index) {
+	    	modifyFun(row);
+	    },
+	
+	};
+function detailFun(row) {
+ 	$('#addModal').find("select").attr('disabled',true);
+ 	$('#addModal').find("input").attr('readonly',true);
+ 	$('#addModal').modal({backdrop: 'static', keyboard: false});
+ 	
+ 	$('#loanHistoryTable').bootstrapTable('destroy'); 
+	$("#loanHistoryTable").bootstrapTable({  
+		 method: "post", 
+		 url: "../../../loanInfo/historyList", 
+         striped: true,  //表格显示条纹  
+         pagination: true, //启动分页  
+         pageSize: 5,  //每页显示的记录数  
+         pageNumber:1, //当前第几页  
+         pageList: [5, 10, 15, 20, 25],  //记录数可选列表  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为limit可以获取limit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+           var data = CloudUtils.convertStringJson('searchForm');
+           var jsonData = eval("(" + data + ")");
+           var param = {    
+               pageNumber: params.pageNumber,
+               pageSize: params.pageSize,
+               isPage : 1,
+	           batchId:row.batchId
+           };    
+           return JSON.stringify(param);
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [{
+ 	        field: 'batchId',
+ 	        title: '订单批次',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'payDate',
+ 	        title: '到账日期',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null)
+            		{
+            		return "";
+            		}
+            	else
+            		return fmtDate(value);
+            	}
+ 	    }, {
+ 	        field: 'payAmt',
+ 	        title: '金额',
+ 	        align: 'center',
+            valign: 'middle',
+         
+ 	    }, {
+ 	        field: 'payWay',
+ 	        title: '流水号',
+ 	       align: 'center',
+           valign: 'middle'
+ 	    },{
+ 	        field: 'note',
+ 	        title: '备注',
+ 	        align: 'center',
+ 	        valign: 'middle'
+ 	    }
+ 	    ]
+       });
+
+}
+function fmtDate(obj){
+    var date =  new Date(obj);
+    var y = 1900+date.getYear();
+    var m = "0"+(date.getMonth()+1);
+    var d = "0"+date.getDate();
+    return y+"-"+m.substring(m.length-2,m.length)+"-"+d.substring(d.length-2,d.length);
+}
+function modifyFun(row) {
+    store.set('FqcrLoanRow', row); //把数据存储在缓存中
+    $('#mainFrame', top.document).attr('src', 'project/ssmManager/LoanInfoManager/LoanInfoDetailAdd.html?isEdit='+true);
+}
+function initTable() { 
+	$('#loanInfoList').bootstrapTable('destroy');  
+	$("#loanInfoList").bootstrapTable({  
+         method: "post", 
+         url: "../../../loanInfo/list", 
+         striped: true,  //表格显示条纹  
+         pagination: true, //启动分页  
+         pageSize: 5,  //每页显示的记录数  
+         pageNumber:1, //当前第几页  
+         pageList: [5, 10, 15, 20, 25],  //记录数可选列表  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为lloanInfoit可以获取lloanInfoit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+           var data = CloudUtils.convertStringJson('searchForm');
+           var jsonData = eval("(" + data + ")");
+           var param = {
+               pageNumber: params.pageNumber,
+               pageSize: params.pageSize,
+               loanDate: jsonData.txt_loanDate,
+               contractNo: jsonData.txt_contractNo,
+               batchId: jsonData.txt_orderBatchId
+           };    
+           return JSON.stringify(param);
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [{
+ 	        field: 'batchId',
+ 	        title: '批次编号',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    },{
+            field: 'peopleType',
+            title: '订单类型',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                if(value=="1")
+             	   {
+             	   return "学生";
+             	   }
+                else if(value=="2")
+ 	        	   {
+ 	        	   return "家庭宽带";
+ 	        	   }
+                else if(value=="3")
+ 	        	   {
+ 	        	   return "翼支付";
+ 	        	   }
+                else
+             	   {
+             	   return value;
+             	   }
+             }
+        },{
+ 	        field: 'contractNo',
+ 	        title: '合同编号',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    },{
+ 	        field: 'totalPrice',
+ 	        title: '总金额',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+   	 	    	return $.number(value, 2);
+   		    }
+ 	    },{
+ 	        field: 'orderTotalNum',
+ 	        title: '总数量',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    },{
+ 	        field: 'recOrderNum',
+ 	        title: '放款数量',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    },{
+ 	        field: 'recOrderAmt',
+ 	        title: '放款金额',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+   	 	    	return $.number(value, 2);
+   		    }
+ 	    },{
+ 	        field: 'sumPayAmt',
+ 	        title: '已放款总额',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+   	 	    	return $.number(value, 2);
+            }
+ 	    },{
+ 	        field: 'loanStatus',
+ 	        title: '已放款状态',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+            	if(row.sumPayAmt==null||row.sumPayAmt==""){
+            		return "未放款";
+            	}
+            	if(parseFloat(row.recOrderAmt)>parseFloat(row.sumPayAmt))
+            		{
+            		return "放款不足";
+            		}
+            	else
+            		{
+            		return "足额放款";
+            		}
+   	 	    
+            }
+ 	    },{
+ 	        field: 'guaranteeMoneyRate',
+ 	        title: '保证金比例',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+   	 	    	return $.number(value, 2);
+   		    }
+ 	    },{
+ 	        field: 'payAbleGuarantee',
+ 	        title: '应缴保证金',
+ 	        align: 'center',
+            valign: 'middle',
+         
+            formatter:function(value,row,index){
+   	 	    	return $.number(value, 2);
+   		    }
+ 	    },{
+ 	        field: 'guaranteeBalance',
+ 	        title: '保证金余额',
+ 	        align: 'center',
+            valign: 'middle',
+        
+            formatter:function(value,row,index){
+   	 	    	return $.number(value, 2);
+   		    }
+ 	    },{
+ 	        field: 'operation',
+ 	        title: '操作',
+ 	        align: 'center',
+            valign: 'middle',
+ 	        formatter:function(value,row,index){
+ 	       	var s = '<a class = "fa fa-edit modify" style="color:#278bdd;padding:0px 5px;" title="编辑" href="javascript:void(0)"></a>';
+			
+	        var d = '<a class = "fa fa-list-ul detail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+	            return s + ' ' + d;
+	     
+ 	        },
+ 	        events: 'operateEvents'
+ 	    }]
+       });
+}
+
+function searchFun() {
+	initTable();
+}
+function dateload(){
+	$('#txt_loanDate').datetimepicker({
+       language: 'zh-CN',
+       autoclose: 1,
+       todayBtn: true,// 显示今天时间
+       pickerPosition: "bottom-left",
+       minuteStep: 5,
+       format: 'yyyy-mm-dd',
+       minView: 'month',　　// 日期时间选择器所能够提供的最精确的时间选择视图。
+       initialDate : new Date()
+    });
+}
+
+function numFormat(){
+	$("#orderAcceptMoney").number(true, 2);
+	$("#orderAllMoney").number(true, 2);
+	$("#loanAmt").number(true, 2);
+	$("#guaranteeMoneyRate").number(true, 2);
+	$("#guaranteeMoney").number(true, 2);
+	$("#guaranteeMoneyActual").number(true, 2);
+}

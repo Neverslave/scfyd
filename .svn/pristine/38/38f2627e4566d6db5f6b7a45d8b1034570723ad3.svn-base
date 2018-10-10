@@ -1,0 +1,34 @@
+package com.ut.scf.web.controller.wechat.statistics;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.query.InterestInfoListReqBean;
+import com.ut.scf.reqbean.statistics.CarInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.query.IInterestInfoQueryService;
+import com.ut.scf.service.statistics.IAgencyInfoService;
+import com.ut.scf.service.statistics.ICarInfoStatisticsService;
+
+@Controller
+@RequestMapping("wechat/carQuery")
+public class WeChatCarInfoController {
+
+	@Resource
+	private ICarInfoStatisticsService carInfoStatisticsService; 
+	
+	@RequestMapping(value = "/list")
+	@ResponseBody
+	public BaseRespBean carInfoList(@RequestBody CarInfoListReqBean reqBean) throws Exception {
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return carInfoStatisticsService.findCarInfos(paramMap);
+	}
+}

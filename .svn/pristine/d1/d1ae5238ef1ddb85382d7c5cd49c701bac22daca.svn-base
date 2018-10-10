@@ -1,0 +1,89 @@
+package com.ut.scf.service.project.impl;
+
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.dao.statistics.IAmitCashDao;
+import com.ut.scf.reqbean.project.CashInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.ICashManagerService;
+
+@Service("cashManagerService")
+public class CashManagerServiceImpl implements ICashManagerService {
+
+	private static final Logger log = LoggerFactory.getLogger(CashManagerServiceImpl.class);
+
+
+	
+	private static SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd");
+
+
+	@Resource
+	private IAmitCashDao iAmitCashDao;
+	@Override
+	public BaseRespBean getCashList(Map<String, Object> paramMap,PageInfoBean page) {
+		
+		List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+/*		Map<String, Object> hashMap=new HashMap<String, Object> ();*/
+		
+		list=iAmitCashDao.getCashList(paramMap,page);
+	/*	for (Map<String, Object> m : list)
+	    {
+		 m.replace("lsCashAmit", (m.get("lsCashAmit")==null?"":m.get("lsCashAmit")).toString());
+		
+		 m.replace("dzPayAmt", (m.get("dzPayAmt")==null?"":m.get("dzPayAmt")).toString());  
+	    }
+		*/
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+	
+	@Override
+	public BaseRespBean add(Map<String, Object> paramMap) {
+		String payNote = (String) paramMap.get("payNote");
+		if(payNote == null){
+			payNote="";
+		}
+		int result = iAmitCashDao.insertCashHistory((String)paramMap.get("payId"), (BigDecimal)paramMap.get("payAmit"), (String)paramMap.get("payDate"), payNote);
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		BaseRespBean bean =new BaseRespBean();
+		bean.setResult(result);
+		return bean;
+	}
+
+	@Override
+	public BaseRespBean detail(CashInfoListReqBean reqBean) {
+		PageRespBean respBean = new PageRespBean();
+		
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		
+		List<Map<String, Object>> list = iAmitCashDao.getDetailList(paramMap);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+}

@@ -1,0 +1,36 @@
+package com.ut.scf.service.project.impl;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.reqbean.project.offsetDepositAgreeReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+import com.ut.scf.service.project.IOffsetDepositService;
+import com.ut.scf.service.project.IRefundDepositService;
+
+@Service("offsetDepositBpmService")
+public class OffsetDepositBpmServiceImpl extends BaseActivitiService<offsetDepositAgreeReqBean>
+implements IActivitiService<offsetDepositAgreeReqBean>{
+
+	private static final String ADVANCE_APPLY_BPM = "OffsetDeposit";
+	
+	@Resource 
+	private IOffsetDepositService offsetDepositService;
+	
+	@Override
+	public String getProcessDefinitionKey() {
+		return ADVANCE_APPLY_BPM;
+	}
+	
+	@Override
+	public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+		if (bpmProcessContext.isProcessEnd()) {
+			offsetDepositAgreeReqBean offsetDepositAgreeReqBean =(offsetDepositAgreeReqBean)bpmProcessContext.getT();
+			offsetDepositService.wechatMod(offsetDepositAgreeReqBean);
+		}
+	}
+	
+}

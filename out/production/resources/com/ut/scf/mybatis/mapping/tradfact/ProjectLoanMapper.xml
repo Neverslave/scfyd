@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ut.scf.dao.tradfact.IProjectLoanDao">
+    <select id="findLoanInfo" parameterType="hashmap" resultType="hashmap">
+        SELECT
+            li.id,
+            li.interest_amount interestAmount,
+            li.loan_amount loanAmount,
+            li.loan_date loanDate,
+            ri.interest_rate interestRate,
+            temp.repayPrinciple
+        FROM
+          tf_loan_info li
+        INNER JOIN tf_rate_info ri ON li.rate_id = ri.rate_id
+        LEFT JOIN (
+            SELECT
+            SUM(ri.this_repay_principle) repayPrinciple,
+            ri.loan_id
+            FROM
+            tf_repay_info ri
+            GROUP BY
+            ri.loan_id
+            )temp  ON li.loan_no = temp.loan_id
+        WHERE
+        1 = 1
+        <if test="repayStatus != null and repayStatus !='' ">
+            and li.repay_status != #{repayStatus}
+        </if>
+        <if test="receiptWay != null and receiptWay !='' ">
+            and ri.receipt_way != #{receiptWay}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,72 @@
+package com.ut.scf.service.project;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.pojo.auto.FinanceInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.reqbean.project.FinanceFlowReqBean;
+import com.ut.scf.reqbean.project.FinanceInfoListReqBean;
+import com.ut.scf.reqbean.pub.TaskInfoReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+/**
+ * 融资
+ * 
+ * @author Yuancy
+ *
+ */
+public interface IFinanceInfoService {
+
+	public BaseRespBean getFinanceInfoList(Map<String, Object> paramMap,
+			PageInfoBean page);
+
+	public BaseRespBean getProGuarantee(FinanceInfoListReqBean reqBean);
+
+	BaseRespBean startProcess(JSONObject jsonObject,
+			ProcessRepeatCheck checkInfo);
+
+	public BaseRespBean getFinanceInfo(TaskInfoReqBean flowReqBean);
+	public BaseRespBean download(FinanceFlowReqBean reqBean, HttpSession httpSession);
+	void applyGuarantee(FinanceFlowReqBean flowReqBean);
+
+	public BaseRespBean doAgree(FinanceFlowReqBean reqBean,
+			HttpSession httpSession);
+	public BaseRespBean getRecommend(String cropId,String ywlxId, String string);
+	
+	public BaseRespBean getRecommendAdd(String cropId,String ywlxId);
+	void reApply(FinanceFlowReqBean reqBean);
+
+	void addFinance(FinanceFlowReqBean reqBean, HttpSession httpSession,
+			String launchRoleId);
+
+	void updateFinance(FinanceFlowReqBean reqBean, HttpSession httpSession,
+			String launchRoleId);
+	void updateFinanceModel(FinanceFlowReqBean reqBean, HttpSession httpSession,
+			String launchRoleId);
+	void updateFinanceStatus(FinanceFlowReqBean reqBean, HttpSession httpSession,
+			String launchRoleId);
+	public int getFinanceStatus(String financeid);
+	public BaseRespBean getFinanceList(Map<String, Object> paramMap);
+
+	public BaseRespBean deleteProcessById(String procInstId);
+
+	String getProductId(String corpId);
+	
+	boolean hasAgencyUser(FinanceFlowReqBean reqBean);
+	boolean hasFinanceId(FinanceFlowReqBean reqBean);
+	boolean checkFinanceStatus(FinanceFlowReqBean reqBean);
+
+	public BaseRespBean getDYKFinancePayAndRepayList(Map<String, Object> paramMap);
+
+	public BaseRespBean getDYKOccupyMoneyInfo(FinanceInfo financeInfo);
+
+	public BaseRespBean getDykCashHistoryList(FinanceInfo financeInfo);
+
+	public String getRecommendTzd(String corpId, String ywlxId, String string);
+
+}

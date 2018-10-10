@@ -1,0 +1,175 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.TfCreditContractInfoMapper;
+import com.ut.scf.dao.auto.TfFactoringContractInfoMapper;
+import com.ut.scf.dao.auto.TfProjectAssignMapper;
+import com.ut.scf.dao.auto.TfProjectFilesMapper;
+import com.ut.scf.dao.tradfact.IProjectSignDao;
+import com.ut.scf.pojo.auto.TfCreditContractInfo;
+import com.ut.scf.pojo.auto.TfCreditContractInfoExample;
+import com.ut.scf.pojo.auto.TfFactoringContractInfo;
+import com.ut.scf.pojo.auto.TfProjectAssign;
+import com.ut.scf.pojo.auto.TfProjectFiles;
+import com.ut.scf.reqbean.tradfact.SignFlowReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+import com.ut.scf.service.bpm.impl.Target;
+import com.ut.scf.service.tradfact.IProjectSignService;
+
+@Service("projectSignBpmService")
+public class ProjectSignBpmServiceImpl extends BaseActivitiService<SignFlowReqBean> implements IActivitiService<SignFlowReqBean> {
+
+	private static final String ADVANCE_APPLY_BPM = "signApplyProcess";
+
+	@Resource
+	private TfProjectAssignMapper  assignMapper;
+	
+	@Resource
+	private TfCreditContractInfoMapper tfCreditContractInfoMapper;
+
+	@Resource
+	private TfFactoringContractInfoMapper tfFactoringContractInfoMapper;
+
+	@Resource
+	private TfProjectFilesMapper projectFilesMapper;
+
+	@Autowired
+	private IProjectSignService projectSignService;
+
+	@Resource
+	private IProjectSignDao projectSignDao;
+
+	@Override
+	public String getProcessDefinitionKey() {
+		return ADVANCE_APPLY_BPM;
+	}
+
+	@Override
+	public void doStartAfter(BpmProcessContext<SignFlowReqBean> processContext) {
+		super.doStartAfter(processContext);
+
+	}
+
+	@Override
+	public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+		if (bpmProcessContext.isProcessEnd()) {
+			String formJsonStr = bpmProcessContext.getFormDataJson();
+			SignFlowReqBean signFlowReqBean = (SignFlowReqBean) bpmProcessContext.getT();
+			addInfo(signFlowReqBean);
+
+			Map<String, Object> paramMap = BeanUtil.beanToMap(signFlowReqBean);
+			paramMap.put("projectStatus", 61);
+			projectSignDao.updateProjectStatus(paramMap);
+			addProjectAssign(signFlowReqBean.getProjectId(),signFlowReqBean.getUserId());
+		}
+	}
+
+	@Override
+	public void doAgreeBefore(BpmProcessContext bpmProcessContext) {
+		Target target1 = new Target();
+		target1.setNode("usertask4");
+		target1.setVariable("reviewUser");
+		Target target2 = new Target();
+		target2.setNode("usertask7");
+		target2.setVariable("jxsUser");
+		List<Target> targets = new ArrayList<Target>();
+		targets.add(target1);
+		targets.add(target2);
+		setTargetlist(targets);
+	}
+
+	@Transactional
+	public void addInfo(SignFlowReqBean signFlowReqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+		TfCreditContractInfoExample tfCreditContractInfoExample = new TfCreditContractInfoExample();
+		com.ut.scf.pojo.auto.TfCreditContractInfoExample.Criteria criteria = tfCreditContractInfoExample.createCriteria();
+		criteria.andProjectIdEqualTo(signFlowReqBean.getProjectId());
+		int exampleNum = tfCreditContractInfoMapper.countByExample(tfCreditContractInfoExample);
+		if (exampleNum <= 0) {
+			addCreditContract(signFlowReqBean);
+		}
+		addFactoringContract(signFlowReqBean);
+		insertFiles(signFlowReqBean.getSignFiles(), "7", signFlowReqBean.getProjectId(),signFlowReqBean.getFactoringContractNo());
+	}
+
+	public BaseRespBean addCreditContract(SignFlowReqBean signFlowReqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+		TfCreditContractInfo tfCreditContractInfo = new TfCreditContractInfo();
+		tfCreditContractInfo.setProjectId(signFlowReqBean.getProjectId());
+		tfCreditContractInfo.setCreditContractNo(signFlowReqBean.getCreditContractNo());
+		tfCreditContractInfo.setCreditContractName(signFlowReqBean.getCreditContractName());
+		tfCreditContractInfo.setCreditContractTerm(signFlowReqBean.getCreditContractTerm());
+		tfCreditContractInfo.setCreditContractNote(signFlowReqBean.getCreditContractNote());
+		tfCreditContractInfo.setCreateTime(new Date());
+		tfCreditContractInfoMapper.insert(tfCreditContractInfo);
+
+		return respBean;
+	}
+
+	public BaseRespBean addFactoringContract(SignFlowReqBean signFlowReqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+		TfFactoringContractInfo tfFactoringContractInfo = new TfFactoringContractInfo();
+		tfFactoringContractInfo.setProjectId(signFlowReqBean.getProjectId());
+		tfFactoringContractInfo.setFactoringContractNo(signFlowReqBean.getFactoringContractNo());
+		tfFactoringContractInfo.setFactoringContractName(signFlowReqBean.getFactoringContractName());
+		tfFactoringContractInfo.setFactoringContractNote(signFlowReqBean.getFactoringContractNote());
+		tfFactoringContractInfo.setFactoringContractTerm(signFlowReqBean.getFactoringContractTerm());
+		tfFactoringContractInfo.setFinancingMain(signFlowReqBean.getFinancingMain());
+		tfFactoringContractInfo.setCreateTime(new Date());
+		tfFactoringContractInfoMapper.insert(tfFactoringContractInfo);
+
+		return respBean;
+	}
+
+	private void insertFiles(List<TfProjectFiles> projectFiles, String fileClass, String projectId, String factoringContractNo) {
+		for (TfProjectFiles file : projectFiles) {
+			file.setProjectId(projectId);
+			file.setMaterialClass(fileClass);
+			file.setFileId(ScfUUID.generate());
+			file.setFactoringContractNo(factoringContractNo);
+			file.setCreateTime(new Date());
+			projectFilesMapper.insert(file);
+		}
+	}
+
+	@Override
+	public void deleteProcessAfter(JSONObject jsonObject) {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("projectId", jsonObject.get("projectId"));
+
+		if (jsonObject.get("firstCreditFlag").equals("1")) {
+			paramMap.put("projectStatus", 61);
+		} else {
+			paramMap.put("projectStatus", 50);
+		}
+		projectSignDao.updateProjectStatus(paramMap);
+	}
+	
+	//指派风险经理
+    private void addProjectAssign(String projectId,String userId){
+        TfProjectAssign projectAssign = new TfProjectAssign();
+        projectAssign.setId(ScfUUID.generate());
+        projectAssign.setProjectId(projectId);
+        projectAssign.setUserAssign(userId);
+        projectAssign.setProjectType("4");
+        assignMapper.insert(projectAssign);
+    }
+
+}

@@ -1,0 +1,52 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+    initTable();
+    dateload();
+});
+
+function searchFun() {
+    initTable();
+}
+
+function initTable() {
+	
+
+	   var dataTemp = CloudUtils.convertStringJson('searchForm');
+	    var jsonData = eval("(" + dataTemp + ")");
+ var options = {
+
+         url: '../SSMSummaryInfo/selectWingRepaymentMonthly',
+         data: JSON.stringify(jsonData),
+         callBackFun: function(data) {
+         	if(data.result==0){
+         		bootbox.alert("操作成功！");
+         		initTable();
+         	}else{
+         		bootbox.alert("操作失败！");
+         	}
+         	
+         },
+         errorCallback: function(data) {
+             bootbox.alert("error");
+         }
+     };
+     CloudUtils.ajax(options);
+
+	
+}
+
+
+
+function dateload() {
+    $('#syncDate').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+
+}

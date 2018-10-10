@@ -1,0 +1,81 @@
+package com.ut.scf.service.test.pub;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.pub.ImUpdateReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.pub.InterestManageService;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = {
+        "classpath:spring-mybatis-test.xml" })
+public class InterestManageServiceTest {
+	
+	private static final Logger log = LoggerFactory.getLogger(InterestManageServiceTest.class);
+	
+	@Autowired
+	private InterestManageService interestManageService;
+	
+	@Test
+	public void getInterestManageListTest(){
+		log.info("**********************************getInterestManageListTest start*********************************");
+		Map<String, Object> paramMap = new HashMap<>();
+    	PageInfoBean page = new PageInfoBean();
+    	paramMap.put("productName", "1408");
+    	page.setPageNumber(1);
+		page.setPageSize(10);
+    	BaseRespBean respBean = interestManageService.getInterestManageList(paramMap, page);
+    	log.info("getInterestManageList : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************getInterestManageListTest end*********************************");
+	}
+	
+	@Test
+	public void insertInterestManageTest(){
+		log.info("**********************************insertInterestManageTest start*********************************");
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("productId", "product02");
+		paramMap.put("receptionDate", "12");
+		paramMap.put("interestRate", BigDecimal.valueOf(44));
+		paramMap.put("costRate", BigDecimal.valueOf(33));
+		BaseRespBean respBean = interestManageService.insertInterestManage(paramMap);
+		log.info("insertInterestManage : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************insertInterestManageTest end*********************************");
+	}
+	
+	@Test
+	public void updateInterestManageTest(){
+		log.info("**********************************updateInterestManageTest start*********************************");
+		ImUpdateReqBean ImUpdateReqBean = new ImUpdateReqBean();
+		ImUpdateReqBean.setRecUid("2c9984b35d076d6c74fb076d6c730000");
+		ImUpdateReqBean.setReceptionDate("23");
+		ImUpdateReqBean.setInterestRate(BigDecimal.valueOf(45));
+		ImUpdateReqBean.setCostRate(BigDecimal.valueOf(32));
+		BaseRespBean respBean = interestManageService.updateInterestManage(ImUpdateReqBean);
+		log.info("updateInterestManage : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************updateInterestManageTest end*********************************");
+	}
+	
+	@Test
+	public void deleteInterestManageTest(){
+		log.info("**********************************deleteInterestManageTest start*********************************");
+		BaseRespBean respBean = interestManageService.deleteInterestManage("2c9984b35d076d6c74fb076d6c730000");
+    	log.info("deleteProduct : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************deleteInterestManageTest end*********************************");
+	}
+}

@@ -1,0 +1,84 @@
+package com.ut.scf.service.project.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.mybatis.spring.SqlSessionUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.dao.project.IFinanceInfoDao;
+import com.ut.scf.dao.project.IRevenueDao;
+import com.ut.scf.dao.pub.IGaranteeMoneyDao;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.project.CountRespBean;
+import com.ut.scf.service.project.ICountAnalyseService;
+
+@Service("countAnalyseService")
+public class CountAnalyseServiceImpl implements ICountAnalyseService {
+	@Resource private IFinanceInfoDao financeInfoDao;
+	@Resource private IRevenueDao revenueDao;
+	@Resource private IGaranteeMoneyDao garanteeMoneyDao;
+	@Resource private SqlSessionFactory sqlSessionFactory;
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getFinanceCountInfo(Map<String, Object> paramMap,PageInfoBean page) {
+		CountRespBean respBean = new CountRespBean();
+		List<Map<String, Object>> echartList = financeInfoDao.getFinanceInfoGroupByName(paramMap);
+		SqlSessionUtils.getSqlSession(sqlSessionFactory).clearCache();
+		List<Map<String, Object>> tableList = financeInfoDao.getFinanceInfoGroupByName(paramMap,page);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setTableList(tableList);
+		respBean.setEchartList(echartList);
+		return respBean;
+	}
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getRevenueCountInfo(Map<String, Object> paramMap,PageInfoBean page) {
+		CountRespBean respBean = new CountRespBean();
+		List<Map<String, Object>> tableList = revenueDao.getRevenueInfoByAgency(paramMap,page);
+		SqlSessionUtils.getSqlSession(sqlSessionFactory).clearCache();
+		List<Map<String, Object>> echartList = revenueDao.getRevenueInfoByAgency(paramMap);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setTableList(tableList);
+		respBean.setEchartList(echartList);
+		return respBean;
+	}
+	/*
+	 * (non-Javadoc)保证金统计分析
+	 * @see com.ut.scf.service.project.ICountAnalyseService#getRevenueCountInfo(java.util.Map)
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getGuarantInfo(Map<String, Object> paramMap,PageInfoBean page) {
+		CountRespBean respBean = new CountRespBean();
+		List<Map<String, Object>> tableList = garanteeMoneyDao.getGaranteeMoneyByName(paramMap,page);
+		SqlSessionUtils.getSqlSession(sqlSessionFactory).clearCache();
+		List<Map<String, Object>> echartList = garanteeMoneyDao.getGaranteeMoneyByName(paramMap);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setTableList(tableList);
+		respBean.setEchartList(echartList);
+		return respBean;
+	}
+	@Override
+	public BaseRespBean getOverdueCountInfo(Map<String, Object> paramMap,PageInfoBean page) {
+		CountRespBean respBean = new CountRespBean();
+//		表数据
+		List<Map<String, Object>> tableList = financeInfoDao.getOverdueInfoGroupByName(paramMap,page);
+//		echart数据
+		List<Map<String, Object>> echartList = financeInfoDao.getOverdueInfoGroupByYear(paramMap);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setTableList(tableList);
+		respBean.setEchartList(echartList);
+		return respBean;
+	}
+
+}

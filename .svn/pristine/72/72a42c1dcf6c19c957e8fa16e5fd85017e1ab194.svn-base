@@ -1,0 +1,94 @@
+package com.ut.scf.service.test.project;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.ContextLoaderListener;
+
+import com.ut.scf.reqbean.project.RevenueProcessReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IRevenueService;
+import com.ut.scf.service.project.impl.RevenueServiceimpl;
+
+@WebAppConfiguration
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class RevenueServiceTest {
+	private static final Logger log = LoggerFactory
+			.getLogger(RevenueServiceimpl.class);
+	
+	@Resource
+	private IRevenueService revenueService;
+	
+	@Before
+	public void getContext(){
+		MockServletContext sc = new MockServletContext("");
+		sc.addInitParameter(ContextLoader.CONFIG_LOCATION_PARAM, "/spring-mybatis-test.xml");
+		ServletContextListener listener = new ContextLoaderListener();
+		ServletContextEvent event = new ServletContextEvent(sc);
+		listener.contextInitialized(event);
+	}
+	
+	@Test
+	public void startProcess(){
+		log.info("=============================startProcess start=============================");
+		try {
+
+			RevenueProcessReqBean reqBean = new RevenueProcessReqBean();
+			BaseRespBean respBean = new BaseRespBean();
+			// 获取当前用户
+			reqBean.setUserId("jiangl");
+			reqBean.setActivitiKey("revenue");
+			JSONObject corpInfoStr = new JSONObject(reqBean);
+			respBean = revenueService.startProcess(corpInfoStr);
+			log.info("respBean:"+respBean);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================startProcess end=============================");
+	
+	}
+
+//	@Test
+//	public void doAgree(){
+//		log.info("=============================doAgree start=============================");
+//		try {
+//
+//			BaseRespBean respBean = new BaseRespBean();
+//			RevenueProcessReqBean reqBean = new RevenueProcessReqBean();
+//			reqBean.setUserId("cwbz");
+//			reqBean.setTaskId("1417523");
+//			reqBean.setAgree("0");
+//			reqBean.setProcInstId("1417501");
+//			reqBean.setRepaymentDate("2018-01-01");
+//			reqBean.setRepaySumAmt("11");
+//			reqBean.setRepaySumAmt("234");
+//			reqBean.setActRepayAmt("3543");
+//			reqBean.setCorpId("corp00001");
+//			reqBean.setFinanceInfoList("[{'financeId':'2c9984c85d0604221e80060820b70004',"
+//					+ "'notPayInterest':'234'}]");
+//			respBean = revenueService.doAgree(reqBean);
+//			log.info("respBean:"+respBean);
+//			
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//
+//		log.info("=============================doAgree end=============================");
+//	
+//	}
+}

@@ -1,0 +1,42 @@
+package com.ut.scf.service.project;
+
+import java.util.Map;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+
+import com.ut.scf.reqbean.project.ContractFileReqBean;
+import com.ut.scf.reqbean.project.ContractReqBean;
+import com.ut.scf.reqbean.project.ContractUpdateReqBean;
+import com.ut.scf.reqbean.query.ChaorenContractInfoListReqBeanNew;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IContractManagerService {
+
+	BaseRespBean addFactorContract(Map<String, Object> map);
+
+	BaseRespBean factorContractList(ContractReqBean reqBean);
+
+	BaseRespBean factorContractFileList(ContractFileReqBean reqBean);
+
+	BaseRespBean modFactorContract(ContractUpdateReqBean reqBean);
+
+	BaseRespBean checkFactorContact(ContractReqBean reqBean);
+
+	BaseRespBean checkFactorContactDYK(ContractReqBean reqBean);
+
+	BaseRespBean checkProcess(String corpId);
+
+	BaseRespBean addFactorContract(Map<String, Object> map,
+			JSONObject jsonObject);
+
+	BaseRespBean startProcess(JSONObject jsonObject);
+
+	BaseRespBean getContractList(ContractReqBean reqBean);
+
+	BaseRespBean isContractNumExit(String contractNo);
+
+	BaseRespBean addFactorContract2(Map<String, Object> map);
+
+	BaseRespBean getContractFile(ChaorenContractInfoListReqBeanNew reqBean);
+
+}

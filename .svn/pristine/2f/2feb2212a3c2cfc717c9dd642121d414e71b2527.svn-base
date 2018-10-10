@@ -1,0 +1,21 @@
+package com.ut.scf.dao.statistics;
+
+import java.util.List;
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+
+public interface IAccountsReceivableDao {
+	List<Map<String, Object>> getARList(Map<String, Object> paramMap,
+			PageInfoBean page);
+	
+	List<Map<String, Object>> getARList(Map<String, Object> paramMap);
+	
+	Map<String, Object> getCorpCountInMonth(Map<String, Object> paramMap);
+	Map<String, Object> getCorpCarCountPayAmitInMonth(Map<String, Object> paramMap);
+	
+	Map<String, Object> getGuaranteeRestInMonth(Map<String, Object> paramMap);
+	Map<String, Object> getRepayAmitSumInMonth(Map<String, Object> paramMap);
+
+	Map<String, Object> getLsWeiShouCarCount(Map<String, Object> paramMap);
+}

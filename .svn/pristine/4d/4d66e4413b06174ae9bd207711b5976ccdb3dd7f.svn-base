@@ -1,0 +1,548 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+	quYuHuanKuanLsTable();
+	quYuHuanKuanDzTable();
+});
+
+function quYuHuanKuanLsTable() {
+    $('#quYuHuanKuanLsTable').bootstrapTable('destroy');
+    $("#quYuHuanKuanLsTable").bootstrapTable({
+        method: "post",
+        contentType:"application/json;charset=UTF-8",
+        url: "../YUQI/quYuHuanKuanList",
+        striped: false, //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var param = {
+            		ywlxId: 1,
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'Number',
+            title: '序号',
+            align: 'center',
+            valign: 'middle',
+            visible:false,
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'areaName',
+            title: '<br/>区域 ',
+            align: 'center',
+            valign: 'middle',
+            width:100,
+  /*          cellStyle:{
+        		css:{"font-size":"50px;"}
+        	}*/
+        }, {
+            field: 'representName',
+            title: '<br/>商代处',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+        }, {
+            field: 'corpCount',
+            title: '经销商<br/>（家）',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return value;
+            	}
+            }
+        },{
+            field: 'maxCreditAmount',
+            title: '<br/>授信额度',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },{
+            title: '<br/>可用敞口',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value,row,index) {
+            	//可用敞口=最高额度-付款函金额+保证金余额+赎证金额
+            	var res=Number(row.maxCreditAmount == null?0:row.maxCreditAmount) - Number(row.payAmt == null ? 0 : row.payAmt) + Number(row.baozhengjinYuE == null ? 0 : row.baozhengjinYuE) + Number(row.suZhengJinE == null ? 0 : row.suZhengJinE);	
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            }
+        },{
+            field: 'carCount',
+            title: '<br/>融资台数',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return value;
+            	}
+            }
+        },{
+            field: 'payAmt',
+            title: '融资金额<br/>A（含保）',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },{
+            title: '已还金额<br/>B',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value,row,index) {
+            	var res=Number(row.suZhengJinE == null ? 0 : row.suZhengJinE) + Number(row.baozhengjinYuE == null ? 0 : row.baozhengjinYuE);	
+
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            }
+        },{
+            field: 'suZhengJinE',
+            title: '赎证金额<br/>C',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            },
+            cellStyle:{
+            	css:{"background-color":"#7198DB"}
+            }
+        },{
+            field: 'baozhengjinYuE',
+            title: '<br/>保证金余额',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            },
+            cellStyle:{
+            	css:{"background-color":"#7198DB"}
+            }
+        },{
+            title: '还款比列<br/>B/A',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value,row,index) {
+            	var suZhengJinE=row.suZhengJinE==null ? 0:row.suZhengJinE;
+            	var baozhengjinYuE=row.baozhengjinYuE==null ? 0:row.baozhengjinYuE;
+            	var payAmt=row.payAmt == null ? 0 : row.payAmt 
+            	if(suZhengJinE == 0 && baozhengjinYuE==0){
+            			return '-';
+            	}else{
+            		if(payAmt!=0){
+            			var res=Number(suZhengJinE) + Number(baozhengjinYuE);
+                    	var res1=Number(res)/Number(row.payAmt == null ? 0 : row.payAmt );
+                    	return Math.round(res1 * 10000) / 100.00+'%';
+            		}else{
+            			return '-';
+            		}
+            
+            	}
+            }
+        },{
+            title: '未还金额<br/>E=A-B',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value,row,index) {
+            	var res=Number(row.payAmt == null ? 0 : row.payAmt) - Number(row.suZhengJinE == null ? 0 : row.suZhengJinE) - Number(row.baozhengjinYuE == null ? 0 : row.baozhengjinYuE);	
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            },
+            cellStyle:{
+            	css:{"background-color":"red"}
+            }
+        },{
+            field: 'weihuanTaiShu',
+            title: '<br/>未还台数',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return value;
+            	}
+            },
+         /*   footerFormatter: function (value) {
+                return 'asdasd';
+            } */
+        },
+        ],
+        rowStyle:function(row,index){
+        	if (row.representName.indexOf('小计')>-1){
+        		return {css:{"background-color":"#EEEEEE"}}
+        	}else{
+        		return {css:{}}
+        	}
+        },
+        onLoadSuccess: function (data) {
+         	var data = $('#quYuHuanKuanLsTable').bootstrapTable('getData', true);
+            // 合并单元格
+		var fieldList=["areaName"];
+		 mergeCells(data, "areaName", 1, $('#quYuHuanKuanLsTable'),fieldList);
+        	
+        },
+        
+    });
+}
+
+
+function quYuHuanKuanDzTable() {
+    $('#quYuHuanKuanDzTable').bootstrapTable('destroy');
+    $("#quYuHuanKuanDzTable").bootstrapTable({
+        method: "post",
+        contentType:"application/json;charset=UTF-8",
+        url: "../YUQI/quYuHuanKuanList",
+        striped: false, //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        showFooter:false,
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var param = {
+            		ywlxId: 2,
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'Number',
+            title: '序号',
+            align: 'center',
+            valign: 'middle',
+            visible:false,
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'areaName',
+            title: '<br/>区域 ',
+            align: 'center',
+            valign: 'middle',
+            width:100,
+  /*          cellStyle:{
+        		css:{"font-size":"50px;"}
+        	}*/
+        }, {
+            field: 'representName',
+            title: '<br/>商代处',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+        }, {
+            field: 'corpCount',
+            title: '经销商<br/>（家）',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return value;
+            	}
+            }
+        },{
+            field: 'maxCreditAmount',
+            title: '<br/>授信额度',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },{
+            title: '<br/>可用敞口',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value,row,index) {
+            	//可用敞口=最高额度-付款函金额+保证金余额+赎证金额
+            	var res=Number(row.maxCreditAmount == null?0:row.maxCreditAmount) - Number(row.payAmt == null ? 0 : row.payAmt) + Number(row.baozhengjinYuE == null ? 0 : row.baozhengjinYuE) + Number(row.suZhengJinE == null ? 0 : row.suZhengJinE);	
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            }
+        },{
+            field: 'carCount',
+            title: '<br/>融资台数',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return value;
+            	}
+            }
+        },{
+            field: 'payAmt',
+            title: '融资金额<br/>A（含保）',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },{
+            title: '已还金额<br/>B',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value,row,index) {
+            	var res=Number(row.suZhengJinE == null ? 0 : row.suZhengJinE) + Number(row.baozhengjinYuE == null ? 0 : row.baozhengjinYuE);	
+
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            }
+        },{
+            field: 'suZhengJinE',
+            title: '赎证金额<br/>C',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            },
+            cellStyle:{
+            	css:{"background-color":"#7198DB"}
+            }
+        },{
+            field: 'baozhengjinYuE',
+            title: '<br/>保证金余额',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            },
+            cellStyle:{
+            	css:{"background-color":"#7198DB"}
+            }
+        },{
+            title: '还款比列<br/>B/A',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value,row,index) {
+            	var suZhengJinE=row.suZhengJinE==null ? 0:row.suZhengJinE;
+            	var baozhengjinYuE=row.baozhengjinYuE==null ? 0:row.baozhengjinYuE;
+            	var payAmt=row.payAmt == null ? 0 : row.payAmt 
+            	if(suZhengJinE == 0 && baozhengjinYuE==0){
+            			return '-';
+            	}else{
+            		if(payAmt!=0){
+            			var res=Number(suZhengJinE) + Number(baozhengjinYuE);
+                    	var res1=Number(res)/Number(row.payAmt == null ? 0 : row.payAmt );
+                    	return Math.round(res1 * 10000) / 100.00+'%';
+            		}else{
+            			return '-';
+            		}
+            
+            	}
+            }
+        },{
+            title: '未还金额<br/>E=A-B',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value,row,index) {
+            	var res=Number(row.payAmt == null ? 0 : row.payAmt) - Number(row.suZhengJinE == null ? 0 : row.suZhengJinE) - Number(row.baozhengjinYuE == null ? 0 : row.baozhengjinYuE);	
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            },
+            cellStyle:{
+            	css:{"background-color":"red"}
+            }
+        },{
+            field: 'weihuanTaiShu',
+            title: '<br/>未还台数',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return value;
+            	}
+            },
+         /*   footerFormatter: function (value) {
+                return 'asdasd';
+            } */
+        },
+        ],
+        rowStyle:function(row,index){
+        	if (row.representName.indexOf('小计')>-1){
+        		return {css:{"background-color":"#EEEEEE"}}
+        	}else{
+        		return {css:{}}
+        	}
+        },
+        onLoadSuccess: function (data) {
+         	var data = $('#quYuHuanKuanDzTable').bootstrapTable('getData', true);
+            // 合并单元格
+		var fieldList=["areaName"];
+		 mergeCells(data, "areaName", 1, $('#quYuHuanKuanDzTable'),fieldList);
+        	
+        },
+        
+        
+    });
+}
+
+
+/**
+ * 合并单元格
+ * 
+ * @param data
+ *            原始数据（在服务端完成排序）
+ * @param fieldName
+ *            合并参照的属性名称
+ * @param colspan
+ *            合并开始列
+ * @param target
+ *            目标表格对象	 
+ * @param fieldList
+ *            要合并的字段集合
+ */
+function mergeCells(data,fieldName,colspan,target,fieldList){	
+// 声明一个map计算相同属性值在data对象出现的次数和
+var sortMap = {};
+for(var i = 0 ; i < data.length ; i++){
+    for(var prop in data[i]){
+    	//例如people.unit.name
+    	var fieldArr=fieldName.split(".");		        
+    	getCount(data[i],prop,fieldArr,0,sortMap);
+    }
+}	  
+var index = 0;    
+for(var prop in sortMap){
+    var count = sortMap[prop];
+    for(var i = 0 ; i < fieldList.length ; i++){
+    	$(target).bootstrapTable('mergeCells',{index:index, field:fieldList[i], colspan: colspan, rowspan: count});   
+	        }
+	        index += count;        
+	    }
+}
+
+/**
+ * 递归到最后一层 统计数据重复次数
+ * 比如例如people.unit.name 就一直取到name
+ * 类似于data["people"]["unit"]["name"]
+ */
+function getCount(data,prop,fieldArr,index,sortMap){	
+	if(index == fieldArr.length-1){			
+		if(prop == fieldArr[index]){
+            var key = data[prop];            
+            if(sortMap.hasOwnProperty(key)){
+                sortMap[key] = sortMap[key]+ 1;
+            } else {
+                sortMap[key] = 1;
+            } 
+	    }        
+		return;
+	}		
+    if(prop == fieldArr[index]){
+        var sdata = data[prop];	   
+        index=index+1;
+        getCount(sdata,fieldArr[index],fieldArr,index,sortMap);
+    } 
+    
+}
+
+

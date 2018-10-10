@@ -1,0 +1,119 @@
+package com.ut.scf.web.controller.wechat;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.http.converter.json.MappingJacksonValue;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.dao.auto.GuaranteeMoneyManagementMapper;
+import com.ut.scf.pojo.auto.DykRate;
+import com.ut.scf.pojo.auto.DykRateExample;
+import com.ut.scf.pojo.auto.GuaranteeMoneyManagement;
+import com.ut.scf.pojo.auto.InterestManagement;
+import com.ut.scf.pojo.auto.InterestManagementExample;
+import com.ut.scf.pojo.auto.InterestManagementExample.Criteria;
+import com.ut.scf.reqbean.project.FinanceInfoListReqBean;
+import com.ut.scf.reqbean.project.RepayInfoListReqBean;
+import com.ut.scf.reqbean.project.RepayProcessReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.project.FinanceInfoRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IFinanceInfoService;
+import com.ut.scf.service.project.IRepayManagerService;
+import com.ut.scf.web.controller.BaseJsonController;
+
+@Controller
+@RequestMapping("/wechat/dykRepay")
+public class DykRepayWechatController extends BaseJsonController{
+
+	@Resource
+	private IRepayManagerService repayManagerService;
+	
+	@Resource
+	private IFinanceInfoService financeInfoService;
+
+	@RequestMapping(value = "/doAgree")
+    @ResponseBody
+    public BaseRespBean doAgree(HttpSession httpSession,
+			@RequestBody RepayProcessReqBean reqBean) {
+		// 获取当前用户
+		String userName = (String) httpSession.getAttribute(ScfConsts.SESSION_USERNAME);
+		reqBean.setUserId(userName);
+		return repayManagerService.doAgree(reqBean);
+	}
+	
+	@RequestMapping(value = "/getRepayCarInfoList", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getRepayCarInfoList(
+			HttpSession httpSession, @RequestBody RepayInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		String corpId = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_CORP_ID);
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("corpId", corpId);
+		if (StringUtils.isNotEmpty(reqBean.getCorpId())) {
+			paramMap.put("corpId", reqBean.getCorpId());
+		}
+		if (!StringUtils.isEmpty(reqBean.getCarFrameNums())) {
+			paramMap.put("carFrameNums", reqBean.getCarFrameNums());
+		}
+
+		PageInfoBean page = null;
+		if (reqBean.getIsPage() == 1) {// 分页
+			page = new PageInfoBean();
+			page.setPageNumber(reqBean.getPageNumber());
+			page.setPageSize(reqBean.getPageSize());
+		}
+
+		respBean = repayManagerService.getRepayCarInfoList(paramMap, page);
+
+		return respBean;
+	}
+	
+	@RequestMapping(value = "/getProGuarantee", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getProGuarantee(
+			@RequestBody FinanceInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		respBean = financeInfoService.getProGuarantee(reqBean);
+		return respBean;
+	}
+	
+	@RequestMapping(value = "/productId")
+	@ResponseBody
+	public String getProductId(HttpSession httpSession) {
+		String corpId = (String) httpSession.getAttribute("corpId");
+		return financeInfoService.getProductId(corpId);
+
+	}
+	
+	@RequestMapping(value = "/getAllNotPayInterest", method = RequestMethod.POST, consumes = { "application/json" }, produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody BaseRespBean getAllNotPayInterest(
+			HttpSession httpSession, @RequestBody RepayInfoListReqBean reqBean,
+			BindingResult bindingResult) {
+		BaseRespBean respBean = new BaseRespBean();
+		String corpId = (String) httpSession
+				.getAttribute(ScfConsts.SESSION_CORP_ID);
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("corpId", corpId);
+		respBean = repayManagerService.getAllNotPayInterest(paramMap);
+
+		return respBean;
+	}
+}

@@ -1,0 +1,53 @@
+package com.ut.scf.service.test;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.reqbean.project.OrderYcManagerReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.sys.ISequenceService;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class SequenceServiceTest {
+
+	private static final Logger log = LoggerFactory
+			.getLogger(SequenceServiceTest.class);
+	private static String DATE_FORMAT = "yyyy-MM-dd";
+	private static SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+	@Resource
+	ISequenceService sequenceUtil;
+	@Resource
+	private IActivitiService activitiService;
+	@Test
+	public void sequenceTest() {
+		log.info("=============================sequenceTest start=============================");
+	
+			// 发起流程
+		String orderIdList="120170221183646756522,120170221184044118945";
+			BaseRespBean respBean = new BaseRespBean();
+			OrderYcManagerReqBean reqBean = new OrderYcManagerReqBean();
+			// 获取当前用户
+			reqBean.setOrderIdList(orderIdList);
+			reqBean.setUserId("sys");
+			reqBean.setSysGetDate(dateFormat.format(new Date()));
+			reqBean.setActivitiKey("orderEarlyClearProcess");
+			JSONObject contactInfo = new JSONObject(reqBean);
+			log.debug("contactInfo: {}", contactInfo);
+			activitiService.startProcess(contactInfo);
+			
+		
+		log.info("=============================sequenceTest end=============================");
+	}
+}

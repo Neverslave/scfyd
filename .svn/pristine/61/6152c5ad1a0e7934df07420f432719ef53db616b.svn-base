@@ -1,0 +1,879 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+	 dateload();
+	 lsYuQiTable();
+	 initLsXiangXiTable('',1);
+	 dzYuQiTable();
+	 dzYuQiXiangXiTable('',2);
+});
+
+function searchFun() {
+    lsYuQiTable();
+    dzYuQiTable();
+}
+function dateload() {
+$('#startTime').datetimepicker({
+    format: 'yyyy-mm',
+    autoclose: true,
+    todayBtn: true,
+    startView: 'year',
+    minView:'year',
+    maxView:'decade',
+    language:  'zh-CN',
+    initialDate: new Date()
+});
+$('#endTime').datetimepicker({
+    format: 'yyyy-mm',
+    autoclose: true,
+    todayBtn: true,
+    startView: 'year',
+    minView:'year',
+    maxView:'decade',
+    language:  'zh-CN',
+    initialDate: new Date()
+});
+
+}
+function lsYuQiTable() {
+    $('#lsYuQiTable').bootstrapTable('destroy');
+    $("#lsYuQiTable").bootstrapTable({
+        method: "post",
+        url: "../YUQI/lsYuQiList",
+        striped: false, //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+            var param = {
+            		startTime: jsonData.startTime,
+            		endTime: jsonData.endTime,
+            		ywlxId: 1,
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'Number',
+            title: '序号',
+            align: 'center',
+            valign: 'middle',
+            visible:false,
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'yuqi_year',
+            title: '年',
+            align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+               return value + '年';
+ 	        }
+        }, {
+            field: 'yuqi_month',
+            title: '月',
+            align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+                return value + '月';
+  	        }
+        }, {
+            field: 'yuqi_count',
+            title: '逾期经销商数',
+            align: 'center',
+            valign: 'middle'
+        },{
+ 	        field: 'operation',
+ 	        title: '操作',
+ 	        align: 'center',
+            valign: 'middle',
+ 	        formatter:function(value,row,index){
+ 	            var d = '<a class = "fa fa-list-ul detail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+               return d;
+ 	        },
+ 	        events: 'operateEvents'
+ 	    }
+        ],
+        onLoadSuccess: function (data) {},
+        
+    });
+}
+
+window.operateEvents = {
+		'click .detail': function (e, value, row, index) {
+			var yearMonth=row.yuqi_year+'-'+row.yuqi_month;
+			initLsXiangXiTable(yearMonth,1);
+		}
+	};
+
+function initLsXiangXiTable(yearMonth,ywlxId) {
+    $('#lsYuQiXiangXiTable').bootstrapTable('destroy');
+    $("#lsYuQiXiangXiTable").bootstrapTable({
+        method: "post",
+        url: "../YUQI/lsYuQiXiangXiList",
+        striped: false, //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var param = {
+            		startTime: yearMonth,
+            		ywlxId: ywlxId,
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'Number',
+            title: '序号',
+            align: 'center',
+            valign: 'middle',
+            visible:false,
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'corp_id',
+            align: 'center',
+            valign: 'middle',
+            visible:false
+        },{
+            field: '_year',
+            title: '年',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter:function(value,row,index){
+                return value + '年';
+  	        }
+        }, {
+            field: '_month',
+            title: '月',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter:function(value,row,index){
+                return value + '月';
+  	        }
+        }, {
+            field: 'areaName',
+            title: '区域',
+            align: 'center',
+            width:100,
+            valign: 'middle'
+        }, {
+            field: 'representName',
+            title: '商代处',
+            align: 'center',
+            width:80,
+            valign: 'middle'
+        },  {
+            field: 'storeName',
+            title: '经销商名称',
+            align: 'center',
+            width:120,
+            valign: 'middle'
+        },  {
+            field: 'agencyNum',
+            title: '代码',
+            align: 'center',
+            width:80,
+            valign: 'middle'
+        },  {
+            field: 'rzTaiShu',
+            title: '融资台数',
+            align: 'center',
+            width:80,
+            valign: 'middle'
+        },  {
+            field: 'rzJinE',
+            title: '融资金额',
+            align: 'center',
+            width:150,
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },  {
+            title: '已还款',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value,row,index) {
+            	var res=Number(row.szJinE == null?0:row.szJinE) + Number(row.bzjYuE == null ? 0 : row.bzjYuE);
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            }
+        }, {
+            field: 'szJinE',
+            title: '赎证金额',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },  {
+            field: 'bzjYuE',
+            title: '保证金余额',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        }, {
+            title: '还款比例',
+            align: 'center',
+            valign: 'middle',
+            width:100,
+            formatter: function(value,row,index) {
+            	var szJinE=row.szJinE==null ? 0:row.szJinE;
+            	var bzjYuE=row.bzjYuE==null ? 0:row.bzjYuE;
+            	if(szJinE == 0 && bzjYuE==0){
+            		return '-';
+            	}else{
+            		var res=Number(szJinE) + Number(bzjYuE);
+                	var res1=Number(res)/Number(row.rzJinE == null ? 0 : row.rzJinE );
+                	return Math.round(res1 * 10000) / 100.00+'%';
+            	}
+            }
+        },  {
+            field: 'zuoriHuiKuan',
+            title: '昨日回款',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        }, {
+            title: '当前欠数',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value,row,index) {
+            	var res=Number(row.rzJinE == null ? 0 : row.rzJinE)-Number(row.szJinE == null ? 0 : row.szJinE) - Number(row.bzjYuE == null ? 0 : row.bzjYuE);
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            }
+        }, {
+            title: '昨日欠数',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(valuem,row,index) {
+            	var res=Number(row.rzJinE == null ? 0 : row.rzJinE)-Number(row.szJinE == null ? 0 : row.szJinE) - Number(row.bzjYuE == null ? 0 : row.bzjYuE)+ Number(row.zuoriHuiKuan == null ? 0 : row.zuoriHuiKuan);
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            }
+        }, {
+            title: '差额',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value,row,index) {
+            	if(row.zuoriHuiKuan==null || row.zuoriHuiKuan==0){
+            		return '-';
+            	}else{
+            	     return $.number(row.zuoriHuiKuan, 2);
+            	}
+            }
+        }, {
+            field: 'zongQianShu',
+            title: '总欠数',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },  {
+            field: 'zongLiuKuTaiShu',
+            title: '总留库台数',
+            align: 'center',
+            width:100,
+            valign: 'middle'
+        },   {
+        	field: 'fachebili',
+            title: '发车比例',
+            align: 'center',
+            valign: 'middle',
+            width:100,
+ 	        formatter:function(value,row,index){
+  	           var m = '<a class = "fa fa-edit modifyDz" style="color:#278bdd;padding:0px 5px;" data-type="custInfo" title="编辑" href="javascript:void(0)"></a>';
+  	           if(value == null || value == ''){
+  	        	   return m;
+	        	}else{
+        		   return '<a class = "modifyDz" style="color:black;" data-type="custInfo"  href="javascript:void(0)">'+value+'</a>';;
+	        	}
+ 	        },
+ 	        events: 'operateEventsLs'
+        },  {
+            title: '备注',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	return '逾期';
+            }
+        }, 
+        ],
+        onLoadSuccess: function (data) {
+        	var data = $('#initLsXiangXiTable').bootstrapTable('getData', true);
+            // 合并单元格
+			var fieldList=["_year"];
+			mergeCells(data, "_year", 1, $('#initLsXiangXiTable'),fieldList);
+        },
+        
+    });
+}
+    
+window.operateEventsLs = {
+		'click .modifyDz': function (e, value, row, index) {
+		  	$("#facheForm").find("input").each(function(){
+				$(this).val('');
+			});
+			$("#facheYear").val(row._year);
+			$("#facheMonth").val(row._month);
+			$("#ywlxId").val("1");
+			$("#corpId").val(row.corp_id);
+		    $('#facheModal').modal({ backdrop: 'static', keyboard: false }); //防止点击空白/ESC 关闭
+	}
+};
+
+function dzYuQiTable() {
+    $('#dzYuQiTable').bootstrapTable('destroy');
+    $("#dzYuQiTable").bootstrapTable({
+        method: "post",
+        url: "../YUQI/lsYuQiList",
+        striped: false, //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+            var param = {
+            		startTime: jsonData.startTime,
+            		endTime: jsonData.endTime,
+            		ywlxId: 2,
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'Number',
+            title: '序号',
+            align: 'center',
+            valign: 'middle',
+            visible:false,
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'yuqi_year',
+            title: '年',
+            align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+               return value + '年';
+ 	        }
+        }, {
+            field: 'yuqi_month',
+            title: '月',
+            align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+                return value + '月';
+  	        }
+        }, {
+            field: 'yuqi_count',
+            title: '逾期经销商数',
+            align: 'center',
+            valign: 'middle'
+        },{
+ 	        field: 'operation',
+ 	        title: '操作',
+ 	        align: 'center',
+            valign: 'middle',
+ 	        formatter:function(value,row,index){
+ 	            var d = '<a class = "fa fa-list-ul detail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+               return d;
+ 	        },
+ 	        events: 'operateEventsDz'
+ 	    }
+        ],
+        onLoadSuccess: function (data) {},
+        
+    });
+}
+
+window.operateEventsDz = {
+		'click .detail': function (e, value, row, index) {
+			var yearMonth=row.yuqi_year+'-'+row.yuqi_month;
+			dzYuQiXiangXiTable(yearMonth,2);
+		}
+	};
+
+function dzYuQiXiangXiTable(yearMonth,ywlxId) {
+    $('#dzYuQiXiangXiTable').bootstrapTable('destroy');
+    $("#dzYuQiXiangXiTable").bootstrapTable({
+        method: "post",
+        url: "../YUQI/lsYuQiXiangXiList",
+        striped: false, //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var param = {
+            		startTime: yearMonth,
+            		ywlxId: ywlxId,
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'Number',
+            title: '序号',
+            align: 'center',
+            valign: 'middle',
+            visible:false,
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'corp_id',
+            align: 'center',
+            valign: 'middle',
+            visible:false
+        },{
+            field: '_year',
+            title: '年',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter:function(value,row,index){
+                return value + '年';
+  	        }
+        }, {
+            field: '_month',
+            title: '月',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter:function(value,row,index){
+                return value + '月';
+  	        }
+        }, {
+            field: 'areaName',
+            title: '区域',
+            align: 'center',
+            width:100,
+            valign: 'middle'
+        }, {
+            field: 'representName',
+            title: '商代处',
+            align: 'center',
+            width:80,
+            valign: 'middle'
+        },  {
+            field: 'storeName',
+            title: '经销商名称',
+            align: 'center',
+            width:120,
+            valign: 'middle'
+        },  {
+            field: 'agencyNum',
+            title: '代码',
+            align: 'center',
+            width:80,
+            valign: 'middle'
+        },  {
+            field: 'rzTaiShu',
+            title: '融资台数',
+            align: 'center',
+            width:80,
+            valign: 'middle'
+        },  {
+            field: 'rzJinE',
+            title: '融资金额',
+            align: 'center',
+            width:150,
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },  {
+            title: '已还款',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value,row,index) {
+            	var res=Number(row.szJinE == null?0:row.szJinE) + Number(row.bzjYuE == null ? 0 : row.bzjYuE);
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            }
+        }, {
+            field: 'szJinE',
+            title: '赎证金额',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },  {
+            field: 'bzjYuE',
+            title: '保证金余额',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        }, {
+            title: '还款比例',
+            align: 'center',
+            valign: 'middle',
+            width:100,
+            formatter: function(value,row,index) {
+            	var szJinE=row.szJinE==null ? 0:row.szJinE;
+            	var bzjYuE=row.bzjYuE==null ? 0:row.bzjYuE;
+            	if(szJinE == 0 && bzjYuE==0){
+            		return '-';
+            	}else{
+            		var res=Number(szJinE) + Number(bzjYuE);
+                	var res1=Number(res)/Number(row.rzJinE == null ? 0 : row.rzJinE );
+                	return Math.round(res1 * 10000) / 100.00+'%';
+            	}
+            }
+        },  {
+            field: 'zuoriHuiKuan',
+            title: '昨日回款',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        }, {
+            title: '当前欠数',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value,row,index) {
+            	var res=Number(row.rzJinE == null ? 0 : row.rzJinE)-Number(row.szJinE == null ? 0 : row.szJinE) - Number(row.bzjYuE == null ? 0 : row.bzjYuE);
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            }
+        }, {
+            title: '昨日欠数',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(valuem,row,index) {
+            	var res=Number(row.rzJinE == null ? 0 : row.rzJinE)-Number(row.szJinE == null ? 0 : row.szJinE) - Number(row.bzjYuE == null ? 0 : row.bzjYuE)+ Number(row.zuoriHuiKuan == null ? 0 : row.zuoriHuiKuan);
+            	if(res==null || res==0){
+            		return '-';
+            	}else{
+            	     return $.number(res, 2);
+            	}
+            }
+        }, {
+            title: '差额',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value,row,index) {
+            	if(row.zuoriHuiKuan==null || row.zuoriHuiKuan==0){
+            		return '-';
+            	}else{
+            	     return $.number(row.zuoriHuiKuan, 2);
+            	}
+            }
+        }, {
+            field: 'zongQianShu',
+            title: '总欠数',
+            align: 'center',
+            valign: 'middle',
+            width:150,
+            formatter: function(value) {
+            	if(value==null || value==0){
+            		return '-';
+            	}else{
+            	     return $.number(value, 2);
+            	}
+            }
+        },  {
+            field: 'zongLiuKuTaiShu',
+            title: '总留库台数',
+            align: 'center',
+            width:100,
+            valign: 'middle'
+        },  {
+        	field: 'fachebili',
+            title: '发车比例',
+            align: 'center',
+            valign: 'middle',
+            width:100,
+ 	        formatter:function(value,row,index){
+  	           var m = '<a class = "fa fa-edit modifyLs" style="color:#278bdd;padding:0px 5px;" data-type="custInfo" title="编辑" href="javascript:void(0)"></a>';
+  	           if(value == null || value == ''){
+  	        	   return m;
+	        	}else{
+        		   return '<a class = "modifyLs" style="color:black;" data-type="custInfo"  href="javascript:void(0)">'+value+'</a>';
+	        	}
+ 	        },
+ 	        events: 'operateEventsDzXiangXi'
+        },  {
+            title: '备注',
+            align: 'center',
+            valign: 'middle',
+            width:80,
+            formatter: function(value) {
+            	return '逾期';
+            }
+        }, 
+        ],
+        onLoadSuccess: function (data) {
+        	
+        	var data = $('#dzYuQiXiangXiTable').bootstrapTable('getData', true);
+            // 合并单元格
+			var fieldList=["_year"];
+			mergeCells(data, "_year", 1, $('#dzYuQiXiangXiTable'),fieldList);
+        	
+        },
+    });
+}
+    
+window.operateEventsDzXiangXi = {
+		'click .modifyLs': function (e, value, row, index) {
+		  	$("#facheForm").find("input").each(function(){
+				$(this).val('');
+			});
+			$("#facheYear").val(row._year);
+			$("#facheMonth").val(row._month);
+			$("#ywlxId").val("2");
+			$("#corpId").val(row.corp_id);
+		    $('#facheModal').modal({ backdrop: 'static', keyboard: false }); //防止点击空白/ESC 关闭
+	}
+};
+
+
+
+/**
+ * 合并单元格
+ * 
+ * @param data
+ *            原始数据（在服务端完成排序）
+ * @param fieldName
+ *            合并参照的属性名称
+ * @param colspan
+ *            合并开始列
+ * @param target
+ *            目标表格对象	 
+ * @param fieldList
+ *            要合并的字段集合
+ */
+function mergeCells(data,fieldName,colspan,target,fieldList){	
+// 声明一个map计算相同属性值在data对象出现的次数和
+var sortMap = {};
+for(var i = 0 ; i < data.length ; i++){
+    for(var prop in data[i]){
+    	//例如people.unit.name
+    	var fieldArr=fieldName.split(".");		        
+    	getCount(data[i],prop,fieldArr,0,sortMap);
+    }
+}	  
+var index = 0;    
+for(var prop in sortMap){
+    var count = sortMap[prop];
+    for(var i = 0 ; i < fieldList.length ; i++){
+    	$(target).bootstrapTable('mergeCells',{index:index, field:fieldList[i], colspan: colspan, rowspan: count});   
+	        }
+	        index += count;        
+	    }
+}
+
+/**
+ * 递归到最后一层 统计数据重复次数
+ * 比如例如people.unit.name 就一直取到name
+ * 类似于data["people"]["unit"]["name"]
+ */
+function getCount(data,prop,fieldArr,index,sortMap){	
+	if(index == fieldArr.length-1){			
+		if(prop == fieldArr[index]){
+            var key = data[prop];            
+            if(sortMap.hasOwnProperty(key)){
+                sortMap[key] = sortMap[key]+ 1;
+            } else {
+                sortMap[key] = 1;
+            } 
+	    }        
+		return;
+	}		
+    if(prop == fieldArr[index]){
+        var sdata = data[prop];	   
+        index=index+1;
+        getCount(sdata,fieldArr[index],fieldArr,index,sortMap);
+    } 
+    
+}
+
+function facheSave(){
+	var fachebili=$("#fachebili").val();
+	if(fachebili==null || fachebili==''){
+		bootbox.alert("请填写发车比例");
+	}
+	var dataForm = CloudUtils.convertStringJson('facheForm');
+	var options = {
+			url : "../YUQI/fachebili",
+			data : dataForm,
+			callBackFun : function(data) {
+				if(data.result==0){
+					 $('#facheModal').modal('hide'); 
+					 $('#dzYuQiXiangXiTable').bootstrapTable('refresh');
+				}else{
+					bootbox.alert(data.resultNote);
+					return false;
+				}
+			},
+			errorCallback:function(data){
+				bootbox.alert("error");
+			}
+		};
+		CloudUtils.ajax(options);
+	
+	
+}
+

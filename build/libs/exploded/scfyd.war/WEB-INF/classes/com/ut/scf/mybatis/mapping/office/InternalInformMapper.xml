@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ut.scf.dao.office.IinternalInformDao">
+  <select id="selectInternalInformList" parameterType="hashmap" resultType="hashmap">
+	select 
+		i.rec_uid recUid,
+		s.username,
+		i.title,
+		s.user_id userId,
+		i.inform_content informContent,
+		DATE_FORMAT(i.inform_date,'%Y-%m-%d') informDate,
+		i.create_time create_time,
+		i.user_id informUserId
+	from 
+		internal_inform i
+		join sys_user s on s.user_id = i.user_id
+    <where>
+        1=1
+		<if test="title != null">
+	  		and i.title LIKE CONCAT(CONCAT('%', #{title}),'%')
+		</if >
+		<if test="informUserId != '' and informUserId != null">
+			and i.user_id = #{informUserId}
+		</if>
+    </where>
+    order by i.create_time desc
+  </select>
+
+   <select id="selectInternalInform" parameterType="hashmap" resultType="hashmap">
+	select 
+		i.rec_uid recUid,
+		s.username,
+		i.title,
+		s.user_id userId,
+		i.inform_content informContent,
+		DATE_FORMAT(i.inform_date,'%Y-%m-%d') informDate,
+		i.create_time create_time,
+		u.user_id informUserId,
+		u.rec_uid informrecUid
+	from 
+		internal_inform i
+	
+	left join inform_user u on i.rec_uid = u.inform_id 
+	left join sys_user s on s.user_id = i.user_id 
+	<where>
+        1=1
+       <if test="title != null">
+	  		and i.title LIKE CONCAT(CONCAT('%', #{title}),'%')
+		</if >
+		<if test="informUserId != '' and informUserId != null">
+			and u.user_id = #{informUserId}
+		</if>
+    </where>
+    order by i.create_time desc
+  </select>
+  <select id="countInternalInform" resultType="int" parameterType="hashmap">
+  	select count(*) from internal_inform i 
+	left join inform_user u on i.rec_uid = u.inform_id 
+	left join sys_user s on s.user_id = i.user_id 
+	<where>
+        1=1
+	<if test="informUserId != '' and informUserId != null">
+		and u.user_id = #{informUserId}
+	</if>
+	</where>
+  </select>
+  <delete id="deleteMyinformByPrimaryKey" parameterType="java.lang.String">
+    delete from inform_user
+    where rec_uid = #{informrecUid,jdbcType=VARCHAR}
+  </delete>
+</mapper>

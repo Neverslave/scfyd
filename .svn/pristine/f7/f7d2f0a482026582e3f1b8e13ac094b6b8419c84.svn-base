@@ -1,0 +1,16 @@
+package com.ut.scf.reqbean.statistics;
+
+import com.ut.scf.reqbean.PageReqBean;
+
+public class SSMProjectSummaryListReqBean extends PageReqBean {
+	private String syncDate;
+
+	public String getSyncDate() {
+		return syncDate;
+	}
+
+	public void setSyncDate(String syncDate) {
+		this.syncDate = syncDate;
+	}
+
+}

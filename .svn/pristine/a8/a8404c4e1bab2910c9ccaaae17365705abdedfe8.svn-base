@@ -1,0 +1,988 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.statistics.ISSMProjectSummaryDao" >
+  <select id="getSummaryInfoList" resultType="hashmap" parameterType="hashmap" >
+  	SELECT
+		(@i :=@i + 1) throwNum,
+		temp2.*
+	from
+		(
+			SELECT
+				obi.sync_date syncDate,
+				sum(obi.rec_order_num) orderNumber,
+				sum(obi.rec_order_amt) repayAmount,
+<!-- 				sum(f.pay_amt) factoringAmount, -->
+				IFNULL(sum(f.pay_amt),0.00) factoringAmount,
+				COALESCE(SUM(
+					temp1.current_payable_principal
+				),0) factoringReceivable,
+				COALESCE(SUM(
+					temp1.current_payable_interest
+				),0) factoringInterest,
+				COALESCE(gi.pay_able_guarantee,0) guaranteeMoney
+			FROM
+				order_batch_info obi
+			LEFT JOIN (
+				SELECT
+					SUM(
+						rpi.current_payable_interest
+					) current_payable_interest,
+					SUM(
+						rpi.current_payable_principal
+					) current_payable_principal,
+					rpi.order_batch_id
+				FROM
+					repayment_plan_info rpi
+				GROUP BY
+					rpi.order_batch_id
+			) temp1 ON obi.order_batch_id = temp1.order_batch_id
+			LEFT JOIN factor_contract_info fc ON fc.order_batch_id = obi.order_batch_id
+			LEFT JOIN guarantee_info gi ON gi.finance_id = fc.contract_no
+			LEFT JOIN finance_info f ON f.finance_id = gi.finance_id
+			where 1=1
+			<if test="syncDate != null and syncDate !='' ">  
+		        and DATE_FORMAT(obi.sync_date, '%Y-%m-%d') <![CDATA[<=]]> #{syncDate}
+		    </if>
+			GROUP BY
+				obi.sync_date
+			ORDER BY
+				obi.sync_date
+		) temp2,
+		(SELECT @i := 0) AS it
+  </select>
+  	
+  
+  <select id="getWingRepaymentDynamicList" resultType="hashmap" parameterType="hashmap" >
+  
+  select
+  		people_type peopleType,
+      current_month currentMonth,
+      current_order_count currentOrderCount,
+      current_need_money currentNeedMoney,
+      current_repay_price currentRepayPrice,
+      current_rest_money currentRestMoney,
+      m1_yuqi_rest_current_money m1YuqiRestCurrentMoney,
+      m1_yuqi_rest_count m1YuqiRestCount,
+      m2_yuqi_rest_current_money m2YuqiRestCurrentMoney,
+      m2_yuqi_rest_count m2YuqiRestCount,
+      m3_yuqi_rest_current_money m3YuqiRestCurrentMoney,
+      m3_yuqi_rest_count m3YuqiRestCount,
+      m4_yuqi_rest_current_money m4YuqiRestCurrentMoney,
+      m4_yuqi_rest_count m4YuqiRestCount,
+      m5_yuqi_rest_current_money m5YuqiRestCurrentMoney,
+      m5_yuqi_rest_count m5YuqiRestCount,
+      early_balance_month_money earlyBalanceMonthMoney,
+      new_order_count newOrderCount,
+      new_order_amt_sum newOrderAmtSum,
+      scheduled_collection_count scheduledCollectionCount,
+      scheduled_collection_amt_sum scheduledCollectionAmtSum,
+      early_clearance_count earlyClearanceCount,
+      early_clearance_should_repay earlyClearanceShouldRepay,
+      early_clearance_repay earlyClearanceRepay,
+      m1_yuqi_repay_current_money m1YuqiRepayCurrentMoney,
+      m1_yuqi_repay_count m1YuqiRepayCount,
+      m2_yuqi_repay_current_money m2YuqiRepayCurrentMoney,
+      m2_yuqi_repay_count m2YuqiRepayCount,
+      m3_yuqi_repay_current_money m3YuqiRepayCurrentMoney,
+      m3_yuqi_repay_count m3YuqiRepayCount,
+      m4_yuqi_repay_current_money m4YuqiRepayCurrentMoney,
+      m4_yuqi_repay_count m4YuqiRepayCount,
+      m5_yuqi_repay_current_money m5YuqiRepayCurrentMoney,
+      m5_yuqi_repay_count m5YuqiRepayCount,
+      scheduled_interest_collection scheduledInterestCollection
+      
+      from 
+      wing_payment_dynamic_info
+      where
+      1=1
+      <if test="peopleType!=null and peopleType!= ''">
+	   		 and people_type LIKE #{peopleType}
+	  </if>
+	   <if test="dateBegin!=null and dateBegin!= ''">
+  	AND DATE_FORMAT(current_month, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(#{dateBegin}, '%Y-%m-%d')
+  	</if>
+  	 <if test="dateEnd!=null and dateEnd!= ''">
+	AND DATE_FORMAT(current_month, '%Y-%m-%d') <![CDATA[<=]]> DATE_FORMAT(#{dateEnd}, '%Y-%m-%d')
+	</if>
+  </select>
+    <select id="getWingRepaymentStaticList" resultType="hashmap" parameterType="hashmap" >
+    	select
+    	people_type peopleType,
+		order_date orderDate,
+		report_month reportMonth,
+		order_sum_money orderSumMoney,
+		order_sum_count orderSumCount,
+		has_not_pay_amt hasNotPayAmt,
+		rest_count restCount,
+		normal_loan_balance normalLoanBalance,
+		m1_overdue_loans m1OverdueLoans,
+		m2_overdue_loans m2OverdueLoans,
+		m3_overdue_loans m3OverdueLoans,
+		m4_overdue_loans m4OverdueLoans,
+		m5_overdue_loans m5OverdueLoans,
+		m1_overdue_counts m1OverdueCounts,
+		m2_overdue_counts m2OverdueCounts,
+		m3_overdue_counts m3OverdueCounts,
+		m4_overdue_counts m4OverdueCounts,
+		m5_overdue_counts m5OverdueCounts,
+		monthly_principal_receiva monthlyPrincipalReceiva,
+		early_compensation earlyCompensation,
+		cleared_amount clearedAmount,
+		yuqi_repay_amount yuqiRepayAmount,
+		total_monthly_recovery totalMonthlyRecovery
+		from
+		wing_payment_static_info
+		 <if test="peopleType!=null and peopleType!= ''">
+	   		 and people_type LIKE #{peopleType}
+	 	</if>
+	   <if test="dateBegin!=null and dateBegin!= ''">
+	  	AND DATE_FORMAT(order_date, '%Y%m') <![CDATA[>=]]> DATE_FORMAT(#{dateBegin}, '%Y%m')
+	  	</if>
+	  	 <if test="dateEnd!=null and dateEnd!= ''">
+		AND DATE_FORMAT(order_date, '%Y%m') <![CDATA[<=]]> DATE_FORMAT(#{dateEnd}, '%Y%m')
+		</if>
+
+    </select>
+
+    
+    
+    <select id="getWingRepaymentMonthlyList" resultType="hashmap" parameterType="hashmap" >
+    
+	    select 
+	    people_type peopleType,
+	    compute_time computeTime,
+		compute_month computeMonth,
+		current_sum_need_money currentSumNeedMoney,
+		current_sum_count currentSumCount,
+		has_paid_current_money hasPaidCurrentMoney,
+		should_paid_count shouldPaidCount,
+		should_paid_repayment_price shouldPaidRepaymentPrice,
+		should_paid_interest shouldPaidInterest,
+		aut_paid_sum_count autPaidSumCount,
+		aut_paid_sum_repayment_price autPaidSumRepaymentPrice,
+		aut_paid_sum_commission autPaidSumCommission,
+		aut_paid_interest autPaidInterest,
+		aut_period_paid_sum_count autPeriodPaidSumCount,
+		aut_period_paid_sum_repayment_price autPeriodPaidSumRepaymentPrice,
+		aut_period_paid_sum_commission autPeriodPaidSumCommission,
+		aut_early_paid_sum_count autEarlyPaidSumCount,
+		aut_early_paid_sum_repayment_price autEarlyPaidSumRepaymentPrice,
+		aut_early_paid_sum_commission autEarlyPaidSumCommission,
+		current_yuqi_paid_sum_count currentYuqiPaidSumCount,
+		current_yuqi_paid_sum_repayment_price currentYuqiPaidSumRepaymentPrice,
+		current_yuqi_paid_sum_commission currentYuqiPaidSumCommission,
+		current_yuqi_paid_sum_damages currentYuqiPaidSumDamages,
+		non_yuqi_paid_sum_count nonYuqiPaidSumCount,
+		non_yuqi_paid_sum_repayment_price nonYuqiPaidSumRepaymentPrice,
+		non_yuqi_paid_sum_commission nonYuqiPaidSumCommission,
+		non_yuqi_paid_sum_damages nonYuqiPaidSumDamages,
+		rest_yuqi_paid_sum_count restYuqiPaidSumCount,
+		rest_yuqi_paid_sum_repaymentPrice restYuqiPaidSumRepaymentPrice,
+		rest_yuqi_paid_sum_commission restYuqiPaidSumCommission,
+		cancel_order_count cancelOrderCount,
+		cancel_order_amt cancelOrderAmt,
+		early_clear_paid_sum_count earlyClearPaidSumCount,
+		early_clear_sum_repayment_price earlyClearSumRepaymentPrice,
+		early_clear_paid_sum_commission earlyClearPaidSumCommission
+		from 
+		wing_payment_monthly_info
+	     <if test="peopleType!=null and peopleType!= ''">
+	   		 and people_type LIKE #{peopleType}
+	 	</if>
+	   <if test="syncDate!=null and syncDate!= ''">
+	  	AND DATE_FORMAT(compute_month, '%Y%m') <![CDATA[=]]> DATE_FORMAT(#{syncDate}, '%Y%m')
+	  	</if>
+	  	order by compute_time desc
+    </select>
+    
+
+  <select id="createWingRepaymentDynamicList" resultType="hashmap"  parameterType="hashmap"  statementType="CALLABLE">
+
+
+	CALL sp_dynamic_pool_info (	#{pstate,jdbcType=VARCHAR,mode=IN},#{ppeopleType,jdbcType=VARCHAR,mode=IN},#{porderDate,jdbcType=VARCHAR,mode=IN},#{prepayDateEnd,jdbcType=VARCHAR,mode=IN});
+	
+	</select>
+	
+	
+	<select id="createWingRepaymentStaticList" resultType="hashmap"  parameterType="hashmap"  statementType="CALLABLE">
+
+	CALL sp_static_pool_info (	#{porderDate,jdbcType=VARCHAR,mode=IN},#{porderDateEnd,jdbcType=VARCHAR,mode=IN},#{prepayDateEnd,jdbcType=VARCHAR,mode=IN});
+	
+	</select>
+	<select id="createWingRepaymentMonthlyList" resultType="hashmap"  parameterType="hashmap"  statementType="CALLABLE">
+
+	CALL sp_month_report_info (	#{porderDate,jdbcType=VARCHAR,mode=IN},#{porderDateEnd,jdbcType=VARCHAR,mode=IN});
+	
+	</select>
+  
+  <!-- delimiter ||
+DROP PROCEDURE
+IF EXISTS sp_dynamic_pool_info ; CREATE PROCEDURE sp_dynamic_pool_info (
+	IN p_state VARCHAR (2),
+	IN p_people_type VARCHAR (2),
+	IN p_order_date VARCHAR (10),
+	IN p_repay_date_end VARCHAR (10)
+)
+BEGIN
+				DECLARE	currentOrderCount INT (32) ; #投放订单数量
+				DECLARE currentNeedMoney DECIMAL (32,2) ; #投放金额
+				DECLARE	currentRepayPrice DECIMAL (32,2) ; #已还金额
+				DECLARE	currentRestMoney DECIMAL (32,2) ; #剩余金额
+				DECLARE	M1YuqiRestCurrentMoney DECIMAL (32,2); #1-30 天拖欠
+				DECLARE	M1YuqiRestCount INT;
+				DECLARE	M2YuqiRestCurrentMoney DECIMAL (32,2); #31-30 天拖欠
+				DECLARE	M2YuqiRestCount INT;
+				DECLARE	M3YuqiRestCurrentMoney DECIMAL (32,2); #61-30 天拖欠
+				DECLARE	M3YuqiRestCount INT;
+				DECLARE	M4YuqiRestCurrentMoney DECIMAL (32,2); #91-30 天拖欠
+				DECLARE	M4YuqiRestCount INT;
+				DECLARE	M5YuqiRestCurrentMoney DECIMAL (32,2); #121 天以上拖欠
+				DECLARE	M5YuqiRestCount INT;
+				DECLARE earlyBalanceMonthMoney DECIMAL (32,2); #月初余额
+				DECLARE	newOrderCount INT; #新增贷款数量
+				DECLARE newOrderAmtSum DECIMAL(32,2); #新增贷款金额
+				DECLARE scheduledCollectionCount INT; #合同规定偿还总数
+				DECLARE scheduledCollectionAmtSum DECIMAL(32,2);#合同规定偿还总额
+				DECLARE earlyClearanceCount INT; #提前结清数量
+				DECLARE earlyClearanceShouldRepay INT;#提前结清应还金额
+				DECLARE earlyClearanceRepay INT;#提前结清未还金额
+				DECLARE	M1YuqiRepayCurrentMoney DECIMAL (32,2); #1-30 天拖欠回收
+				DECLARE	M1YuqiRepayCount INT;
+				DECLARE	M2YuqiRepayCurrentMoney DECIMAL (32,2); #31-30 天拖欠回收
+				DECLARE	M2YuqiRepayCount INT;
+				DECLARE	M3YuqiRepayCurrentMoney DECIMAL (32,2); #61-30 天拖欠回收
+				DECLARE	M3YuqiRepayCount INT;
+				DECLARE	M4YuqiRepayCurrentMoney DECIMAL (32,2); #91-30 天拖欠回收
+				DECLARE	M4YuqiRepayCount INT;
+				DECLARE	M5YuqiRepayCurrentMoney DECIMAL (32,2); #121 天以上拖欠回收
+				DECLARE	M5YuqiRepayCount INT;
+				DECLARE	ScheduledInterestCollection	 DECIMAL (32,2); #按合同规定的利息回收款
+
+
+				DROP TABLE 	IF EXISTS trun_order_info ; 
+				CREATE TABLE trun_order_info (
+					order_id VARCHAR (30) PRIMARY KEY
+				) ; 
+				INSERT INTO trun_order_info (order_id) 
+				SELECT DISTINCT
+					order_id
+				FROM
+					order_info a USE INDEX (
+						index_order_id_yi_state_people_type
+					)
+				LEFT JOIN order_info_yi b ON a.order_id_yi = b.order_id_yi
+				WHERE
+					a.state <> p_state
+				AND a.people_type = p_people_type
+				AND b.order_date <= p_order_date ; 
+				SELECT
+					COUNT(*),
+					SUM(needmoney)
+					INTO currentOrderCount,
+							 currentNeedMoney
+				FROM
+					order_info
+				WHERE
+					order_id IN (
+						SELECT
+							order_id
+						FROM
+							trun_order_info
+					) ;
+		SELECT
+			SUM(paid_price) INTO currentRepayPrice
+		FROM
+			repayment_plan_user_info
+		WHERE
+			order_id IN (
+		SELECT
+							order_id
+						FROM
+							trun_order_info
+			)
+		AND paid_date IS NOT NULL
+		AND DATE_FORMAT(paid_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+		AND people_id = '3';
+
+	DROP TABLE if EXISTS yuqi_compute_info;
+	CREATE temporary TABLE  yuqi_compute_info(
+	rowid BIGINT auto_increment PRIMARY KEY,
+	grade_level VARCHAR(5),
+	level_count INT,
+	sum_need_money DECIMAL(32),
+	sum_paid_money DECIMAL(32)
+	);
+INSERT INTO yuqi_compute_info(grade_level,level_count,sum_need_money,sum_paid_money)
+SELECT
+	tempDD.gradeLevel,
+COUNT(*) AS sumCout,
+	SUM(tempDD.needmoney),
+SUM(tempDD.sumPaidPrice)
+
+FROM
+	(
+		SELECT
+			tempA.order_id,
+			tempA.sumPaidPrice,
+			tempB.needmoney,
+			tempC.maxDiffDate,
+			(
+				CASE
+				WHEN tempC.maxDiffDate BETWEEN 1
+				AND 30 THEN
+					'M1'
+				WHEN tempC.maxDiffDate BETWEEN 31
+				AND 60 THEN
+					'M2'
+				WHEN tempC.maxDiffDate BETWEEN 61
+				AND 90 THEN
+					'M3'
+				WHEN tempC.maxDiffDate BETWEEN 91
+				AND 120 THEN
+					'M4'
+				ELSE
+					'M5'
+				END
+			) AS gradeLevel
+		FROM
+			(
+				SELECT
+					order_id,
+					SUM(paid_price) sumPaidPrice
+				FROM
+					repayment_plan_user_info
+				WHERE
+					order_id IN (
+						SELECT
+							order_id
+						FROM
+							repayment_plan_user_info a
+						WHERE
+							order_id IN (
+								SELECT
+									order_id
+								FROM
+									trun_order_info
+							)
+						AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+						AND (
+							paid_date IS NULL
+							OR DATE_FORMAT(paid_date, '%y-%m-%d') > DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+						)
+						AND people_id = '3'
+						AND NOT EXISTS (
+							SELECT
+								1
+							FROM
+								repayment_plan_user_info b
+							WHERE
+								(
+									loan_tenor = '88'
+									OR loan_tenor = '99'
+								)
+							AND people_id = '3'
+							AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+							AND a.order_id = b.order_id
+							AND a.loan_tenor <> '99'
+						)
+					)
+				GROUP BY
+					order_id
+			) tempA
+		LEFT JOIN order_info tempB ON tempA.order_id = tempB.order_id
+		LEFT JOIN (
+			SELECT
+				order_id,
+				MAX(
+					DATEDIFF(
+						DATE_FORMAT(p_repay_date_end, '%y-%m-%d'),
+						DATE_FORMAT(repayment_date, '%y-%m-%d')
+					)
+				) maxDiffDate
+			FROM
+				repayment_plan_user_info a
+			WHERE
+				order_id IN (
+					SELECT
+						order_id
+					FROM
+						trun_order_info
+				)
+			AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+			AND (
+				paid_date IS NULL
+				OR DATE_FORMAT(paid_date, '%y-%m-%d') > DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+			)
+			AND people_id = '3'
+			AND NOT EXISTS (
+				SELECT
+					1
+				FROM
+					repayment_plan_user_info b
+				WHERE
+					(
+						loan_tenor = '88'
+						OR loan_tenor = '99'
+					)
+				AND people_id = '3'
+				AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+				AND a.order_id = b.order_id
+				AND a.loan_tenor <> '99'
+			)
+			GROUP BY
+				order_id
+		) tempC ON tempA.order_id = tempC.order_id
+	) tempDD
+GROUP BY
+	tempDD.gradeLevel;
+
+SELECT IFNULL(level_count,0),IFNULL(sum_need_money,0.00)-IFNULL(sum_paid_money,0.00)  INTO M1YuqiRestCount,M1YuqiRestCurrentMoney FROM yuqi_compute_info WHERE grade_level='M1' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_need_money,0.00)-IFNULL(sum_paid_money,0.00)  INTO M2YuqiRestCount,M2YuqiRestCurrentMoney FROM yuqi_compute_info WHERE grade_level='M2' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_need_money,0.00)-IFNULL(sum_paid_money,0.00)  INTO M3YuqiRestCount,M3YuqiRestCurrentMoney FROM yuqi_compute_info WHERE grade_level='M3' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_need_money,0.00)-IFNULL(sum_paid_money,0.00)  INTO M4YuqiRestCount,M4YuqiRestCurrentMoney FROM yuqi_compute_info WHERE grade_level='M4' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_need_money,0.00)-IFNULL(sum_paid_money,0.00)  INTO M5YuqiRestCount,M5YuqiRestCurrentMoney FROM yuqi_compute_info WHERE grade_level='M5' LIMIT 1;
+
+SELECT
+sela.sumNeedMoney-selb.sumPaidPrice INTO earlyBalanceMonthMoney
+FROM
+ (
+  SELECT
+   SUM(needmoney) AS sumNeedMoney,
+   COUNT(*) AS sumCount
+  FROM
+   order_info a
+  LEFT JOIN order_info_yi ayi ON a.order_id_yi = ayi.order_id_yi
+  WHERE
+	DATE_FORMAT(ayi.order_date, '%y-%m-%d') <= DATE_FORMAT(date_sub(date_sub(date_format(p_repay_date_end, '%y-%m-%d'),interval extract(day from p_repay_date_end) day),interval 0 month),'%y-%m-%d') 
+  AND a.people_type = '3'
+  AND a.state = '1'
+ ) sela,
+ (
+  SELECT
+   SUM(paid_price) AS sumPaidPrice
+  FROM
+   repayment_plan_user_info
+  WHERE
+   order_id IN (
+    SELECT
+     order_id
+    FROM
+     order_info a
+    LEFT JOIN order_info_yi ayi ON a.order_id_yi = ayi.order_id_yi
+    WHERE
+     DATE_FORMAT(ayi.order_date, '%y-%m-%d') <=DATE_FORMAT(date_sub(date_sub(date_format(p_repay_date_end, '%y-%m-%d'),interval extract(day from p_repay_date_end) day),interval 0 month),'%y-%m-%d') 
+    AND a.people_type = '3'
+    AND a.state = '1'
+   )
+  AND paid_date IS NOT NULL
+  AND DATE_FORMAT(paid_date, '%y-%m-%d') <=DATE_FORMAT(date_sub(date_sub(date_format(p_repay_date_end, '%y-%m-%d'),interval extract(day from p_repay_date_end) day),interval 0 month),'%y-%m-%d') 
+  AND people_id = '3'
+ ) selb;
+  SELECT
+   SUM(needmoney) AS sumNeedMoney,
+   COUNT(*) AS sumCount INTO newOrderAmtSum,newOrderCount
+  FROM
+   order_info a
+  LEFT JOIN order_info_yi ayi ON a.order_id_yi = ayi.order_id_yi
+  WHERE
+
+   DATE_FORMAT(ayi.order_date, '%y-%m-%d')  <= DATE_FORMAT(p_repay_date_end,'%y-%m-%d')
+AND DATE_FORMAT(ayi.order_date, '%y-%m-%d') >=DATE_FORMAT(date_sub(date_sub(date_format(p_repay_date_end, '%y-%m-%d'),INTERVAL extract(DAY FROM p_repay_date_end) - 1 DAY),INTERVAL 0 MONTH	),'%y-%m-%d')
+  AND a.people_type = '3'
+  AND a.state = '1';
+
+SELECT
+ COUNT(*),
+SUM(paid_price) into scheduledCollectionCount,scheduledCollectionAmtSum
+FROM
+ repayment_plan_user_info
+WHERE
+ order_id IN (
+				SELECT
+						order_id
+					FROM
+						trun_order_info
+ )
+AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+AND DATE_FORMAT(paid_date, '%y-%m-%d') <= DATE_FORMAT(repayment_date, '%y-%m-%d')
+AND state='1';
+
+SELECT
+ COUNT(*),
+SUM(repayment_price),
+SUM(paid_price) into earlyClearanceCount,earlyClearanceShouldRepay,earlyClearanceRepay
+FROM
+ repayment_plan_user_info
+WHERE
+ order_id IN (
+					SELECT
+						order_id
+					FROM
+						trun_order_info
+ )
+AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+AND loan_tenor='99';
+DROP TABLE if EXISTS yuqi_repay_info;
+CREATE temporary TABLE  yuqi_repay_info(
+rowid BIGINT auto_increment PRIMARY KEY,
+grade_level VARCHAR(5),
+level_count INT,
+sum_paid_money DECIMAL(32)
+);
+INSERT INTO yuqi_repay_info(grade_level,level_count,sum_paid_money)
+SELECT  temp.gradeLevel,COUNT(*),SUM(temp.paid_price) FROM (SELECT
+ repayment_date,
+ paid_date,
+ paid_price,
+ DATEDIFF(
+  DATE_FORMAT(paid_date, '%y-%m-%d'),
+  DATE_FORMAT(repayment_date, '%y-%m-%d')
+ ) AS diff_days,
+ (
+  CASE
+  WHEN DATEDIFF(
+   DATE_FORMAT(paid_date, '%y-%m-%d'),
+   DATE_FORMAT(repayment_date, '%y-%m-%d')
+  ) BETWEEN 1
+  AND 30 THEN
+   'M1'
+  WHEN DATEDIFF(
+   DATE_FORMAT(paid_date, '%y-%m-%d'),
+   DATE_FORMAT(repayment_date, '%y-%m-%d')
+  ) BETWEEN 31
+  AND 60 THEN
+   'M2'
+  WHEN DATEDIFF(
+   DATE_FORMAT(paid_date, '%y-%m-%d'),
+   DATE_FORMAT(repayment_date, '%y-%m-%d')
+  ) BETWEEN 61
+  AND 90 THEN
+   'M3'
+  WHEN DATEDIFF(
+   DATE_FORMAT(paid_date, '%y-%m-%d'),
+   DATE_FORMAT(repayment_date, '%y-%m-%d')
+  ) BETWEEN 91
+  AND 120 THEN
+   'M4'
+  ELSE
+   'M5'
+  END
+ ) AS gradeLevel
+FROM
+ repayment_plan_user_info
+WHERE
+ order_id IN (
+SELECT
+						order_id
+					FROM
+						trun_order_info
+ )
+AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+AND DATE_FORMAT(paid_date, '%y-%m-%d') > DATE_FORMAT(repayment_date, '%y-%m-%d'))temp
+GROUP BY temp.gradeLevel;
+SELECT IFNULL(level_count,0),IFNULL(sum_paid_money,0.00)  INTO M1YuqiRepayCount,M1YuqiRepayCurrentMoney FROM yuqi_repay_info WHERE grade_level='M1' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_paid_money,0.00)  INTO M2YuqiRepayCount,M2YuqiRepayCurrentMoney FROM yuqi_repay_info WHERE grade_level='M2' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_paid_money,0.00)  INTO M3YuqiRepayCount,M3YuqiRepayCurrentMoney FROM yuqi_repay_info WHERE grade_level='M3' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_paid_money,0.00)  INTO M4YuqiRepayCount,M4YuqiRepayCurrentMoney FROM yuqi_repay_info WHERE grade_level='M4' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_paid_money,0.00)  INTO M5YuqiRepayCount,M5YuqiRepayCurrentMoney FROM yuqi_repay_info WHERE grade_level='M5' LIMIT 1;
+
+SELECT
+SUM(paid_commission) INTO ScheduledInterestCollection
+FROM
+ repayment_plan_user_info
+WHERE
+ order_id IN (
+ SELECT
+						order_id
+					FROM
+						trun_order_info
+ )
+AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d');
+
+INSERT INTO wing_payment_dynamic_info(people_type,current_month,current_order_count,current_need_money,current_repay_price,current_rest_money,m1_yuqi_rest_current_money,m1_yuqi_rest_count,m2_yuqi_rest_current_money,m2_yuqi_rest_count,m3_yuqi_rest_current_money,m3_yuqi_rest_count,m4_yuqi_rest_current_money,m4_yuqi_rest_count,m5_yuqi_rest_current_money,m5_yuqi_rest_count,
+early_balance_month_money,new_order_count,new_order_amt_sum,scheduled_collection_count,scheduled_collection_amt_sum,early_clearance_count,early_clearance_should_repay,early_clearance_repay,m1_yuqi_repay_current_money,m1_yuqi_repay_count,m2_yuqi_repay_current_money,m2_yuqi_repay_count,m3_yuqi_repay_current_money,m3_yuqi_repay_count,m4_yuqi_repay_current_money,m4_yuqi_repay_count,m5_yuqi_repay_current_money,m5_yuqi_repay_count,scheduled_interest_collection
+)
+SELECT p_people_type, p_repay_date_end, currentOrderCount,currentNeedMoney ,currentRepayPrice ,currentNeedMoney-currentRepayPrice ,M1YuqiRestCurrentMoney ,M1YuqiRestCount ,M2YuqiRestCurrentMoney ,M2YuqiRestCount ,
+M3YuqiRestCurrentMoney ,M3YuqiRestCount ,M4YuqiRestCurrentMoney ,M4YuqiRestCount ,M5YuqiRestCurrentMoney ,M5YuqiRestCount ,earlyBalanceMonthMoney ,newOrderCount ,
+newOrderAmtSum ,scheduledCollectionCount ,scheduledCollectionAmtSum ,earlyClearanceCount ,earlyClearanceShouldRepay ,earlyClearanceRepay ,M1YuqiRepayCurrentMoney ,
+M1YuqiRepayCount ,M2YuqiRepayCurrentMoney ,M2YuqiRepayCount ,M3YuqiRepayCurrentMoney ,M3YuqiRepayCount ,M4YuqiRepayCurrentMoney ,M4YuqiRepayCount ,M5YuqiRepayCurrentMoney ,
+M5YuqiRepayCount ,ScheduledInterestCollection	 ;
+				END||
+delimiter ;
+
+
+CALL sp_dynamic_pool_info (
+	'0',
+	'3',
+	'20180831',
+	'20180831'
+); -->
+
+
+<!-- delimiter ||
+DROP PROCEDURE
+IF EXISTS sp_static_pool_info ; CREATE PROCEDURE sp_static_pool_info (
+
+	IN p_order_date_begin VARCHAR (10),
+	IN p_order_date_end VARCHAR (10),
+	IN p_repay_date_end VARCHAR (10)
+)
+BEGIN
+DECLARE orderSumMoney DECIMAL(32,2);
+DECLARE orderSumCount INT;
+DECLARE hasNotPayAmt DECIMAL(32,2);
+DECLARE hasPayedAmt DECIMAL(32,2);
+DECLARE restCount INT;
+DECLARE normalLoanBalance DECIMAL(32,2);
+DECLARE m1OverdueLoans DECIMAL(32,2);
+DECLARE m2OverdueLoans DECIMAL(32,2);
+DECLARE m3OverdueLoans DECIMAL(32,2);
+DECLARE m4OverdueLoans DECIMAL(32,2);
+DECLARE m5OverdueLoans DECIMAL(32,2);
+DECLARE m1OverdueCounts INT;
+DECLARE m2OverdueCounts INT;
+DECLARE m3OverdueCounts INT;
+DECLARE m4OverdueCounts INT;
+DECLARE m5OverdueCounts INT;
+DECLARE monthlyPrincipalReceiva DECIMAL(32,2);
+DECLARE earlyCompensation DECIMAL(32,2);
+DECLARE clearedAmount DECIMAL(32,2);
+DECLARE yuqiRepayAmount DECIMAL(32,2);
+DECLARE totalMonthlyRecovery DECIMAL(32,2);
+
+DROP TABLE 	IF EXISTS trun_order_info ; 
+				CREATE TABLE trun_order_info (
+					order_id VARCHAR (30) PRIMARY KEY
+				) ; 
+				INSERT INTO trun_order_info (order_id) 
+				SELECT DISTINCT
+					order_id
+				FROM
+					order_info a USE INDEX (
+						index_order_id_yi_state_people_type
+					)
+				LEFT JOIN order_info_yi b ON a.order_id_yi = b.order_id_yi
+				WHERE
+					a.state <> '0'
+				AND a.people_type = '3'
+				AND DATE_FORMAT(b.order_date,'%y%m%d') <=  DATE_FORMAT(p_order_date_end,'%y%m%d')
+				AND DATE_FORMAT(b.order_date,'%y%m%d') >  DATE_FORMAT(p_order_date_begin,'%y%m%d');
+
+SELECT IFNULL(SUM(needmoney),0.00) ,IFNULL(COUNT(*),0) INTO orderSumMoney,orderSumCount FROM order_info WHERE order_id in(
+SELECT order_id FROM trun_order_info
+);
+ SELECT  IFNULL(SUM(paid_price),0.00)  INTO hasPayedAmt FROM repayment_plan_user_info
+		WHERE		order_id IN (	SELECT order_id FROM trun_order_info)
+		AND paid_date IS NOT NULL
+		AND DATE_FORMAT(paid_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+		AND people_id = '3';
+
+SELECT
+	(  IFNULL(TA.allCount,0)-IFNULL(TB.paidCount,0)-IFNULL(TC.paidCountC,0)) INTO restCount
+FROM
+	(
+		SELECT COUNT(*) as allCount FROM trun_order_info 
+
+	) TA,
+	(
+		SELECT
+			COUNT(b.order_id) AS paidCount
+		FROM
+			(
+				SELECT
+					order_id
+				FROM
+					repayment_plan_user_info
+				WHERE
+					order_id IN (
+					SELECT order_id from trun_order_info
+					)
+				AND people_id = '3'
+				AND paid_date IS NOT NULL
+				AND DATE_FORMAT(paid_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+				AND (loan_tenor = '99')				
+			) b
+
+	) TB,
+(
+SELECT
+			COUNT(b.order_id) AS paidCountC
+		FROM
+			(
+				SELECT
+				 order_id
+				FROM
+					repayment_plan_user_info
+				WHERE
+					order_id IN (
+					SELECT order_id from trun_order_info
+					)
+					AND order_id not IN(
+						SELECT order_id from repayment_plan_user_info WHERE 	
+						people_id = '3'
+						AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+						AND (loan_tenor = '99')	
+					)
+				AND people_id = '3'
+				AND paid_date IS NOT NULL
+				AND DATE_FORMAT(paid_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+				AND (loan_tenor = '24')				
+			) b
+)TC;
+
+DROP TABLE if EXISTS yuqi_compute_info;
+	CREATE temporary TABLE  yuqi_compute_info(
+	rowid BIGINT auto_increment PRIMARY KEY,
+	grade_level VARCHAR(5),
+	level_count INT,
+	sum_need_money DECIMAL(32),
+	sum_paid_money DECIMAL(32)
+	);
+INSERT INTO yuqi_compute_info(grade_level,level_count,sum_need_money,sum_paid_money)
+SELECT
+	tempDD.gradeLevel,
+COUNT(*) AS sumCout,
+	SUM(tempDD.needmoney),
+SUM(tempDD.sumPaidPrice)
+
+FROM
+	(
+		SELECT
+			tempA.order_id,
+			tempA.sumPaidPrice,
+			tempB.needmoney,
+			tempC.maxDiffDate,
+			(
+				CASE
+				WHEN tempC.maxDiffDate BETWEEN 1
+				AND 30 THEN
+					'M1'
+				WHEN tempC.maxDiffDate BETWEEN 31
+				AND 60 THEN
+					'M2'
+				WHEN tempC.maxDiffDate BETWEEN 61
+				AND 90 THEN
+					'M3'
+				WHEN tempC.maxDiffDate BETWEEN 91
+				AND 120 THEN
+					'M4'
+				ELSE
+					'M5'
+				END
+			) AS gradeLevel
+		FROM
+			(
+				SELECT
+					order_id,
+					SUM(paid_price) sumPaidPrice
+				FROM
+					repayment_plan_user_info
+				WHERE
+					order_id IN (
+						SELECT
+							order_id
+						FROM
+							repayment_plan_user_info a
+						WHERE
+							order_id IN (
+								SELECT
+									order_id
+								FROM
+									trun_order_info
+							)
+						AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+						AND (
+							paid_date IS NULL
+							OR DATE_FORMAT(paid_date, '%y-%m-%d') > DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+						)
+						AND people_id = '3'
+						AND NOT EXISTS (
+							SELECT
+								1
+							FROM
+								repayment_plan_user_info b
+							WHERE
+								(
+									loan_tenor = '88'
+									OR loan_tenor = '99'
+								)
+							AND people_id = '3'
+							AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+							AND a.order_id = b.order_id
+							AND a.loan_tenor <> '99'
+						)
+					)
+				GROUP BY
+					order_id
+			) tempA
+		LEFT JOIN order_info tempB ON tempA.order_id = tempB.order_id
+		LEFT JOIN (
+			SELECT
+				order_id,
+				MAX(
+					DATEDIFF(
+						DATE_FORMAT(p_repay_date_end, '%y-%m-%d'),
+						DATE_FORMAT(repayment_date, '%y-%m-%d')
+					)
+				) maxDiffDate
+			FROM
+				repayment_plan_user_info a
+			WHERE
+				order_id IN (
+					SELECT
+						order_id
+					FROM
+						trun_order_info
+				)
+			AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+			AND (
+				paid_date IS NULL
+				OR DATE_FORMAT(paid_date, '%y-%m-%d') > DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+			)
+			AND people_id = '3'
+			AND NOT EXISTS (
+				SELECT
+					1
+				FROM
+					repayment_plan_user_info b
+				WHERE
+					(
+						loan_tenor = '88'
+						OR loan_tenor = '99'
+					)
+				AND people_id = '3'
+				AND DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end, '%y-%m-%d')
+				AND a.order_id = b.order_id
+				AND a.loan_tenor <> '99'
+			)
+			GROUP BY
+				order_id
+		) tempC ON tempA.order_id = tempC.order_id
+	) tempDD
+GROUP BY
+	tempDD.gradeLevel;
+
+SELECT IFNULL(level_count,0),IFNULL(sum_need_money,0.00)-IFNULL(sum_paid_money,0.00)  INTO m1OverdueCounts,m1OverdueLoans FROM yuqi_compute_info WHERE grade_level='M1' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_need_money,0.00)-IFNULL(sum_paid_money,0.00)  INTO m2OverdueCounts,m2OverdueLoans FROM yuqi_compute_info WHERE grade_level='M2' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_need_money,0.00)-IFNULL(sum_paid_money,0.00)  INTO m3OverdueCounts,m3OverdueLoans FROM yuqi_compute_info WHERE grade_level='M3' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_need_money,0.00)-IFNULL(sum_paid_money,0.00)  INTO m4OverdueCounts,m4OverdueLoans FROM yuqi_compute_info WHERE grade_level='M4' LIMIT 1;
+SELECT IFNULL(level_count,0),IFNULL(sum_need_money,0.00)-IFNULL(sum_paid_money,0.00)  INTO m5OverdueCounts,m5OverdueLoans FROM yuqi_compute_info WHERE grade_level='M5' LIMIT 1;
+SELECT
+	SUM(paid_price) into monthlyPrincipalReceiva
+FROM
+	repayment_plan_user_info
+WHERE
+	order_id IN (
+SELECT order_id from trun_order_info
+	)
+AND people_id = '3'
+AND	paid_date IS NOT NULL
+AND DATE_FORMAT(repayment_date,'%y-%m')=DATE_FORMAT(p_repay_date_end,'%y-%m')
+AND DATE_FORMAT(paid_date,'%y-%m-%d')<=DATE_FORMAT(repayment_date,'%y-%m-%d')
+AND DATE_FORMAT(paid_date,'%y-%m')=DATE_FORMAT(p_repay_date_end,'%y-%m')
+AND loan_tenor<>'99';
+
+SELECT
+	IFNULL(SUM(paid_price),0.00) INTO earlyCompensation
+FROM
+	repayment_plan_user_info
+WHERE
+	order_id IN (
+SELECT order_id from trun_order_info
+	)
+AND people_id = '3'
+AND	paid_date IS NOT NULL
+AND DATE_FORMAT(repayment_date,'%y-%m')>DATE_FORMAT(p_repay_date_end,'%y-%m')
+AND DATE_FORMAT(paid_date,'%y-%m-%d')<DATE_FORMAT(repayment_date,'%y-%m-%d')
+AND DATE_FORMAT(paid_date,'%y-%m')=DATE_FORMAT(p_repay_date_end,'%y-%m')
+AND state='1'
+AND loan_tenor<>'99';
+
+
+
+SELECT
+	IFNULL(SUM(paid_price),0.00)  INTO  clearedAmount
+FROM
+	repayment_plan_user_info
+WHERE
+	order_id IN (
+SELECT order_id from trun_order_info
+	)
+AND people_id = '3'
+AND DATE_FORMAT(repayment_date,'%y-%m')=DATE_FORMAT(p_repay_date_end,'%y-%m')
+
+AND state='1'
+AND loan_tenor='99';
+
+
+SELECT
+	IFNULL(SUM(paid_price) ,0.00) INTO yuqiRepayAmount
+FROM
+	repayment_plan_user_info
+WHERE
+	order_id IN (
+SELECT order_id from trun_order_info
+	)
+AND people_id = '3'
+AND	paid_date IS NOT NULL
+AND DATE_FORMAT(paid_date,'%y-%m')=DATE_FORMAT(p_repay_date_end,'%y-%m')
+AND DATE_FORMAT(paid_date,'%y-%m')> DATE_FORMAT(repayment_date,'%y-%m')
+AND state='1'
+AND loan_tenor<>'99';
+
+SELECT
+	IFNULL(SUM(paid_price),0.00)  INTO totalMonthlyRecovery
+FROM
+	repayment_plan_user_info
+WHERE
+	order_id IN (
+SELECT order_id from trun_order_info
+	)
+AND people_id = '3'
+AND	paid_date IS NOT NULL
+AND DATE_FORMAT(paid_date,'%y-%m')=DATE_FORMAT(p_repay_date_end,'%y-%m')
+
+AND state='1';
+
+SELECT
+	IFNULL(SUM(repayment_price),0.00)-IFNULL(SUM(paid_price),0.00) INTO normalLoanBalance
+
+FROM
+	repayment_plan_user_info
+WHERE
+	order_id IN (
+		SELECT
+			order_id
+		FROM
+			trun_order_info a
+		WHERE
+			NOT EXISTS (
+				SELECT
+					1
+				FROM
+					repayment_plan_user_info b
+				WHERE
+					a.order_id=b.order_id
+					AND
+				DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end,'%y-%m-%d')
+					AND loan_tenor='99'
+			)
+			AND not EXISTS (
+					SELECT 1 FROM repayment_plan_user_info c WHERE a.order_id=c.order_id
+					AND 	DATE_FORMAT(repayment_date, '%y-%m-%d') <= DATE_FORMAT(p_repay_date_end,'%y-%m-%d')
+					AND (
+						DATE_FORMAT(paid_date, '%y-%m-%d') > DATE_FORMAT(p_repay_date_end,'%y-%m-%d')
+							OR paid_date IS NULL
+					)	
+			)
+	);
+
+INSERT INTO wing_payment_static_info (people_type,order_date,report_month,order_sum_money,order_sum_count,has_not_pay_amt,rest_count,normal_loan_balance,m1_overdue_loans,m2_overdue_loans,m3_overdue_loans,m4_overdue_loans,m5_overdue_loans,m1_overdue_counts,m2_overdue_counts,m3_overdue_counts,m4_overdue_counts,m5_overdue_counts,monthly_principal_receiva,early_compensation,cleared_amount,yuqi_repay_amount,total_monthly_recovery
+) SELECT '3',DATE_FORMAT(p_order_date_begin,'%Y%m'),DATE_FORMAT(p_repay_date_end,'%Y%m'),orderSumMoney,orderSumCount,orderSumMoney-hasPayedAmt,restCount,normalLoanBalance,m1OverdueLoans,m2OverdueLoans,m3OverdueLoans,m4OverdueLoans,m5OverdueLoans,m1OverdueCounts,m2OverdueCounts,m3OverdueCounts,m4OverdueCounts,m5OverdueCounts,monthlyPrincipalReceiva,earlyCompensation,clearedAmount,yuqiRepayAmount,totalMonthlyRecovery
+;
+	END||
+delimiter ;
+
+
+CALL sp_static_pool_info('20180701','20180801','20180831'); -->
+</mapper>

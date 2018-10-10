@@ -1,0 +1,32 @@
+package com.ut.scf.web.controller.wechat.statistics;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.statistics.SSMInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.statistics.ISSMStatisticsInfoService;
+
+@Controller
+@RequestMapping("/wechat/supRepay")
+public class WeChatSupRepayInfoController {
+
+	@Resource
+	private ISSMStatisticsInfoService ssmIssmStatisticsInfoService;
+	
+	@RequestMapping(value = "/supRepayList")
+	@ResponseBody
+	public BaseRespBean getCustInfoList(@RequestBody SSMInfoListReqBean reqBean) throws Exception {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return ssmIssmStatisticsInfoService.supRepayInfos(paramMap);
+	}
+	
+}

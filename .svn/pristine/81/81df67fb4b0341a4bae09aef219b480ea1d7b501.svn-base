@@ -1,0 +1,46 @@
+package com.ut.scf.web.controller.wechat.statistics;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.statistics.SalesInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.statistics.ISalesInfoStatisticsService;
+import com.ut.scf.web.controller.BaseJsonController;
+import com.ut.scf.web.controller.project.CarInfoController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author liwd 销售情况统计
+ */
+@Controller
+@RequestMapping("wechat/sales")
+public class WeChatSalesInfoController extends BaseJsonController {
+	private static final Logger log = LoggerFactory
+			.getLogger(WeChatSalesInfoController.class);
+	@Resource
+	private ISalesInfoStatisticsService salesInfoStatisticsService;
+
+	@RequestMapping(value = "/salesInfo")
+	@ResponseBody
+	public Map<String, Object> findSalesInfos(@RequestBody SalesInfoListReqBean reqBean)
+			throws Exception {
+		Map<String, Object> resultMap = new HashMap<>();
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		List<Map<String, Object>> result = salesInfoStatisticsService.findSalesInfos(paramMap);
+		List<Map<String, Object>> result2 = salesInfoStatisticsService.staSalesInfosWX(paramMap);
+		resultMap.put("salesInfo",result);
+		resultMap.put("echart",result2);
+		return resultMap;
+	}
+
+}

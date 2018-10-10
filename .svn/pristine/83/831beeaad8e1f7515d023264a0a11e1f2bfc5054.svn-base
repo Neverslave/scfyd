@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" style="background-color: #ffffff;">
+
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="ThemeBucket">
+<link rel="shortcut icon" href="#" type="image/png">
+<title>翼支付逾期报表</title>
+<link href="../css/style.css" rel="stylesheet">
+<link href="../css/style-responsive.css" rel="stylesheet">
+<link href="../css/bootstrap-table.css" rel="stylesheet">
+<link href="../css/bootstrap.css" rel=	"stylesheet">
+<link href="../css/validator/bootstrapValidator.css" rel="stylesheet">
+<link href="../css/sysfun.css" rel="stylesheet">
+<link href="../106/css/selectordie_theme_03.css" rel="stylesheet">
+<link href="../js/bootstrap-datetimepicker/css/datetimepicker.css"
+	rel="stylesheet" />
+<script src="../js/jquery-3.0.0.min.js" type="text/javascript"></script>
+<script src="../106/js/selectordie.min.js" type="text/javascript"></script>
+<script src="../js/bootstrap.min.js"></script>
+<script src="../js/CloudUtils.js"></script>
+<script src="../js/password.js"></script>
+<script src="../js/store.js" type="text/javascript"></script>
+
+<script src="../js/bootstrap-treeview.js" type="text/javascript"></script>
+<script type="text/javascript" src="../js/jquery.validate.min.js"></script>
+<script src="../js/validation-init.js"></script>
+<script type="text/javascript"
+	src="../js/advanced-datatable/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="../js/bootstrap-table.js"></script>
+<script type="text/javascript" src="../js/bootstrap-table-zh-CN.js"></script>
+<script type="text/javascript" src="../js/tableExport.js"></script>
+<script type="text/javascript"
+	src="../js/bootstrap-validator/bootstrapValidator.js"></script>
+<script type="text/javascript" src="../js/bootstrap-validator/zh_CN.js"></script>
+<script type="text/javascript" src="../js/bootbox-4.4.0/bootbox.js"></script>
+<script type="text/javascript"
+	src="../js/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>
+<script type="text/javascript"
+	src="../js/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+<script type="text/javascript" src="../js/jquery.number.js"></script>
+   <script type="text/javascript" src="../js/printThis.js"></script>
+<!--dynamic table initialization -->
+<script src="../js/statistics/WingPaymentYuqiView.js" type="text/javascript"></script>
+</head>
+
+<body class="iframeBody" style="background-color: #ffffff;">
+	<section>
+		<div class="main-content-child">
+			<div class="row">
+				<div class="nav" id="nav"></div>
+			</div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+				<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">翼支付逾期报表数据</li>
+					</ol>
+				</div>
+		
+<!-- 			 <div class="modal-body">
+			 <div class="col-sm-12">
+	
+                <form class="form-horizontal" role="form" id="detailFormMonthly">
+                		 <input id="currentComputeTime" name="currentComputeTime" style="background:none;text-align:center;font-size:40px;margin-bottom:50px" readonly 
+										type="text" />
+	                <table id="detailFormMonthlyTable" class="col-sm-12">
+	                <tr>
+		                <td class="backGroundTitle">
+		                <label class="control-label"> 放款总人数</label>
+		                </td>
+		                <td>
+		                <input class="form-control" id="orderSumCount" name="orderSumCount" readonly
+										type="text" />
+		                </td>
+		                 <td class="backGroundTitle">
+		                <label class="control-label"> 放款总金额</label>
+		                </td>
+		                <td>
+		                <input class="form-control" id="orderSumMoney" name="orderSumMoney" readonly
+										type="text" />
+		                </td>
+		            </tr>
+		            <tr>
+		                  <td class="backGroundTitle">
+		                <label class="control-label"> 应还总人数</label>
+		                </td>
+		                <td>
+		                <input class="form-control" id="shouldPayCount" name="shouldPayCount" readonly
+										type="text" />
+		                </td>
+		                <td  class="backGroundTitle">
+		                  <label class="control-label"> 在贷余额</label>
+		                </td><td >
+		                 <input class="form-control" id="restRepaymentPrice" name="restRepaymentPrice" readonly
+										type="text" />
+		                </td>
+	                </tr>
+	                  <tr>
+		                <td class="backGroundTitle">
+		                <label class="control-label"> 逾期阶段</label>
+		                </td>
+		                 <td class="backGroundTitle">
+		               <label class="control-label"> 账户逾期率</label>
+		                </td>
+		                 <td class="backGroundTitle">
+		                <label class="control-label"> 应还资方本金</label>
+		                </td>
+		              </tr>
+		              <tr>
+		                <td class="backGroundTitle">
+		                <label class="control-label"> 1-30天</label>
+		                </td>
+		                 <td>
+		                <input class="form-control" id="m1YuqiRestCurrentMoney" name="m1YuqiRestCurrentMoney" readonly
+										type="text" />
+		                </td>
+		                <td>
+		                <input class="form-control" id="m1YuqiRestCount" name="m1YuqiRestCount" readonly
+										type="text" />
+		                </td>		                
+	                </tr>
+	                <tr>
+		                <td class="backGroundTitle">
+		                <label class="control-label"> 31-60天</label>
+		                </td>
+		                 <td>
+		                <input class="form-control" id="m2YuqiRestCurrentMoney" name="m2YuqiRestCurrentMoney" readonly
+										type="text" />
+		                </td>
+		                <td>
+		                <input class="form-control" id="m2YuqiRestCount" name="m2YuqiRestCount" readonly
+										type="text" />
+		                </td>		                
+	                </tr>
+	                <tr>
+		                <td class="backGroundTitle">
+		                <label class="control-label"> 61-90天</label>
+		                </td>
+		                 <td>
+		                <input class="form-control" id="m3YuqiRestCurrentMoney" name="m3YuqiRestCurrentMoney" readonly
+										type="text" />
+		                </td>
+		                <td>
+		                <input class="form-control" id="m3YuqiRestCount" name="m3YuqiRestCount" readonly
+										type="text" />
+		                </td>		                
+	                </tr>
+	                  <tr>
+		                <td class="backGroundTitle">
+		                <label class="control-label"> 91-180天</label>
+		                </td>
+		                 <td>
+		                <input class="form-control" id="m4YuqiRestCurrentMoney" name="m4YuqiRestCurrentMoney" readonly
+										type="text" />
+		                </td>
+		                <td>
+		                <input class="form-control" id="m4YuqiRestCount" name="m4YuqiRestCount" readonly
+										type="text" />
+		                </td>		                
+	                </tr>
+	                <tr>
+		                <td class="backGroundTitle">
+		                <label class="control-label"> 181天以上</label>
+		                </td>
+		                 <td>
+		                <input class="form-control" id="m5YuqiRestCurrentMoney" name="m5YuqiRestCurrentMoney" readonly
+										type="text" />
+		                </td>
+		                <td>
+		                <input class="form-control" id="m5YuqiRestCount" name="m5YuqiRestCount" readonly
+										type="text" />
+		                </td>		                
+	                </tr>
+	                
+	                </table>
+					
+					 </form>
+					
+				 </div>
+			 </div>
+			</div>
+		</div>
+	</section>
+	<form class="form-horizontal" role="form" id="searchForm">
+		<div class="form-group col-sm-12">
+
+			<label class="col-sm-2 control-label" for=syncDate>查找日期</label>
+			<div class="col-sm-3 date form_datetime">
+				<input name="syncDate" class="form-control addInput" readonly
+					id="syncDate" size="16" type="text"> <span
+					class="glyphicon glyphicon-calendar addIcon"> </span>
+			</div>
+			<div class="col-sm-3">
+				<input type="button" onclick="searchFun()"
+					class="btn btn-default save pull-right" id="btnSave"
+					style="margin-right: 5px;" value="查找">
+			</div>
+			<div class="col-sm-3">
+				<input type="button" onclick="operateFun()"
+					class="btn btn-default save pull-right" id="btnSave"
+					style="margin-right: 5px;" value="计算">
+			</div>
+		</div>
+	</form> -->
+<div class="main-content-child">
+<div class="panel-body" style="margin-top: 50px;" id="wingPaymentYuqiInfoTable">
+		<table id="wingPaymentYuqiInfo" style="font-size: 20px;margin-top: 50px; border-collapse: collapse;height: 50px;"align=center border=1 >
+		<form id="wingPaymentYuqiInfoForm">
+			<caption style="font-weight: bolder;font-size: 20px;">翼支付逾期统计</caption>
+				<tbody>
+				<tr>
+					<td  align="center" style="font-weight: bolder;height: 50px;padding: 0px 20px;">放款总人数</td>
+					<td colspan="2" id="orderSumCountTable"></td>
+					<td  align="center" style="font-weight: bolder;">放款总金额</td>
+					<td colspan="3" id="orderSumMoneyTable"></td>
+				</tr>
+					<tr>
+					<td  align="center" style="font-weight: bolder;height: 50px;padding: 0px 20px;">应还总人数</td>
+					<td colspan="2" id="shouldPayCountTable"></td>
+					<td  align="center" style="font-weight: bolder;">在贷余额</td>
+					<td colspan="3" id="restRepaymentPriceTable"></td>
+				</tr>
+				<tr>
+					<td style="font-weight: bolder;height: 50px;padding: 20px 0;">逾期阶段 </td>
+					<td style="font-weight: bolder;padding: 0px 20px;">总账户逾期率 </td>
+					<td style="font-weight: bolder;padding: 0px 20px;">总金额逾期率 </td>
+						<td style="font-weight: bolder;padding: 0px 20px;">当前应还金额逾期率（总）</td>
+						<td style="font-weight: bolder;padding: 0px 20px;">在贷账户逾期率</td>
+						<td style="font-weight: bolder;padding: 0px 20px;">在贷金额逾期率</td>
+						<td style="font-weight: bolder;padding: 0px 20px;">当前应还金额逾期率（在贷）</td>
+				</tr>
+				<tr>
+					<td align="center" style="font-weight: bolder;height: 50px;">1-30天</td>
+			<!-- 		m0_yuqi_rest_count/order_sum_count -->
+					<td id="m01"></td>
+					<!-- m0_yuqi_rest_current_money/order_sum_money -->
+					<td id="m02"></td>
+					<!-- m0_yuqi_rest_no_current_money/order_sum_money -->
+					<td id="m03"></td>
+				<!-- 	m0_yuqi_rest_count/should_pay_count -->
+					<td id="m04"></td>
+					<!-- m0_yuqi_rest_current_mone/rest_repayment_price -->
+					<td id="m05"></td>
+					<!-- m0_yuqi_rest_no_current_money/rest_repayment_price -->
+					<td id="m06"></td>
+				</tr>
+							<tr>
+					<td align="center" style="font-weight: bolder;height: 50px;">31-60天</td>
+					<td id="m11"></td>
+					<td id="m12"></td>
+					<td id="m13"></td>
+					<td id="m14"></td>
+					<td id="m15"></td>
+					<td id="m16"></td>
+				</tr>
+						<tr>
+					<td align="center" style="font-weight: bolder;height: 50px;">61-90天</td>
+					<td id="m21"></td>
+					<td id="m22"></td>
+					<td id="m23"></td>
+					<td id="m24"></td>
+					<td id="m25"></td>
+					<td id="m26"></td>
+				</tr>
+						<tr>
+					<td align="center" style="font-weight: bolder;height: 50px;">91-120天</td>
+					<td id="m31"></td>
+					<td id="m32"></td>
+					<td id="m33"></td>
+					<td id="m34"></td>
+					<td id="m35"></td>
+					<td id="m36"></td>
+				</tr>
+						<tr>
+					<td align="center" style="font-weight: bolder;height: 50px;">121-180天</td>
+					<td id="m41"></td>
+					<td id="m42"></td>
+					<td id="m43"></td>
+					<td id="m44"></td>
+					<td id="m45"></td>
+					<td id="m46"></td>
+				</tr>
+					<td align="center" style="font-weight: bolder;height: 50px;">180天+</td>
+					<td id="m51"></td>
+					<td id="m52"></td>
+					<td id="m53"></td>
+					<td id="m54"></td>
+					<td id="m55"></td>
+					<td id="m56"></td>
+				</tr>
+				
+			</tbody>
+			</form>
+		</table>
+		
+		<div id="zhushiDiv">
+		<table style="font-size: 16px;margin-top: 50px; border-collapse:separate; border-spacing:0px 10px;"align=center border=0>
+		<tr><td style="font-weight: bolder;text-align: left;">定义：</td><td style="text-align: left;"><span></span></td></tr>
+		<tr><td style="font-weight: bolder;text-align: left;">放款总人数：</td><td style="text-align: left;"><span>去除未进入还款表现期新增订单，翼支付所有发生放款的订单总数量</span></td></tr>
+		<tr><td style="font-weight: bolder;text-align: left;">放款总金额：</td><td style="text-align: left;"><span>去除未进入还款表现期新增订单，翼支付所有发生放款的订单财务本金总和</span></td></tr>
+		<tr><td style="font-weight: bolder;text-align: left;">应还总人数：</td><td style="text-align: left;"><span>去除未进入还款表现期新增订单，去除提前结清、异常结清、办理完成取消、完成还款状态订单的剩余应还订单数总量</span></td></tr>
+		<tr><td style="font-weight: bolder;text-align: left;">在贷余额：</td><td style="text-align: left;"><span>去除未进入还款表现期新增订单，去除提前结清、异常结清、办理完成取消、完成还款状态订单的剩余所有应还财务本金总和</span></td></tr>
+		<tr><td style="font-weight: bolder;text-align: left;">总账户逾期率：</td><td style="text-align: left;"><span>总账户逾期率=欠款状态订单/放款总人数</span></td></tr>
+		<tr><td style="font-weight: bolder;text-align: left;">总金额逾期率：</td><td style="text-align: left;"><span>总金额逾期率=欠款状态订单所有剩余应还财务本金总和（在贷余额）/放款总金额</span></td></tr>
+		<tr><td style="font-weight: bolder;text-align: left;">当前应还金额逾期率（总）：</td><td style="text-align: left;"><span>当前应还金额逾期率（总）=欠款状态订单截止当前实际发生的应还未还财务本金总和/放款总金额</span></td></tr>
+		<tr><td style="font-weight: bolder;text-align: left;">在贷账户逾期率：</td><td style="text-align: left;"><span>在贷账户逾期率=欠款状态订单/应还总人数</span></td></tr>
+		<tr><td style="font-weight: bolder;text-align: left;">在贷金额逾期率：</td><td style="text-align: left;"><span>在贷金额逾期率=欠款状态订单所有剩余应还财务本金总和（在贷余额）/在贷余额</span></td></tr>
+		<tr><td style="font-weight: bolder;text-align: left;">当前应还金额逾期率（在贷）：</td><td style="text-align: left;"><span>当前应还金额逾期率（在贷）=欠款状态订单截止当前实际发生的应还未还财务本金总和/在贷余额</span></td></tr>
+		</table>
+		</div>
+	</div>
+	     <div class="col-sm-12">
+	          <input type="button" onclick="print()" class="btn btn-default save pull-right" style="margin-right:5px;" value="打印">
+         </div>
+         <div class="panel-body" id="print_div" style='display:none'>
+        </div>
+</body>
+
+</html>

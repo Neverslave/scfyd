@@ -1,0 +1,85 @@
+package com.ut.scf.reqbean.query;
+
+import com.ut.scf.reqbean.PageReqBean;
+
+public class SaleInfoListReqBean extends PageReqBean {
+	private String repaymentDate;
+	private String corpId;
+	private String ywlxId;
+	private String cprYear;
+	private String cprMonth;
+	private String typeName;
+	private String guaranteeBalance;
+	
+	private String agencyName;
+	
+	
+	
+	
+	
+
+	public String getAgencyName() {
+		return agencyName;
+	}
+
+	public void setAgencyName(String agencyName) {
+		this.agencyName = agencyName;
+	}
+
+	public String getGuaranteeBalance() {
+		return guaranteeBalance;
+	}
+
+	public void setGuaranteeBalance(String guaranteeBalance) {
+		this.guaranteeBalance = guaranteeBalance;
+	}
+
+	public String getTypeName() {
+		return typeName;
+	}
+
+	public void setTypeName(String typeName) {
+		this.typeName = typeName;
+	}
+
+	public String getCprYear() {
+		return cprYear;
+	}
+
+	public void setCprYear(String cprYear) {
+		this.cprYear = cprYear;
+	}
+
+	public String getCprMonth() {
+		return cprMonth;
+	}
+
+	public void setCprMonth(String cprMonth) {
+		this.cprMonth = cprMonth;
+	}
+
+	public String getYwlxId() {
+		return ywlxId;
+	}
+
+	public void setYwlxId(String ywlxId) {
+		this.ywlxId = ywlxId;
+	}
+
+	public String getRepaymentDate() {
+		return repaymentDate;
+	}
+
+	public void setRepaymentDate(String repaymentDate) {
+		this.repaymentDate = repaymentDate;
+	}
+
+	public String getCorpId() {
+		return corpId;
+	}
+
+	public void setCorpId(String corpId) {
+		this.corpId = corpId;
+	}
+
+}

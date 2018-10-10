@@ -1,0 +1,601 @@
+$(document).ready(function() {
+    getTaskData();
+    numFormat();
+    $("#selDate").val(store.get("serverDate"));
+});
+
+
+function numFormat() {
+    $("#totalPrice").number(true, 2);
+    $("#recOrderAmt").number(true, 2);
+}
+var agreeList=[];
+var refuseList=[];
+
+var selRowsObj = {}; //保存选中行
+var orderIds = "";
+var status = "";
+
+function getTaskData() {
+    var data = {};
+    data.taskId = taskId;
+    var options = {
+        url: "../../activiti/getTaskDataByTaskId",
+        data: JSON.stringify(data),
+        callBackFun: function(data) {
+            if (data.result == 0) {
+                var jsonData = eval("(" + data.str + ")");
+                if (jsonData.recOrderNum) {
+                    CloudUtils.setForm(jsonData, 'detailForm');
+                } else {
+                    getBatchInfoById(jsonData.batchId);
+                }
+
+                initOrderListTable(jsonData.batchId, jsonData.orderId, jsonData.state);
+
+            } else {
+                return false;
+            }
+        },
+        errorCallback: function(data) {
+            bootbox.alert(data.resultNote);
+            return false;
+        }
+    };
+    CloudUtils.ajax(options);
+}
+
+
+function getBatchInfoById(batchId) {
+    var data = {};
+    data.batchId = batchId;
+
+    var options = {
+        url: '../../order/batchInfo',
+        data: JSON.stringify(data),
+        callBackFun: function(data) {
+            CloudUtils.setForm(data, 'detailForm');
+        }
+    };
+    CloudUtils.ajax(options);
+}
+function reapply() {
+    var type = $("#agree").val();
+    var data = {};
+     orderIds = "";
+     status = "";
+    var dataTemp = CloudUtils.convertStringJson('detailForm');
+    var allTableData = $("#orderList").bootstrapTable('getData'); //获取表格的所有内容行 
+    for (i = 0; i < allTableData.length; i++) {  
+        
+    	var row = allTableData[i];
+    	if(row.state==null||row.state==''){
+    		bootbox.alert("存在未审核的订单，请确认");
+   		 	return false;
+    	}
+    
+        orderIds = orderIds + "," + row.orderId;
+        status = status + "," + row.state
+    }
+    data = eval("(" + dataTemp + ")");
+    data.crReqTotalAmt = $("#crReqTotalAmt").val();
+    data.orderId = orderIds;
+    data.state = status;
+    data.taskId = taskId;
+    data.advice = $.trim($("#advice").val());
+    data.agree = type;
+    data.batchId = $("#orderBatchId2").val();
+
+        var options = {
+            url: '../../order/doAgree',
+            data: JSON.stringify(data),
+            callBackFun: function(data) {
+                if (taskDefKey != "task_order_fzr" || type == "1") {
+                    bootbox.alert(data.resultNote, function() {
+                        window.location.href = '../../project/agencyTask/agencyTask.html';
+                    });
+                }
+
+            },
+            errorCallback: function(data) {
+                bootbox.alert(data.resultNote);
+                return false;
+            }
+        };
+        CloudUtils.ajax(options);
+    
+}
+
+function initOrderListTable(orderBatchId, orderId, state) {
+	
+	orderList();
+	getOrderList(orderBatchId, orderId, state);
+}
+
+function getOrderList(orderBatchId, orderId, state){
+	var data ={
+		batchId: orderBatchId,
+        state: state,
+        orderId: orderId	
+	};
+	var options = {
+            url: '../../order/orderList',
+            data: JSON.stringify(data),
+            callBackFun: function(data) {
+            	$('#orderList').bootstrapTable('append',data.dataList);
+            }
+	
+        };
+        CloudUtils.ajax(options);
+}
+
+function orderList(){
+	
+    $('#orderList').bootstrapTable('destroy');
+    
+    $("#orderList").bootstrapTable({
+        method: "post",
+      /*  url: '../../order/orderListAll',*/
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 25, //每页显示的记录数  
+        pageNumber: 1, //当前第几页 
+        pageList: [25,100,200,500,1000], //记录数可选列表  
+     
+        showColumns: true, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮
+        clickToSelect:true,   
+        sidePagination: "client", //表示服务端请求 
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {},
+        responseHandler: function responseHandler(res) {},
+        columns: [{
+            field: 'orderId',
+            title: '订单号',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 200
+        },{
+            field: 'name',
+            title: '姓名',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'sex',
+            title: '性别',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value) {
+                if (value == "0") {
+                    return "女";
+                } else if(value=="1") {
+                    return "男";
+                }else
+                	{
+                	return "未知";
+                	}
+            },
+            width: 200
+        },{
+            field: 'name',
+            title: '姓名',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'sex',
+            title: '性别',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 50,
+            formatter: function(value) {
+                if (value == "0") {
+                    return "女";
+                } else if(value=="1") {
+                    return "男";
+                }else
+                	{
+                	return "未知";
+                	}
+            }
+        },{
+            field: 'idCard',
+            title: '身份证',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 200
+        },{
+            field: 'nation',
+            title: '民族',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 50
+        },{
+            field: 'mobile',
+            title: '联系方式',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 150
+        },{
+            field: 'age',
+            title: '年龄',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 50
+        },{
+            field: 'idcardBirthday',
+            title: '出生年月',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'tUnivsName',
+            title: '学校',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'tUnivsGrade',
+            title: '年级',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'tUnivsRoom',
+            title: '宿舍',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'tUnivsFinishtime',
+            title: '毕业年份',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'goodsName',
+            title: '产品名称',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'ummTruename',
+            title: '面审员',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'financePeriod',
+            title: '分期期数',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'totalPrice',
+            title: '分期总费用',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'paytime',
+            title: '首期还款日期',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'paidPeriod',
+            title: '已还期数',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'tongdunRes',
+            title: '同盾分数',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'needmoney',
+            title: '商家结算款',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'serviceMoney',
+            title: '超人服务费',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'ensureMoney',
+            title: '保证金',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'loanMoney',
+            title: '实际支付付费',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+        	   field: 'storeId',
+               title: '门店id',
+               align: 'center',
+               valign: 'middle',
+               sortable : true,
+               formatter: function(value, row, index) {
+               	if(value!=null&&value!=""){
+               	      var m = '<a class = "storeDetail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)">'+value+'</a>';
+
+                         return m;
+               	}else{
+               		return '';
+               	}
+             
+               },
+               events: 'operateEvents',
+            sortable : true,
+            width: 100
+        },{
+
+            field: 'contract',
+            title: '合同url',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row, index) {
+            	if(value!=null&&value!=""){
+            	      var m = '<a  target="_blank" style="color:#278bdd;padding:0px 5px;" title="详情" href="'+value+'">查看</a>';
+
+                      return m;
+            	}else{
+            		return '';
+            	}
+          
+            },
+            sortable : true,
+            width: 100
+        },{
+            field: 'file',
+            title: '相关图片',
+            align: 'center',
+            valign: 'middle',
+            width: 100,
+            sortable : true,
+            events: 'operateEvents',
+            formatter: function() {
+                return "<a class='stu_file' href='javascript:void(0)'>查看</a>";
+            }
+        }, {
+            field: 'state',
+            title: '订单状态',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 150,
+           
+            formatter: function(value) {
+                if (value == "1") {
+                    return "通过";
+                } else if(value=="0") {
+                    return "拒绝";
+                }
+            }
+        }, {
+        	
+        	field: 'checkStatus',
+        
+            checkbox: true,
+
+        }], 
+	    
+           onCheck: function(row) {
+        	   		selRowsObj[row.orderId] = row;        	   		
+	 	   },
+	 	   onUncheck: function(e, value, row, index) {
+	 		   	delete selRowsObj[row.orderId];
+
+	 	   },
+	 	   onCheckAll: function(rows) {
+	 		   $.each(rows, function(i, row) {
+	 			   if (!(row.orderId in selRowsObj)) {
+	 				   	selRowsObj[row.orderId] = row;
+	 				 
+	 			   }
+	 		   });
+	 	   }, 
+	 	   onUncheckAll: function(rows) {
+	 		   $.each(rows, function(i, row) {
+	 			   if (row.orderId in selRowsObj) {
+	 					delete selRowsObj[row.orderId];
+	 			
+	 			   }
+	 		   });
+	 	   }
+    });
+ 
+}
+
+
+function allRefuse(){
+	 var recOrderNum =0;
+    var recOrderAmt = 0;
+    var rejOrderNum=0;
+    var rejOrderAmt = 0;
+    agreeList=[];
+    refuseList=[];
+   var allTableData = $("#orderList").bootstrapTable('getData'); //获取表格的所有内容行 
+   for (i = 0; i < allTableData.length; i++) {
+
+       var row = allTableData[i];
+       if(row.orderId in selRowsObj){
+       	row.state = '0';
+       	row.checkStatus = false;        	
+       }
+       if(row.state =='1'){
+       	agreeList.push[row.orderId];
+       	recOrderNum=recOrderNum + 1;
+           recOrderAmt=recOrderAmt + Number(row.needmoney);
+       }else if(row.state =='0'){
+       	refuseList.push[row.orderId];
+       	rejOrderNum=rejOrderNum + 1;
+       	rejOrderAmt=rejOrderAmt + Number(row.needmoney);
+       }
+   }
+   orderList();
+   $('#orderList').bootstrapTable('append',allTableData);  
+   $("#recOrderNum").val(recOrderNum);    
+   $("#recOrderAmt").val(recOrderAmt);
+   $("#rejOrderNum").val(rejOrderNum);    
+   $("#rejOrderAmt").val(rejOrderAmt);
+	selRowsObj={};
+	 
+}
+function allAgree(){
+	 var recOrderNum =0;
+    var recOrderAmt = 0;
+    var rejOrderNum=0;
+    var rejOrderAmt = 0;
+    agreeList=[];
+    refuseList=[];
+   var allTableData = $("#orderList").bootstrapTable('getData'); //获取表格的所有内容行 
+   for (i = 0; i < allTableData.length; i++) {
+
+       var row = allTableData[i];
+       if(row.orderId in selRowsObj){
+       	row.state = '1';
+       	row.checkStatus = false;        	
+       }
+       if(row.state =='1'){
+       	agreeList.push[row.orderId];
+       	recOrderNum=recOrderNum + 1;
+           recOrderAmt=recOrderAmt + Number(row.needmoney);
+       }else if(row.state =='0'){
+       	refuseList.push[row.orderId];
+       	rejOrderNum=rejOrderNum + 1;
+       	rejOrderAmt=rejOrderAmt + Number(row.needmoney);
+       }
+   }
+   
+   orderList();
+   $('#orderList').bootstrapTable('append',allTableData);  
+   $("#recOrderNum").val(recOrderNum);    
+   $("#recOrderAmt").val(recOrderAmt);
+   $("#rejOrderNum").val(rejOrderNum);    
+   $("#rejOrderAmt").val(rejOrderAmt);
+	selRowsObj={};
+	 
+}
+
+
+
+window.operateEvents = {
+    'click .agree': function(e, value, row, index) {
+      /*  var data = {};
+        $("#planInfo").modal("show");
+        data.orderId = row.orderId;*/
+
+   /*     var options = {
+            url: '../../order/plans',
+            data: JSON.stringify(data),
+            callBackFun: function(data) {
+                initRepayPlanListTable();
+                for (var i = 0; i < data.length; i++) {
+                    $("#planInfoListTable").bootstrapTable('append', data[i]);
+                }
+
+
+            }
+        };
+        CloudUtils.ajax(options);*/
+
+        // initRepayPlanListTable(row.orderId);
+/*        $("#input_row").val(JSON.stringify(row));
+        $("#input_index").val(index);*/
+        
+        
+        row.state = '1';
+        $("#orderList").bootstrapTable('updateRow', { row:row, index:index });
+        var recOrderNum = Number($("#recOrderNum").val());
+        $("#recOrderNum").val(recOrderNum + 1);
+        var recOrderAmt = Number($("#recOrderAmt").val());
+        $("#recOrderAmt").val(recOrderAmt + Number(row.productAmt));
+        var crReqTotalAmt = Number($("#crReqTotalAmt").val());
+        $("#crReqTotalAmt").val(crReqTotalAmt + Number(row.crReqAmt));
+        var loanAmt = Number($("#loanAmt").val());
+        $("#loanAmt").val(loanAmt + Number(row.crReqAmt));
+        $("#planInfo").modal("hide");
+        
+    },
+    'click .refuse': function(e, value, row, index) {
+        row.state = '0';
+        var recOrderNum = Number($("#recOrderNum").val());
+        $("#recOrderNum").val(recOrderNum - 1);
+        var recOrderAmt = Number($("#recOrderAmt").val());
+        $("#recOrderAmt").val(recOrderAmt - Number(row.productAmt));
+        var crReqTotalAmt = Number($("#crReqTotalAmt").val());
+        $("#crReqTotalAmt").val(crReqTotalAmt - Number(row.crReqAmt));
+        var loanAmt = Number($("#loanAmt").val());
+        $("#loanAmt").val(loanAmt - Number(row.crReqAmt));
+        $("#orderList").bootstrapTable('updateRow', { index:index, row:row });
+    },
+    'click .stu_file': function(e, value, row, index) {
+    	
+    	
+        var data = { orderId: row.orderId};
+        data = JSON.stringify(data);
+        var options = {
+            url: '../../sign/stuFileInfo',
+            data: data,
+            callBackFun: function(data) {
+                CloudUtils.getTab("../../project/ssmManager/orderManager/stuInfo.html", "agencyDetailModal");
+                $("#imgsDetail").html("");
+            
+                var dataList = data.dataList;
+                for (var i = 0; i < dataList.length; i++) {
+                    var temp = dataList[i];
+                     var img = ReferrerKiller.imageHtml(temp.stuFile.toString().replace(/,m_lfit,w_50,/,",m_lfit,w_200,"));
+                    $("#imgsDetail").append(img);
+
+                }
+                CloudUtils.setForm(row, 'detailFormStuInfo');
+                $("#stuImgDetail").modal("show");
+            }
+        };
+        CloudUtils.ajax(options);
+   
+    },
+    'click .storeDetail': function(e, value, row, index) {
+    	  store.set('businessHallDeatilRow', row); //把数据存储在缓存中
+  	    $('#mainFrame', top.document).attr('src', 'project/ssmManager/BusinessHallDetail.html');
+      }
+
+};

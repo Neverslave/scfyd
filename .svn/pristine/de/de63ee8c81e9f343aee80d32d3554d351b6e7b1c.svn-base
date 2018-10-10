@@ -1,0 +1,361 @@
+
+
+$(document).ready(function() {
+	$("form").attr("autocomplete","off");
+	CloudUtils.getMenuNames("nav");
+//	dateload();
+	initTable();
+
+	//modal绑定事件
+	$('#addModal').on('hidden.bs.modal', function(){
+		$("#addForm")[0].reset();
+		if ($("#addForm").data('bootstrapValidator')) {
+			$("#addForm").data('bootstrapValidator').destroy();
+	        $('#addForm').data('bootstrapValidator', null);
+		}
+//        formValidator();
+	});
+} );
+
+window.operateEvents = {
+		'click .detail': function (e, value, row, index) {
+			detailFun(row);
+		},
+	    'click .modify': function(e, value, row, index) {
+	    	add(e, value, row, index);
+	    }
+	};
+
+function initTable() { 
+	$('#CashListTable').bootstrapTable('destroy'); 
+	$("#CashListTable").bootstrapTable({  
+		 method: "post", 
+         url: "../../cashInfo/list", 
+         striped: true,  //表格显示条纹  
+         pagination: true, //启动分页  
+         pageSize: 5,  //每页显示的记录数  
+         pageNumber:1, //当前第几页  
+         pageList: [5, 10, 15, 20, 25],  //记录数可选列表  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为limit可以获取limit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+           var param = {    
+               pageNumber: params.pageNumber,
+               pageSize: params.pageSize,
+              
+           };    
+           return JSON.stringify(param);
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [{
+ 	        field: 'payId',
+ 	        title: '付款编号',
+ 	        align: 'center',
+            valign: 'middle'
+           
+ 	    }, {
+ 	        field: 'financeEndDate',
+ 	        title: '应付款日',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'lsPayAmt',
+ 	        title: '到期应付私家车款项',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index) {
+            	if(row.ywlxId=='1')
+            		return $.number(value, 2);
+            	else
+            		return '';
+	    	}
+ 	    }, {
+ 	        field: 'dzPayAmt',
+ 	        title: '到期应付大宗款项',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index) {
+            	if(row.ywlxId=='2')
+            		return $.number(value, 2);
+            	else
+            		return '';
+	    	}
+ 	    },{
+ 	        field: 'payDate',
+ 	        title: '实际对付日期',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	    
+ 	    }, {
+ 	        field: 'lsCashAmit',
+ 	        title: '实际零售业务兑付金额',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index) {
+            	if(row.ywlxId=='1')
+            		return $.number(value, 2);
+            	else
+            		return '';
+	    	}
+ 	    },{
+ 	        field: 'operation01',
+ 	        title: '明细',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	        formatter:function(value,row,index){
+ 	        	if(row.ywlxId=='1')
+ 	        		{
+ 	        		var d = '<a class = "fa fa-list-ul detail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+ 	 	            return d;
+ 	        		}
+ 	        	else
+ 	        		{
+ 	        		return '';
+ 	        		}
+ 	        },
+ 	        events: 'operateEvents'
+ 	    },{
+ 	        field: 'dzCashAmit',
+ 	        title: '实际大宗业务兑付金额',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index) {
+            	if(row.ywlxId=='2')
+            		return $.number(value, 2);
+            	else
+            		return '';
+	    	}
+ 	    },{
+ 	        field: 'operation02',
+ 	        title: '明细',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	        formatter:function(value,row,index){
+ 	        	if(row.ywlxId=='2')
+	        		{
+	        		var d = '<a class = "fa fa-list-ul detail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+	 	            return d;
+	        		}
+	        	else
+	        		{
+	        		return '';
+	        		}
+	        },
+ 	        events: 'operateEvents'
+ 	    },{
+ 	        field: 'operation03',
+ 	        title: '兑付',
+ 	        align: 'center',
+ 	        valign: 'middle',
+ 	        formatter:function(value,row,index){
+ 	        	var d = '<a class = "glyphicon glyphicon-plus modify" style="color:#278bdd;padding:0px 5px;" title="添加" href="javascript:void(0)"></a>';
+ 	            return d;
+ 	        },
+ 	        events: 'operateEvents'
+ 	    }
+ 	    ]
+       });
+}
+
+function add(e, value, row, index){
+	formValidator();
+	$('#isEdit').val("0"); //新增0；修改1
+	$("#addForm").find('input').attr("readonly", false);
+	$("#addForm").find('select').attr("disabled", false);
+	$("#btn_save").show();
+	$(".required").show();
+    $('#addModal').modal({backdrop: 'static', keyboard: false});//防止点击空白/ESC 关闭
+    $("#payId").val(row.payId);
+    $("#payId").attr("readonly",true);
+
+}
+
+function addHistory(){
+	var bootstrapValidator = $('#addForm').data('bootstrapValidator');
+	bootstrapValidator.validate();
+	if(!bootstrapValidator.isValid()){  
+	    //没有通过校验 
+		return false;
+	}else{
+		var data = CloudUtils.convertStringJson('addForm');
+        var jsonData = eval("(" + data + ")");
+        var options = {
+            url: '../../cashInfo/add',
+            data: JSON.stringify(jsonData),
+            callBackFun: function(data) {
+            	if (data.result == 1) {
+            		$("#addModal").modal("hide");
+                } else {
+                    return false;
+                }
+            },
+            errorCallback: function(data) {
+                return false;
+            }
+        };
+        CloudUtils.ajax(options);
+	}
+}
+
+
+function dateload() {
+    $('#payDate').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+}
+
+
+
+/**
+ * 金额项目千分位符表示
+ */
+function numFormat(){
+	$("input[name='payAmit']").number(true, 2);
+
+}
+
+//form验证规则
+function formValidator(){
+	$('#addForm').bootstrapValidator({
+	      message: 'This value is not valid',
+	      feedbackIcons: {
+	          valid: 'glyphicon glyphicon-ok',
+	          invalid: 'glyphicon glyphicon-remove',
+	          validating: 'glyphicon glyphicon-refresh'
+	      },
+	      fields: {
+	    	  payId: {
+	              validators: {
+	                  notEmpty: {
+	                      message: '付款编号不可为空'
+	                  }
+	              }
+	          },
+	          payAmit: {
+	        	  validators: {
+	        		  notEmpty: {
+	                      message: '付款金额不可为空'
+	                  },
+	            	    numeric: {message: '只能输入数字'},
+		                callback: {  
+	                       message: '金额在0~1000000000之间',  
+	                       callback: function(value, validator) { 
+	                        	return value =="" || (parseFloat(value)>=0&&parseFloat(value)<=1000000000);
+	                         }  
+	                     } 
+		              }
+	          },
+	          payDate: {
+              validators: {
+                  notEmpty: {
+                      message: '付款日期不可为空'
+                  },
+                
+              }
+          }
+	      }
+		})
+		.on('success.form.bv', function (e) {
+			e.preventDefault();
+		});	
+}
+function detailFun(row) {
+ 	
+ 	$('#detailModal').modal({backdrop: 'static', keyboard: false});
+ 	
+ 	$('#cashHistoryTable').bootstrapTable('destroy'); 
+	$("#cashHistoryTable").bootstrapTable({  
+		 method: "post", 
+		 url: "../../cashInfo/detail",
+         striped: true,  //表格显示条纹  
+         pagination: true, //启动分页  
+         pageSize: 5,  //每页显示的记录数  
+         pageNumber:1, //当前第几页  
+         pageList: [5, 10, 15, 20, 25],  //记录数可选列表  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为limit可以获取limit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+           var param = {    
+               pageNumber: params.pageNumber,
+               pageSize: params.pageSize,
+               isPage : 1,
+	           payId:row.payId
+           };    
+           return JSON.stringify(param);
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [{
+ 	        field: 'payId',
+ 	        title: '付款编号',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'payDate',
+ 	        title: '兑付日期',
+ 	        align: 'center',
+            valign: 'middle',
+ 	    }, {
+ 	        field: 'payAmit',
+ 	        title: '兑付金额',
+ 	        align: 'center',
+            valign: 'middle',
+         
+ 	    }, {
+ 	        field: 'payNote',
+ 	        title: '备注',
+ 	       align: 'center',
+           valign: 'middle'
+ 	    }
+ 	    ]
+       });
+ 	
+ 	
+ 	
+ 	
+ 	
+}

@@ -1,0 +1,257 @@
+<style type="text/css">
+#repayInfo .th-inner {
+    height: 80px;
+}
+</style>
+
+<script type="text/javascript">
+function initBlRepayPlanListTable(peopleType,orderId,corpRepayUrl) {
+if(peopleType=='3'){
+	$('#blRepayPlanListTableDetail').bootstrapTable('destroy');
+    $("#blRepayPlanListTableDetail").bootstrapTable({
+        method: "post",
+        url: corpRepayUrl,
+        striped: false, //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var jsonData = {
+                orderId:orderId,
+            };
+            return JSON.stringify(jsonData);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [ {
+            field: 'order_id',
+            title: '订单编号',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'order_batch_id',
+            title: '批次编号',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'period',
+            title: '第几期',
+            align: 'center',
+            valign: 'middle'   
+        },{
+            field: 'current_repay_date',
+            title: '应付日期',
+            align: 'center',
+            valign: 'middle',
+        },{
+            field: 'interest',
+            title: '资方利息',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'lc_money',
+            title: '超人服务费',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'current_money',
+            title: '资方本金',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'ensure_money',
+            title: '保证金',
+            align: 'center',
+            valign: 'middle',
+            visible:false,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+     
+        },{
+            field: 'marketing_fee_yi',
+            title: '翼支付营销费',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+     
+        },{
+            field: 'service_charge_yi',
+            title: '翼支付服务费',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+     
+        },{
+            field: 'repayment_money',
+            title: '用户应还金额',
+            align: 'center',
+            valign: 'middle',
+
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        }      
+            
+        ]       
+    });	
+}
+else{
+	
+
+    $('#blRepayPlanListTableDetail').bootstrapTable('destroy');
+    $("#blRepayPlanListTableDetail").bootstrapTable({
+        method: "post",
+        url: corpRepayUrl,
+        striped: false, //表格显示条纹  
+        pagination: false, //启动分页  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var jsonData = {
+                orderId:orderId,
+            };
+            return JSON.stringify(jsonData);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [ {
+            field: 'order_id',
+            title: '订单编号',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'order_batch_id',
+            title: '批次编号',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'period',
+            title: '第几期',
+            align: 'center',
+            valign: 'middle'   
+        },{
+            field: 'current_repay_date',
+            title: '应付日期',
+            align: 'center',
+            valign: 'middle',
+        },{
+            field: 'interest',
+            title: '资方利息',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'lc_money',
+            title: '超人服务费',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'current_money',
+            title: '资方本金',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'ensure_money',
+            title: '保证金',
+            align: 'center',
+            valign: 'middle',
+            visible:false,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+     
+        },{
+            field: 'repayment_money',
+            title: '用户应还金额',
+            align: 'center',
+            valign: 'middle',
+
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        }      
+            
+        ]       
+    });
+}
+}
+</script>
+<div class="modal fade" id="blRepayInfoDetail" aria-hidden="true" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="repayModal">
+    <div class="modal-dialog" role="document" style='width:95%'>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span> </button>
+                <h4 class="modal-title" id="blRepayModal">资方还款计划详情信息</h4>
+            </div>
+            <div class="modal-body">
+                <div class="panel-body">
+                    <table id="blRepayPlanListTableDetail" class="table" height="100%" cellspacing="0" width="100%">
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-3">
+                        <button type="button" class="btn btn-default cancel" data-dismiss="modal">取消
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

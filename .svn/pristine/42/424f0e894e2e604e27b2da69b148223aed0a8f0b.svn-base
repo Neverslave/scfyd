@@ -1,0 +1,16 @@
+package com.ut.scf.service.tradfact;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.tradfact.CreditInfoBean;
+import com.ut.scf.reqbean.tradfact.LoanApplicationInfoBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface ILoanApplicationService {
+	
+	public void addLoanApplicationInfo(LoanApplicationInfoBean loanApplicationInfoBean);
+	
+	public BaseRespBean getContractList(Map<String, Object> paramMap, PageInfoBean page);
+	
+}

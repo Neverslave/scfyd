@@ -1,0 +1,121 @@
+package com.ut.scf.reqbean.project;
+
+import java.math.BigDecimal;
+
+import com.ut.scf.reqbean.PageReqBean;
+
+public class AgencySearchPageReqBean extends PageReqBean {
+	private String agencyCode;
+	private String agencyName;
+	private BigDecimal maxCreditAmountStart;
+	private BigDecimal maxCreditAmountEnd;
+	private BigDecimal maxLscreditAmountStart;
+	private BigDecimal maxLscreditAmountEnd;
+	private BigDecimal useAbleAmountStrat;
+	private BigDecimal useAbleAmountEnd;
+	private BigDecimal useLsableAmountStrat;
+	private BigDecimal useLsableAmountEnd;
+	private byte sysType;
+	public byte getSysType() {
+		return sysType;
+	}
+
+	public void setSysType(byte sysType) {
+		this.sysType = sysType;
+	}
+
+	/**
+	 * 是否分页，0：否，1：是，默认为1.
+	 */
+	private Integer isPage = 1;
+	
+	public String getAgencyCode() {
+		return agencyCode;
+	}
+
+	public void setAgencyCode(String agencyCode) {
+		this.agencyCode = agencyCode;
+	}
+
+	public String getAgencyName() {
+		return agencyName;
+	}
+
+	public void setAgencyName(String agencyName) {
+		this.agencyName = agencyName;
+	}
+
+	public Integer getIsPage() {
+		return isPage;
+	}
+
+	public void setIsPage(Integer isPage) {
+		this.isPage = isPage;
+	}
+
+	public BigDecimal getMaxCreditAmountStart() {
+		return maxCreditAmountStart;
+	}
+
+	public BigDecimal getMaxCreditAmountEnd() {
+		return maxCreditAmountEnd;
+	}
+
+	public BigDecimal getMaxLscreditAmountStart() {
+		return maxLscreditAmountStart;
+	}
+
+	public BigDecimal getMaxLscreditAmountEnd() {
+		return maxLscreditAmountEnd;
+	}
+
+	public BigDecimal getUseAbleAmountStrat() {
+		return useAbleAmountStrat;
+	}
+
+	public BigDecimal getUseAbleAmountEnd() {
+		return useAbleAmountEnd;
+	}
+
+	public BigDecimal getUseLsableAmountStrat() {
+		return useLsableAmountStrat;
+	}
+
+	public BigDecimal getUseLsableAmountEnd() {
+		return useLsableAmountEnd;
+	}
+
+	public void setMaxCreditAmountStart(BigDecimal maxCreditAmountStart) {
+		this.maxCreditAmountStart = maxCreditAmountStart;
+	}
+
+	public void setMaxCreditAmountEnd(BigDecimal maxCreditAmountEnd) {
+		this.maxCreditAmountEnd = maxCreditAmountEnd;
+	}
+
+	public void setMaxLscreditAmountStart(BigDecimal maxLscreditAmountStart) {
+		this.maxLscreditAmountStart = maxLscreditAmountStart;
+	}
+
+	public void setMaxLscreditAmountEnd(BigDecimal maxLscreditAmountEnd) {
+		this.maxLscreditAmountEnd = maxLscreditAmountEnd;
+	}
+
+	public void setUseAbleAmountStrat(BigDecimal useAbleAmountStrat) {
+		this.useAbleAmountStrat = useAbleAmountStrat;
+	}
+
+	public void setUseAbleAmountEnd(BigDecimal useAbleAmountEnd) {
+		this.useAbleAmountEnd = useAbleAmountEnd;
+	}
+
+	public void setUseLsableAmountStrat(BigDecimal useLsableAmountStrat) {
+		this.useLsableAmountStrat = useLsableAmountStrat;
+	}
+
+	public void setUseLsableAmountEnd(BigDecimal useLsableAmountEnd) {
+		this.useLsableAmountEnd = useLsableAmountEnd;
+	}
+
+	
+}

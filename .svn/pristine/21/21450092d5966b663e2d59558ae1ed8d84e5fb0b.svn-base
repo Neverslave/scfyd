@@ -1,0 +1,108 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+    initTable();
+    dateload();
+    numFormat();
+});
+
+function searchFun() {
+    initTable();
+}
+function numFormat() {
+	$("#currentSumCount").number(true, 0);
+	$("#currentSumNeedMoney").number(true, 2);
+	$("#hasPaidCurrentMoney").number(true, 2);
+	$("#shouldPaidCount").number(true, 0);
+	$("#shouldPaidRepaymentPrice").number(true, 2);
+	$("#shouldPaidInterest").number(true, 2);
+	$("#autPaidSumCount").number(true, 0);
+	$("#autPaidSumRepaymentPrice").number(true, 2);
+	$("#autPaidSumCommission").number(true, 2);
+	$("#autPaidInterest").number(true, 2);
+	$("#autPeriodPaidSumCount").number(true, 0);
+	$("#autPeriodPaidSumRepaymentPrice").number(true, 2);
+	$("#autPeriodPaidSumCommission").number(true, 2);
+	$("#autEarlyPaidSumCount").number(true, 0);
+	$("#autEarlyPaidSumRepaymentPrice").number(true, 2);
+	$("#autEarlyPaidSumCommission").number(true, 2);
+	$("#currentYuqiPaidSumCount").number(true, 0);
+	$("#currentYuqiPaidSumRepaymentPrice").number(true, 2);
+	$("#currentYuqiPaidSumCommission").number(true, 2);
+	$("#currentYuqiPaidSumDamages").number(true, 2);
+	$("#nonYuqiPaidSumCount").number(true, 0);
+	$("#nonYuqiPaidSumRepaymentPrice").number(true, 2);
+	$("#nonYuqiPaidSumCommission").number(true, 2);
+	$("#nonYuqiPaidSumDamages").number(true, 2);
+	$("#restYuQiPaidSumCount").number(true, 0);
+	$("#restYuQiPaidSumRepaymentPrice").number(true, 2);
+	$("#restYuQiPaidSumCommission").number(true, 2);
+	$("#earlyClearPaidSumCount").number(true, 0);
+	$("#earlyClearSumRepaymentPrice").number(true, 2);
+	$("#earlyClearPaidSumCommission").number(true, 2);
+	$("#cancelOrderAmt").number(true, 2);
+
+}
+function operateFun(){
+	var dataTemp = CloudUtils.convertStringJson('searchForm');
+    var jsonData = eval("(" + dataTemp + ")");
+var options = {
+
+     url: '../SSMSummaryInfo/createWingRepaymentMonthly',
+     data: JSON.stringify(jsonData),
+     callBackFun: function(data) {
+     	if(data.result==0){
+     		bootbox.alert("操作成功！");
+     	
+     	}else{
+     		bootbox.alert("操作失败！");
+     	}
+     	
+     },
+     errorCallback: function(data) {
+         bootbox.alert("error");
+     }
+ };
+ CloudUtils.ajax(options);
+}
+
+function initTable() {
+	
+
+	   var dataTemp = CloudUtils.convertStringJson('searchForm');
+	    var jsonData = eval("(" + dataTemp + ")");
+ var options = {
+
+         url: '../SSMSummaryInfo/wingRepaymentMonthlyList',
+         data: JSON.stringify(jsonData),
+         callBackFun: function(data) {
+         	if(data.result==0){
+         		 CloudUtils.setForm(data.resultMap, 'detailFormMonthly');
+         	
+         	}else{
+         		bootbox.alert("操作失败！");
+         	}
+         	
+         },
+         errorCallback: function(data) {
+             bootbox.alert("error");
+         }
+     };
+     CloudUtils.ajax(options);
+
+	
+}
+
+
+
+function dateload() {
+    $('#syncDate').datetimepicker({
+		format: 'yyyymm',
+		 weekStart: 1,
+        autoclose: true,
+        startView: 3,
+        minView: 3,
+        forceParse: false,
+        language: 'zh-CN'
+    });
+
+}

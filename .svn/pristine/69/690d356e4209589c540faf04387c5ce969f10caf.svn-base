@@ -1,0 +1,11 @@
+package com.ut.scf.service.project;
+
+import com.ut.scf.pojo.auto.DykArea;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IDykRepresentInfoService {
+
+	public BaseRespBean findAreaInfo();
+
+	BaseRespBean findRepresentInfo(DykArea area);
+}

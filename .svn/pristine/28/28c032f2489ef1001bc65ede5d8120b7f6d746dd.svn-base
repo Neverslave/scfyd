@@ -1,0 +1,785 @@
+package com.ut.scf.service.project.impl;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.util.json.JSONArray;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.taobao.top.link.embedded.websocket.util.StringUtil;
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.MoneyUtil;
+import com.ut.scf.core.util.PDFUtil2;
+import com.ut.scf.dao.auto.DykRateMapper;
+import com.ut.scf.dao.auto.FinanceInfoMapper;
+import com.ut.scf.dao.auto.GuaranteeInfoMapper;
+import com.ut.scf.dao.auto.GuaranteeMoneyManagementMapper;
+import com.ut.scf.dao.auto.InterestManagementMapper;
+import com.ut.scf.dao.auto.LimitInfoMapper;
+import com.ut.scf.dao.auto.SysUserMapper;
+import com.ut.scf.dao.auto.WarningInfoMapper;
+import com.ut.scf.dao.project.IFinanceInfoDao;
+import com.ut.scf.pojo.auto.DykRate;
+import com.ut.scf.pojo.auto.DykRateExample;
+import com.ut.scf.pojo.auto.FinanceInfo;
+import com.ut.scf.pojo.auto.FinanceInfoExample;
+import com.ut.scf.pojo.auto.GuaranteeInfo;
+import com.ut.scf.pojo.auto.GuaranteeMoneyManagement;
+import com.ut.scf.pojo.auto.InterestManagement;
+import com.ut.scf.pojo.auto.InterestManagementExample;
+import com.ut.scf.pojo.auto.InterestManagementExample.Criteria;
+import com.ut.scf.pojo.auto.LimitInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.pojo.auto.SysUser;
+import com.ut.scf.pojo.auto.SysUserExample;
+import com.ut.scf.reqbean.project.FinanceFlowReqBean;
+import com.ut.scf.reqbean.project.FinanceInfoListReqBean;
+import com.ut.scf.reqbean.pub.TaskInfoReqBean;
+import com.ut.scf.reqbean.query.GuaranteeHistoryQueryReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.ListRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.respbean.StringRespBean;
+import com.ut.scf.respbean.project.FinanceInfoRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.ICommonService;
+import com.ut.scf.service.project.IFinanceInfoService;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.query.IGuaranteeQueryService;
+import com.ut.scf.service.sys.ISequenceService;
+
+@Service("financeInfoService")
+public class FinanceInfoServiceImpl implements IFinanceInfoService {
+
+	private static final Logger log = LoggerFactory.getLogger(FinanceInfoServiceImpl.class);
+
+	private static SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd");
+
+	@Resource
+	private IFinanceInfoDao financeInfoDao;
+
+	@Resource
+	private GuaranteeMoneyManagementMapper guaranteeMapper;
+
+	@Resource
+	private WarningInfoMapper warningInfoMapper;
+
+	@Resource
+	private InterestManagementMapper interestMapper;
+
+	@Resource
+	private DykRateMapper dykRateMapper;
+
+	@Resource
+	private ProcessEngine processEngine;
+
+	@Resource
+	private TaskService taskService;
+
+	@Resource
+	private RuntimeService runtimeService;
+
+	@Resource
+	private FinanceInfoMapper financeInfoMapper;
+
+	@Resource
+	private GuaranteeInfoMapper guaranteeInfoMapper;
+
+	@Resource
+	private ISequenceService sequenceService;
+
+	@Resource
+	private IProcessRepeatChkService processRepeatChkService;
+
+	@Resource
+	private ICommonService commonService;
+
+	@Resource
+	private LimitInfoMapper limitInfoMapper;
+
+	@Resource
+	private SysUserMapper sysUserMapper;
+
+	@Resource
+	private IActivitiService activitiService;
+	@Resource
+	private IGuaranteeQueryService guaranteeQueryService;
+	@Override
+	@Transactional(readOnly = true)
+	public String getProductId(String corpId) {
+
+		FinanceInfoExample example = new FinanceInfoExample();
+		com.ut.scf.pojo.auto.FinanceInfoExample.Criteria criteria = example.createCriteria();
+		criteria.andCorpIdEqualTo(corpId);
+
+		List<FinanceInfo> financeInfos = financeInfoMapper.selectByExample(example);
+		if (financeInfos != null && financeInfos.size() > 0) {
+			return financeInfos.get(0).getProductId();
+		}
+		return "";
+	}
+
+	/**
+	 * 条件查询 分页获取financeInfo
+	 * 
+	 * @param paramMap
+	 * @param page
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getFinanceInfoList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = financeInfoDao.getFinanceInfoList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean getProGuarantee(FinanceInfoListReqBean reqBean) {
+		FinanceInfoRespBean respBean = new FinanceInfoRespBean();
+		// 保证金比例取得
+		GuaranteeMoneyManagement guaranteeMoneyManagement = guaranteeMapper.selectByPrimaryKey(reqBean.getProductId());
+		if (guaranteeMoneyManagement != null) {
+			respBean.setGuaranteeRate(guaranteeMoneyManagement.getGuaranteeMoneyRate());
+		}
+
+		// 扣息方式,收息日,费率取得
+		InterestManagementExample interestExample = new InterestManagementExample();
+		Criteria criteria = interestExample.createCriteria();
+		criteria.andProductIdEqualTo(reqBean.getProductId());
+		List<InterestManagement> list = interestMapper.selectByExample(interestExample);
+		if (CollectionUtils.isNotEmpty(list)) {
+			respBean.setBett(list.get(0).getBett());
+			respBean.setReceptionDate(list.get(0).getReceptionDate());
+			respBean.setCostRate(list.get(0).getCostRate());
+		}
+
+		// 利息列表取得
+		DykRateExample dykRateExample = new DykRateExample();
+		com.ut.scf.pojo.auto.DykRateExample.Criteria criteria1 = dykRateExample.createCriteria();
+		criteria1.andProductIdEqualTo(reqBean.getProductId());
+		List<DykRate> list1 = dykRateMapper.selectByExample(dykRateExample);
+		if (CollectionUtils.isNotEmpty(list1)) {
+			respBean.setDataList(list1);
+		}
+
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean getFinanceInfo(TaskInfoReqBean reqBean) {
+		// 根据taskId获取流程数据
+		String values = (String) taskService.getVariable(reqBean.getTaskId(), reqBean.getVarName());
+		StringRespBean respBean = new StringRespBean();
+		respBean.setStr(values);
+		return respBean;
+	}
+	@Override
+	public BaseRespBean getRecommend(String cropId,String ywlxId) {
+		// 根据taskId获取流程数据
+		String financeId = sequenceService.getNextSequence(cropId,ywlxId, "rz");
+		StringRespBean respBean = new StringRespBean();
+		respBean.setStr(financeId);
+		return respBean;
+	}
+	@Override
+	public BaseRespBean getRecommendAdd(String cropId,String ywlxId) {
+		// 根据taskId获取流程数据
+		String financeId = sequenceService.getNextAddSequence(cropId,ywlxId, "rz");
+		StringRespBean respBean = new StringRespBean();
+		respBean.setStr(financeId);
+		return respBean;
+	}
+	@Override
+	public void applyGuarantee(FinanceFlowReqBean flowReqBean) {
+		// 获取taskId和userId
+		String taskId = flowReqBean.getTaskId();
+		String userName = flowReqBean.getUserId();
+		String values = (String) taskService.getVariable(taskId, "payApplyJson");
+		JSONObject jsonObject = new JSONObject(values);
+		jsonObject.put("guaranteePayDate", flowReqBean.getGuaranteePayDate());
+		jsonObject.put("payAbleGuarantee", flowReqBean.getPayAbleGuarantee());
+		jsonObject.put("payActGuarantee", flowReqBean.getPayActGuarantee());
+		jsonObject.put("guaranteePayHis", flowReqBean.getGuaranteePayHis());
+		jsonObject.put("note", flowReqBean.getNote());
+		jsonObject.put("agree", "");
+
+		// 拾取用户
+		taskService.claim(taskId, userName);
+		// 设置变量
+		taskService.setVariable(taskId, "jxsUser", userName);
+		taskService.setVariable(taskId, "payApplyJson", jsonObject.toString());
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+		// 完成节点
+		taskService.complete(taskId);
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean doAgree(FinanceFlowReqBean reqBean, HttpSession httpSession) {
+		BaseRespBean respBean = new BaseRespBean();
+
+		// 1.获取taskId和当前用户
+		String procInstId = reqBean.getProcInstId();
+		String taskId = reqBean.getTaskId();
+		String userId = reqBean.getUserId();
+		String agree = reqBean.getAgree();
+		String backTarget = reqBean.getBackTarget();
+		String advice = reqBean.getAdvice();
+		String launchRoleId = (String) taskService.getVariable(taskId, "launchRoleId");// 发起者角色ID
+		String values = (String) taskService.getVariable(taskId, "payApplyJson");
+		JSONObject jsonObject = new JSONObject(values);
+		jsonObject.put("agree", agree);
+		jsonObject.put("backTarget", backTarget);
+		jsonObject.put("advice", advice);
+		jsonObject.put("financeId", reqBean.getFinanceId());
+		jsonObject.put("guaranteeAccountAmt", reqBean.getGuaranteeAccountAmt());
+		jsonObject.put("rzTemplate", reqBean.getRzTemplate());
+		jsonObject.put("templateUrl", reqBean.getTemplateUrl());
+
+		// 2.拾取用户
+		taskService.claim(taskId, userId);
+		// 3.设置变量
+		String reviewUser = (String) taskService.getVariable(taskId, "reviewUser");
+		if (StringUtils.isEmpty(reviewUser)) {
+			taskService.setVariable(taskId, "reviewUser", userId);
+		}
+		taskService.setVariable(taskId, "payApplyJson", jsonObject.toString());
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+		// 4.流程走向
+		if ("1".equals(agree)) {
+			if ("0".equals(backTarget)) {
+				agree = "2";
+			} else if ("1".equals(backTarget)) {
+				agree = "1";
+			}
+		}
+		taskService.setVariable(taskId, "agree", agree);
+		// 5.完成流程
+		taskService.complete(taskId);
+		// 6.查看流程状态
+		ProcessInstance pi = runtimeService.createProcessInstanceQuery().processInstanceId(procInstId).singleResult();
+		if (pi == null) { // 流程已结束
+			addFinance(reqBean, httpSession, launchRoleId);
+		}
+
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void reApply(FinanceFlowReqBean reqBean) {
+		// 1.获取taskId和userId
+		String taskId = reqBean.getTaskId();
+		String userId = reqBean.getUserId();
+		JSONObject jsonObject = new JSONObject(reqBean);
+		String values = (String) taskService.getVariable(taskId, "payApplyJson");
+		JSONObject oldObj = new JSONObject(values);
+		jsonObject.put("guaranteePayHis", oldObj.getString("guaranteePayHis"));
+
+		// 2.拾取用户
+		taskService.claim(taskId, userId);
+		// 3.设置流程变量
+		taskService.setVariable(taskId, "payApplyJson", jsonObject.toString());
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+		// 4.完成流程
+		taskService.complete(taskId);
+		BaseRespBean updateLimitInfo = updateLimitInfo(jsonObject);
+		if (updateLimitInfo.getResult() == ErrorCodeEnum.FINANCEAMT_BIG_USEABLEAMT.getValue()) {
+			throw new BizException(ErrorCodeEnum.FINANCEAMT_BIG_USEABLEAMT);
+		} else if (updateLimitInfo.getResult() == ErrorCodeEnum.UPDATE_FAILED.getValue()) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+	}
+
+	public BaseRespBean download(FinanceFlowReqBean reqBean, HttpSession httpSession){
+		BaseRespBean respBean = new BaseRespBean();
+		// 融资承诺函
+				String templetPath = httpSession.getServletContext().getRealPath(reqBean.getTemplateUrl());
+
+				String uploadFilePath = "uploadFile/common/";// 文件服务器存储目录
+				String toPath = httpSession.getServletContext().getRealPath(uploadFilePath);
+				//String pdfName = ScfUUID.generate() + ".pdf";
+				String pdfName = reqBean.getFinanceId() + ".pdf";
+				File dir = new File(toPath);
+				if (!dir.exists()) {
+					dir.mkdirs();
+				}
+				toPath = toPath + "/" + pdfName;
+				File file2 = new File(toPath);
+				if (true) {
+					if(file2.exists())
+						file2.delete();
+					Map<String, String> paramMap = new HashMap<String, String>();
+					paramMap.put("financeNo.1", reqBean.getFinanceId());// 融资编号
+					paramMap.put("financeNo.2", reqBean.getFinanceId());// 融资编号
+					paramMap.put("agencyName", reqBean.getAgencyName());// 经销商名称
+					BigDecimal financeAmt = new BigDecimal(reqBean.getFinanceAmount());// 融资金额
+					if (financeAmt.compareTo(BigDecimal.ZERO) == 0) {
+						paramMap.put("money", "零圆整");
+					} else {
+						String financeAmtStr = MoneyUtil.toChinese(financeAmt.toString());// 金额小写转大写
+						paramMap.put("money", financeAmtStr+"整");
+					}
+
+					// 生成融资承诺函
+					try {
+						PDFUtil2.exportToPDF(templetPath, toPath, paramMap);
+					} catch (Exception e) {
+						log.error(e.getMessage());
+						throw new BizException(ErrorCodeEnum.ADD_FAILED);
+					}
+	
+				}
+				
+				respBean.setResultNote(uploadFilePath + "/" + pdfName);
+ 				return respBean;
+	}
+	
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void addFinance(FinanceFlowReqBean reqBean, HttpSession httpSession, String launchRoleId) {
+		// 新增融资情报
+		FinanceInfo financeInfo = new FinanceInfo();
+		String financeId = reqBean.getFinanceId();
+  		if("".equals(financeId)||financeId==null){
+			//financeId = sequenceService.getNextSequence(reqBean.getCorpId(),reqBean.getYwlxId(), "rz");
+  			log.error("融资编号为空");
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+  			
+		}
+  		sequenceService.getNextAddSequence(reqBean.getCorpId(), reqBean.getYwlxId(),"rz");
+//		String financeId = sequenceService.getNextSequence(reqBean.getCorpId(), "rz");
+		try {
+			financeInfo.setProductId(reqBean.getProductId());
+			financeInfo.setFinanceId(financeId);
+			 financeInfo.setApplyDate(SDF.parse(reqBean.getApplyDate()));
+			 financeInfo.setYwlxId(reqBean.getYwlxId());
+			 financeInfo.setTemplateUrl(reqBean.getTemplateUrl());
+			 financeInfo.setCprYear(reqBean.getCprYear());
+			 financeInfo.setCprMonth(reqBean.getCprMonth());
+			 financeInfo.setUploadUrl(reqBean.getUploadUrl());
+			 
+			 financeInfo.setAttachSize(reqBean.getAttachSize());
+			 financeInfo.setFileUrl(reqBean.getFileUrl());
+			 financeInfo.setAttachType(reqBean.getAttachType());
+			 
+			financeInfo.setCorpId(reqBean.getCorpId());
+			/*financeInfo.setFinanceRate(new BigDecimal(reqBean.getFinanceRate()));
+			financeInfo.setCashRate(new BigDecimal(reqBean.getCashRate()));*/
+			/* financeInfo.setFinanceStartDate(SDF.parse(reqBean.getFinanceStartDate()));
+			 financeInfo.setFinanceEndDate(SDF.parse(reqBean.getFinanceEndDate()));*/
+			financeInfo.setFinanceAmount(new BigDecimal(reqBean.getFinanceAmount()));
+		/*	financeInfo.setExpense(new BigDecimal(reqBean.getExpense()));*/
+			financeInfo.setFinanceStatus("1");
+			financeInfo.setNote(reqBean.getRemark());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		int recFinance = financeInfoMapper.insert(financeInfo);
+		if (recFinance < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		// 新增保证金情报
+		GuaranteeInfo guaranteeInfo = new GuaranteeInfo();
+		try {
+			guaranteeInfo.setFinanceId(financeId);
+			guaranteeInfo.setGuaranteeMoneyRate(new BigDecimal(StringUtils.isEmpty(reqBean.getGuaranteeRate())?"0": reqBean.getGuaranteeRate()));
+			guaranteeInfo.setPayAbleGuarantee(new BigDecimal(StringUtils.isEmpty(reqBean.getPayAbleGuarantee())?"0": reqBean.getPayAbleGuarantee()));
+			/*guaranteeInfo.setGuaranteePayDate(SDF.parse(reqBean.getGuaranteePayDate()));*/
+			guaranteeInfo.setPayActGuarantee(new BigDecimal(StringUtils.isEmpty(reqBean.getPayActGuarantee())?"0": reqBean.getPayActGuarantee()));
+			
+			/*guaranteeInfo.setGuaranteeBalance(new BigDecimal(reqBean.getGuaranteeAccountAmt()));*/
+			/*guaranteeInfo.setGuaranteePayHis(reqBean.getGuaranteePayHis());*/
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		int recGuarantee = guaranteeInfoMapper.insert(guaranteeInfo);
+		if (recGuarantee < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		GuaranteeHistoryQueryReqBean guaranteeHistoryQueryReqBean=new GuaranteeHistoryQueryReqBean();
+		
+
+		guaranteeHistoryQueryReqBean.setFinanceId(financeId);
+		
+		guaranteeHistoryQueryReqBean.setGuaranteeListInfo(reqBean.getGuaranteeListInfo());
+		
+		guaranteeQueryService.getGuaranteeHistoryInsert(guaranteeHistoryQueryReqBean);
+
+		
+		
+
+		// 融资承诺函
+		String templetPath = httpSession.getServletContext().getRealPath(reqBean.getTemplateUrl());
+
+		String uploadFilePath = "uploadFile/common/";// 文件服务器存储目录
+		String toPath = httpSession.getServletContext().getRealPath(uploadFilePath);
+		//String pdfName = ScfUUID.generate() + ".pdf";
+		String pdfName = reqBean.getFinanceId() + ".pdf";
+		File dir = new File(toPath);
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
+		toPath = toPath + "/" + pdfName;
+		File file2 = new File(toPath);
+		if (file2.exists()) {
+			file2.delete();
+		}
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("financeNo.1", financeId);// 融资编号
+		paramMap.put("financeNo.2", financeId);// 融资编号
+		paramMap.put("agencyName", reqBean.getAgencyName());// 经销商名称
+		BigDecimal financeAmt = new BigDecimal(reqBean.getFinanceAmount());// 融资金额
+		if (financeAmt.compareTo(BigDecimal.ZERO) == 0) {
+			paramMap.put("money", "零圆整");
+		} else {
+			String financeAmtStr = MoneyUtil.toChinese(financeAmt.toString());// 金额小写转大写
+			paramMap.put("money", financeAmtStr+"整");
+		}
+
+		// 生成融资承诺函
+		try {
+			PDFUtil2.exportToPDF(templetPath, toPath, paramMap);
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		/*// 发送融资承诺函
+		Map<String, Object> warnParamMap = new HashMap<String, Object>();
+		//List<String> roleList = Arrays.asList(launchRoleId, "ROLE000020", "ROLE000016");
+		List<String> roleList = Arrays.asList( "ROLE000020", "ROLE000016");
+		warnParamMap.put("roleList", roleList);
+		warnParamMap.put("warnType", 4);// 通知类型:4.融资承诺函
+		warnParamMap.put("warnMsg", "经销商[" + reqBean.getAgencyName() + "]的融资承诺函已发送，请查收！");
+		warnParamMap.put("filePath", httpSession.getServletContext().getContextPath() + "/" + uploadFilePath + pdfName);
+		commonService.insertWarningInfo(warnParamMap);
+
+		ProcessRepeatCheck checkInfo = new ProcessRepeatCheck();
+		checkInfo.setProcessKey("financeMngProcess");
+		checkInfo.setItemKey("AGENCY_CORP_ID");
+		checkInfo.setItemValue(reqBean.getCorpId());
+		int result = processRepeatChkService.delete(checkInfo);
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}*/
+	}
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void updateFinance(FinanceFlowReqBean reqBean, HttpSession httpSession, String launchRoleId) {
+		// 新增融资情报
+		FinanceInfo financeInfo = new FinanceInfo();
+		String financeId = reqBean.getFinanceId();
+  	
+		try {
+			financeInfo.setProductId(reqBean.getProductId());
+			financeInfo.setFinanceId(financeId);
+
+			/* financeInfo.setFinanceStartDate(SDF.parse(reqBean.getFinanceStartDate()));
+			 financeInfo.setFinanceEndDate(SDF.parse(reqBean.getFinanceEndDate()));*/
+			financeInfo.setFinanceAmount(new BigDecimal(reqBean.getFinanceAmount()));
+
+			financeInfo.setNote(reqBean.getRemark());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		int recFinance = financeInfoMapper.update(financeInfo);
+		if (recFinance < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+/*		// 新增保证金情报
+		GuaranteeInfo guaranteeInfo = new GuaranteeInfo();
+		try {
+			guaranteeInfo.setFinanceId(financeId);
+			guaranteeInfo.setGuaranteeMoneyRate(new BigDecimal(reqBean.getGuaranteeRate()));
+			guaranteeInfo.setPayAbleGuarantee(new BigDecimal(reqBean.getPayAbleGuarantee()));
+			guaranteeInfo.setGuaranteePayDate(SDF.parse(reqBean.getGuaranteePayDate()));
+			guaranteeInfo.setPayActGuarantee(new BigDecimal(reqBean.getGuaranteeAccountAmt()));
+			guaranteeInfo.setGuaranteeBalance(new BigDecimal(reqBean.getGuaranteeAccountAmt()));
+			guaranteeInfo.setGuaranteePayHis(reqBean.getGuaranteePayHis());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		int recGuarantee = guaranteeInfoMapper.insert(guaranteeInfo);
+		if (recGuarantee < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}*/
+
+		// 融资承诺函
+		String templetPath = httpSession.getServletContext().getRealPath(reqBean.getTemplateUrl());
+
+		String uploadFilePath = "uploadFile/common/";// 文件服务器存储目录
+		String toPath = httpSession.getServletContext().getRealPath(uploadFilePath);
+		//String pdfName = ScfUUID.generate() + ".pdf";
+		String pdfName = reqBean.getFinanceId() + ".pdf";
+		File dir = new File(toPath);
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
+		toPath = toPath + "/" + pdfName;
+		File file2 = new File(toPath);
+		if (file2.exists()) {
+			file2.delete();
+		}
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("financeNo.1", financeId);// 融资编号
+		paramMap.put("financeNo.2", financeId);// 融资编号
+		paramMap.put("agencyName", reqBean.getAgencyName());// 经销商名称
+		BigDecimal financeAmt = new BigDecimal(reqBean.getFinanceAmount());// 融资金额
+		if (financeAmt.compareTo(BigDecimal.ZERO) == 0) {
+			paramMap.put("money", "零圆整");
+		} else {
+			String financeAmtStr = MoneyUtil.toChinese(financeAmt.toString());// 金额小写转大写
+			paramMap.put("money", financeAmtStr+"整");
+		}
+
+		// 生成融资承诺函
+		try {
+			PDFUtil2.exportToPDF(templetPath, toPath, paramMap);
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+	}
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void updateFinanceModel(FinanceFlowReqBean reqBean, HttpSession httpSession, String launchRoleId) {
+	
+	
+		String financeId = reqBean.getFinanceId();
+		String newTemplate= reqBean.getFileUrlNew();
+	
+		int recFinance = financeInfoMapper.updateFinanceModel(newTemplate,financeId);
+		if (recFinance < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+	}
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void updateFinanceStatus(FinanceFlowReqBean reqBean, HttpSession httpSession, String launchRoleId) {
+	
+		
+		String financeId = reqBean.getFinanceId();
+  	
+	
+		int recFinance = financeInfoMapper.updateFinanceStatus(999,financeId);
+		if (recFinance < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+	}
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public int getFinanceStatus(String financeid)	{
+		int recFinance = financeInfoMapper.selectFinanceStatus(financeid);
+		return recFinance;
+	}
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean startProcess(JSONObject jsonObject, ProcessRepeatCheck checkInfo) {
+		BaseRespBean respBean = new BaseRespBean();
+
+		String userName = (String) jsonObject.get("userId");
+		String key = (String) jsonObject.get("activitiKey");
+		String launchRoleId = (String) jsonObject.get("launchRoleId");
+		String agencyCorpId = (String) jsonObject.get("corpId");
+
+		ProcessInstance pi = processEngine.getRuntimeService()// 管理流程实例和执行对象，也就是表示正在执行的操作
+				.startProcessInstanceByKey(key);
+		String procInstId = pi.getProcessInstanceId();
+		Task task = taskService.createTaskQuery().processInstanceId(pi.getId()).singleResult();
+
+		// 拾取用户
+		taskService.claim(task.getId(), userName);
+		// 设置变量
+		taskService.setVariable(task.getId(), "launchUser", userName);
+		taskService.setVariable(task.getId(), "launchRoleId", launchRoleId);
+		taskService.setVariable(task.getId(), "agencyCorpId", agencyCorpId);
+		taskService.setVariable(task.getId(), "payApplyJson", jsonObject.toString());
+		taskService.setVariableLocal(task.getId(), "agencyJson", jsonObject.toString());
+		// 完成节点
+		taskService.complete(task.getId());
+
+		BaseRespBean updateLimitInfo = updateLimitInfo(jsonObject);
+		if (updateLimitInfo.getResult() == ErrorCodeEnum.FINANCEAMT_BIG_USEABLEAMT.getValue()) {
+			throw new BizException(ErrorCodeEnum.FINANCEAMT_BIG_USEABLEAMT);
+		} else if (updateLimitInfo.getResult() == ErrorCodeEnum.UPDATE_FAILED.getValue()) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		checkInfo.setProcInstId(procInstId);
+		int result = processRepeatChkService.insert(checkInfo);
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		return respBean;
+	}
+
+	private BaseRespBean updateLimitInfo(JSONObject jsonObject) {
+		BaseRespBean respBean = new BaseRespBean();
+		String corpId = jsonObject.getString("corpId");
+		LimitInfo limitInfo = limitInfoMapper.selectByPrimaryKey(corpId);
+		BigDecimal maxCreditAmount = limitInfo.getMaxCreditAmount();
+		BigDecimal occupiedAmt = nullBigDecimalToZERO(limitInfo.getOccupiedAmt());
+		BigDecimal preOccupancyAmt = nullBigDecimalToZERO(limitInfo.getPreOccupancyAmt());
+		BigDecimal useAbleCreditAmt = nullBigDecimalToZERO(limitInfo.getUseAbleCreditAmt());
+		BigDecimal financeAmount = nullStringToZERO(jsonObject.getString("financeAmount"));
+		BigDecimal orginFinanceAmount = nullStringToZERO(jsonObject.getString("orginFinanceAmount"));
+		if (jsonObject.getString("orginFinanceAmount") != "null") {
+			// 还原额度
+			preOccupancyAmt = preOccupancyAmt.subtract(orginFinanceAmount);
+			// 可用授信额度 = 最高授信额度 - 已占用额度 - 预占用额度
+			useAbleCreditAmt = maxCreditAmount.subtract(occupiedAmt).subtract(preOccupancyAmt);
+		}
+		if (financeAmount.compareTo(useAbleCreditAmt) == 1) {
+			respBean.setResult(ErrorCodeEnum.FINANCEAMT_BIG_USEABLEAMT);
+			return respBean;
+		}
+		// 预占用额度 = 预占用额度 + 融资金额
+		// 可用授信额度 = 最高授信额度 - 已占用额度 - 预占用额度
+		BigDecimal newPreOccupancyAmt = preOccupancyAmt.add(financeAmount);
+		BigDecimal newUseAbleCreditAmt = maxCreditAmount.subtract(occupiedAmt).subtract(newPreOccupancyAmt);
+		LimitInfo limitInfoBean = new LimitInfo();
+		limitInfoBean.setUseAbleCreditAmt(newUseAbleCreditAmt);
+		limitInfoBean.setPreOccupancyAmt(newPreOccupancyAmt);
+		limitInfoBean.setCorpId(corpId);
+		int updateByPrimaryKeySelective4 = limitInfoMapper.updateByPrimaryKeySelective(limitInfoBean);
+		if (updateByPrimaryKeySelective4 < 1) {
+			respBean.setResult(ErrorCodeEnum.UPDATE_FAILED);
+			return respBean;
+		}
+		return respBean;
+	}
+
+	public BigDecimal nullBigDecimalToZERO(BigDecimal value) {
+		BigDecimal result = value == null ? BigDecimal.ZERO : value;
+		return result;
+	}
+
+	public BigDecimal nullStringToZERO(String value) {
+		BigDecimal result = (value == "null" || value.equals("") || value == null) ? BigDecimal.ZERO
+				: new BigDecimal(value);
+		return result;
+	}
+
+	public BigDecimal nullDoubleToZERO(Double value) {
+		BigDecimal result = value == null ? BigDecimal.ZERO : new BigDecimal(value);
+		return result;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getFinanceList(Map<String, Object> paramMap) {
+		List<Map<String, Object>> list = financeInfoDao.getFinanceList(paramMap);
+		ListRespBean respBean = new ListRespBean();
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean deleteProcessById(String procInstId) {
+		BaseRespBean respBean = new BaseRespBean();
+		activitiService.deleteProcessById(procInstId);
+		// 根据procInstId获取发起时存入的流程变量,还原预占用额度和可用授信额度
+		Object value = processEngine.getHistoryService().createHistoricVariableInstanceQuery()
+				.processInstanceId(procInstId).variableName("payApplyJson").singleResult().getValue();
+		JSONObject payApplyJson = new JSONObject(value.toString());
+		String corpId = payApplyJson.getString("corpId");
+		LimitInfo limitInfo = limitInfoMapper.selectByPrimaryKey(corpId);
+		BigDecimal maxCreditAmount = limitInfo.getMaxCreditAmount();
+		BigDecimal occupiedAmt = nullBigDecimalToZERO(limitInfo.getOccupiedAmt());
+		BigDecimal preOccupancyAmt = nullBigDecimalToZERO(limitInfo.getPreOccupancyAmt());
+		BigDecimal useAbleCreditAmt = nullBigDecimalToZERO(limitInfo.getUseAbleCreditAmt());
+		BigDecimal orginFinanceAmount = nullStringToZERO(payApplyJson.getString("financeAmount"));
+		// 预占用额度 = 预占用额度 + 融资金额
+		// 可用授信额度 = 最高授信额度 - 已占用额度 - 预占用额度
+		preOccupancyAmt = preOccupancyAmt.subtract(orginFinanceAmount);
+		useAbleCreditAmt = maxCreditAmount.subtract(occupiedAmt).subtract(preOccupancyAmt);
+		LimitInfo limitInfoBean = new LimitInfo();
+		limitInfoBean.setUseAbleCreditAmt(useAbleCreditAmt);
+		limitInfoBean.setPreOccupancyAmt(preOccupancyAmt);
+		limitInfoBean.setCorpId(corpId);
+		int updateByPrimaryKeySelective = limitInfoMapper.updateByPrimaryKeySelective(limitInfoBean);
+		if (updateByPrimaryKeySelective < 1) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		return respBean;
+	}
+
+	@Override
+	public boolean hasAgencyUser(FinanceFlowReqBean reqBean) {
+		SysUserExample example = new SysUserExample();
+		com.ut.scf.pojo.auto.SysUserExample.Criteria criteria = example.createCriteria();
+		criteria.andCorpIdEqualTo(reqBean.getCorpId());
+		criteria.andStatusEqualTo((byte) 1);
+
+		List<SysUser> users = sysUserMapper.selectByExample(example);
+
+		if (CollectionUtils.isNotEmpty(users)) {
+			return true;
+		}
+
+		return false;
+	}
+	
+	@Override
+	public boolean hasFinanceId(FinanceFlowReqBean reqBean) {	
+		FinanceInfoExample example = new FinanceInfoExample();
+		com.ut.scf.pojo.auto.FinanceInfoExample.Criteria criteria = example.createCriteria();
+		criteria.andFinanceIdEqualTo(reqBean.getFinanceId());
+
+		List<FinanceInfo> financeInfos = financeInfoMapper.selectByExample(example);
+		if (CollectionUtils.isNotEmpty(financeInfos)) {
+			return true;
+		}
+
+		return false;
+	}
+	@Override
+	public boolean checkFinanceStatus(FinanceFlowReqBean reqBean) {
+		FinanceInfoExample example = new FinanceInfoExample();
+		com.ut.scf.pojo.auto.FinanceInfoExample.Criteria criteria = example.createCriteria();
+		criteria.andCorpIdEqualTo(reqBean.getCorpId());
+		criteria.andFinanceStatusNotEqualTo("4");// 融资状态, 4:已全额还款
+
+		List<FinanceInfo> list = financeInfoMapper.selectByExample(example);
+
+		if (CollectionUtils.isNotEmpty(list)) {
+			return true;
+		}
+
+		return false;
+	}
+}

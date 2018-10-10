@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.project.IFinanceInfoDao" >
+  <select id="getFinanceInfoList" resultType="hashmap" parameterType="hashmap" >
+     select temp.* from
+     (
+     SELECT
+      fi.finance_id financeId,
+      fi.apply_date applyDate,
+      ci.corp_name agencyName,
+      ci.agency_num agencyNum,
+      ci.orgn_num orgnNum,
+      li.max_credit_amount maxCredit,
+      li.use_able_credit_amt availableCredit,
+      fi.finance_rate financeRate, 
+      fi.cash_rate cashRate,
+      fi.finance_start_date financeStartDate,
+      fi.finance_end_date financeEndDate,
+      fi.pay_amt payAmt,
+      fi.finance_balance financeBalance,
+      fi.finance_amount financeAmount,
+      fi.expense expense,
+      fi.finance_status financeStatus,
+      fi.product_id productId,
+      fi.note note,
+       fi.ywlx_id ywlxId,
+       fi.cpr_year cprYear,
+       fi.cpr_month cprMonth,
+        fi.upload_url uploadUrl,
+       fi.file_url fileUrl,
+       fi.template_url templateUrl,
+       fi.template_url_new templateUrlNew,
+		pro.product_name productName,	
+		pro.business_type businessType,
+		busi.type_name typeName,
+		guara.guarantee_money_rate guaranteeMoneyRate,
+		guara.pay_able_guarantee payAbleGuarantee,
+		guara.pay_act_guarantee payActGuarantee
+    from finance_info fi
+    join corp_info ci on fi.corp_id = ci.corp_id
+    left join limit_info li on ci.corp_id = li.corp_id
+		left join product_info pro on fi.product_id=pro.product_id
+LEFT JOIN guarantee_info guara on fi.finance_id=guara.finance_id
+
+LEFT JOIN business_type_info busi on pro.business_type=busi.type_id
+    WHERE 1 = 1
+    and ci.sys_type = '4'
+    <if test="agencyName != null and agencyName != ''">
+	    and ci.corp_name LIKE CONCAT(CONCAT('%', #{agencyName}),'%')
+	</if> 
+    <if test="agencyNum != null and agencyNum !='' ">  
+        and ci.agency_num LIKE CONCAT(CONCAT('%', #{agencyNum}),'%')
+    </if>
+    <if test="financeId != null and financeId !='' ">  
+        and fi.finance_id LIKE CONCAT(CONCAT('%', #{financeId}),'%')
+    </if>
+    <if test="financeStartDate != null and financeStartDate !='' ">  
+        and DATE_FORMAT(fi.finance_start_date, '%Y-%m-%d') >= #{financeStartDate}
+    </if>
+    <if test="financeEndDate != null and financeEndDate !='' ">  
+        and DATE_FORMAT(fi.finance_end_date, '%Y-%m-%d') <![CDATA[<=]]> #{financeEndDate}
+    </if>
+     <if test="financeStatus != null and financeStatus !='' ">  
+        and fi.finance_status = #{financeStatus}
+    </if>
+    <if test="cprYear != null and cprYear !='' ">  
+        and fi.cpr_year = #{cprYear}
+    </if>
+     <if test="cprMonth != null and cprMonth !='' ">  
+        and fi.cpr_Month = #{cprMonth}
+    </if>
+    <if test="corpId != null and corpId !='' ">  
+  	   <choose> 
+	  	<when test="corpId =='corp00002'">
+	  		and ci.corp_id not in ('corp00003')
+	  	</when>
+	  	<otherwise>  
+	  		and ci.corp_id = #{corpId}
+       	</otherwise>  
+	  </choose>
+    </if>
+     ) temp
+     
+    <if test="orderBy =='desc'">
+	 ORDER BY ${orderByName} +0 desc
+	</if>
+	<if test="orderBy =='asc'">
+	 ORDER BY ${orderByName} +0 asc
+	</if>
+     
+    
+  </select>
+  
+  <select id="getFinanceInfoGroupByName" resultType="hashmap" parameterType="hashmap" >
+  	select Temp.*from
+    (SELECT
+   		ci.corp_name agencyName,
+   		ci.agency_num agencyNum,
+   		ci.orgn_num orgnNum,
+   		SUM(fi.finance_amount) financeAmountSum,
+   		SUM(fi.pay_amt) payAmtSum,
+   		SUM(fi.finance_balance) financeBalanceSum,
+   		(SUM(fi.pay_amt)-SUM(fi.finance_balance)) financeAlreadySum,
+		SUM(if(fi.finance_status = 5, fi.finance_balance, 0)) overdueFinanceAmountSum,
+		SUM(if(fi.finance_status = 1, fi.finance_amount, 0)) toBeFinanceAmountSum
+    from finance_info fi
+    join corp_info ci on fi.corp_id = ci.corp_id
+    WHERE 1 = 1
+    and ci.sys_type = '4'
+    <if test="agencyName != null and agencyName != ''">
+	    and ci.corp_name LIKE CONCAT(CONCAT('%', #{agencyName}),'%')
+	</if> 
+    <if test="agencyNum != null and agencyNum !='' ">  
+        and ci.agency_num LIKE CONCAT(CONCAT('%', #{agencyNum}),'%')
+    </if>
+    <if test="financeStartDate != null and financeStartDate !='' ">  
+        and DATE_FORMAT(fi.finance_start_date, '%Y-%m-%d') >= #{financeStartDate}
+    </if>
+    <if test="financeEndDate != null and financeEndDate !='' ">  
+        and DATE_FORMAT(fi.finance_end_date, '%Y-%m-%d') <![CDATA[<=]]> #{financeEndDate}
+    </if>
+     <if test="financeStatus != null and financeStatus !='' ">  
+        and fi.finance_status = #{financeStatus}
+    </if>
+     <if test="corpId != null and corpId !='' ">  
+        and ci.corp_id = #{corpId}
+    </if>
+    GROUP BY ci.corp_name) Temp
+  </select>
+  
+  <select id="getRefundDepositInfo" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+     fi.finance_id financeId,
+     fi.apply_date applyDate,
+     ci.corp_name agencyName,
+     ci.agency_num agencyNum,
+     li.max_credit_amount maxCredit,
+     li.use_able_credit_amt availableCredit,
+     fi.finance_start_date financeStartDate,
+     fi.finance_end_date financeEndDate,
+     fi.finance_amount financeAmount,
+     fi.pay_date payDate,
+     fi.finance_balance financeBalance,
+     fi.pay_amt payAmt,
+     pi.guarantee_money_rate guaranteeMoneyRate,
+     pi.pay_able_guarantee payAbleGuarantee,
+     pi.guarantee_pay_date guaranteePayDate,
+     pi.pay_act_guarantee payActGuarantee,
+     pi.guarantee_balance guaranteeBalance,
+     pi.guarantee_pay_his guaranteePayHis,
+     rm.not_pay_interest notPayInterest,
+     rm.has_pay_interest hasPayInterest
+    from finance_info fi 
+    join guarantee_info pi on fi.finance_id =pi.finance_id
+    join corp_info ci on fi.corp_id = ci.corp_id
+    left join limit_info li on ci.corp_id = li.corp_id
+    left join revenue_management rm on rm.finance_id = fi.finance_id
+    <where>
+    	ci.sys_type = '4' and pi.guarantee_balance <![CDATA[<>]]> 0
+    	<if test="financeType==0">  
+    		and pi.pay_act_guarantee<![CDATA[>]]>pi.pay_able_guarantee
+    	</if>
+    	<if test="corpId != null and corpId !=''">
+    		and ci.corp_id = #{corpId}
+    	</if>  
+    	<if test="financeType==1">  
+    		and fi.finance_status in (2,3,4,5)
+    		and pi.guarantee_balance>0
+    	</if>
+    </where>
+    
+  </select>
+  
+  <select id="getFinanceList" resultType="hashmap" parameterType="hashmap" >
+   select distinct
+	fi.finance_id financeId,
+	fi.finance_start_date financeStartDate,
+	fi.finance_end_date financeEndDate,
+	fi.pay_amt payAmt,
+	fi.finance_balance financeBalance,
+	fi.finance_amount financeAmount,
+	rm.not_pay_interest notPayInterest
+  from
+	finance_info fi
+  	join revenue_management rm ON rm.finance_id =fi.finance_id
+    <where>
+    	rm.not_pay_interest > 0 
+    	and fi.corp_id =#{corpId} and fi.finance_status in(2,3,4,5)
+    </where>
+  </select>
+  
+  <select id="getOverdueInfoGroupByName" resultType="hashmap" parameterType="hashmap">
+  select Temp.* from(
+  	 SELECT
+   		ci.corp_name agencyName,
+   		ci.agency_num agencyNum,
+   		ci.orgn_num orgnNum,
+   		SUM(fi.pay_amt) payAmtSum,
+   		SUM(if(fi.finance_status = 5, 1, 0)) overdueCountSum,
+   		SUM(if(fi.finance_status = 5, fi.finance_amount, 0)) overdueAmountSum,
+   		SUM(if(fi.finance_status = 5, fi.finance_balance, 0))/SUM(fi.pay_amt) overdueRate
+    from finance_info fi
+    join corp_info ci on fi.corp_id = ci.corp_id
+    WHERE 1 = 1
+    and ci.sys_type = '4'
+    <if test="agencyName != null and agencyName != ''">
+	    and ci.corp_name LIKE CONCAT(CONCAT('%', #{agencyName}),'%')
+	</if> 
+    <if test="financeStartDate != null and financeStartDate !='' ">  
+        and DATE_FORMAT(fi.finance_end_date, '%Y-%m-%d') >= #{financeStartDate}
+    </if>
+    <if test="financeEndDate != null and financeEndDate !='' ">  
+        and DATE_FORMAT(fi.finance_end_date, '%Y-%m-%d') <![CDATA[<=]]> #{financeEndDate}
+    </if>
+     <if test="financeStatus != null and financeStatus !='' ">  
+        and fi.finance_status = #{financeStatus}
+    </if>
+    GROUP BY ci.corp_name) Temp
+  </select>
+  
+  <select id="getOverdueInfoGroupByYear" resultType="hashmap" parameterType="hashmap">
+  	 SELECT
+   		SUM(fi.pay_amt) payAmtSum,
+   		SUM(if(fi.finance_status = 5, fi.finance_amount, 0)) overdueAmountSum,
+   		DATE_FORMAT(fi.finance_end_date, '%Y') financeEndDate
+    from finance_info fi
+    join corp_info ci on fi.corp_id = ci.corp_id
+    WHERE 1 = 1
+    and ci.sys_type = '4'
+    <if test="agencyName != null and agencyName != ''">
+	    and ci.corp_name LIKE CONCAT(CONCAT('%', #{agencyName}),'%')
+	</if> 
+    <if test="financeStartDate != null and financeStartDate !='' ">  
+        and DATE_FORMAT(fi.finance_end_date, '%Y-%m-%d') >= #{financeStartDate}
+    </if>
+    <if test="financeEndDate != null and financeEndDate !='' ">  
+        and DATE_FORMAT(fi.finance_end_date, '%Y-%m-%d') <![CDATA[<=]]> #{financeEndDate}
+    </if>
+     <if test="financeStatus != null and financeStatus !='' ">  
+        and fi.finance_status = #{financeStatus}
+    </if>
+    GROUP BY financeEndDate
+  </select>
+  
+  <!-- 查询统计新需求 -->
+  <select id="getFinanceInfoQueryList" resultType="hashmap" parameterType="hashmap" >
+    select temp.*
+    from (SELECT
+      ci.corp_name agencyName,
+      ci.agency_num agencyNum,
+      fi.pay_id payId,
+      fi.finance_start_date financeStartDate,
+      fi.finance_end_date financeEndDate,
+      fi.pay_amt payAmt,
+      li.max_credit_amount maxCredit,
+      LEAST(li.max_credit_amount, li.use_able_credit_amt) availableCredit,
+       li.max_lscredit_amount maxLsCredit,
+      LEAST(li.max_lscredit_amount, li.use_able_lscredit_amt) availableLsCredit,
+      li.dz_id dzId,
+      li.ls_id lsId
+    from finance_info fi
+    join corp_info ci on fi.corp_id = ci.corp_id
+    join limit_info li on ci.corp_id = li.corp_id
+    WHERE ci.sys_type = '4'
+    <if test="agencyName != null and agencyName != ''">
+	    and ci.corp_name LIKE CONCAT(CONCAT('%', #{agencyName}),'%')
+	</if> 
+    <if test="agencyNum != null and agencyNum !='' ">  
+        and ci.agency_num LIKE CONCAT(CONCAT('%', #{agencyNum}),'%')
+    </if>
+    <if test="financeStartDate != null and financeStartDate !='' ">  
+        and DATE_FORMAT(fi.finance_start_date, '%Y-%m-%d') >= #{financeStartDate}
+    </if>
+    <if test="financeEndDate != null and financeEndDate !='' ">  
+        and DATE_FORMAT(fi.finance_end_date, '%Y-%m-%d') <![CDATA[<=]]> #{financeEndDate}
+    </if>
+       <if test="corpId != null and corpId !='' ">  
+  	   <choose> 
+	  	<when test="corpId =='corp00002'">
+	  		and ci.corp_id not in ('corp00003')
+	  	</when>
+	  	<otherwise>  
+	  		and ci.corp_id = #{corpId}
+       	</otherwise>  
+	  </choose>
+    </if>
+    order by ci.agency_num asc, fi.finance_start_date asc) temp
+  </select>
+</mapper>

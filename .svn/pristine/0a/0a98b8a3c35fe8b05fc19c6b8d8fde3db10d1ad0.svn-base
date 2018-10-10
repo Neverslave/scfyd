@@ -1,0 +1,259 @@
+package com.ut.scf.service.tradfact.impl;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.*;
+import com.ut.scf.dao.sys.IUserDao;
+import com.ut.scf.dao.tradfact.ITfProjectDao;
+import com.ut.scf.pojo.auto.*;
+import com.ut.scf.reqbean.tradfact.ProjectAddReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+
+import com.ut.scf.service.project.ICommonService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.util.*;
+
+
+@Service("projectBpmService")
+public class ProjectBpmServiceImpl extends BaseActivitiService<ProjectAddReqBean> implements IActivitiService<ProjectAddReqBean> {
+    private static final String ADVANCE_APPLY_BPM = "project";
+    // 批复推送对象：业务负责人、业务分管领导、风险经理、风险部长、风险分管领导,业务经理
+    private static List<String> TARGET_ROLE_IDS_REPLY = Arrays.asList("ROLE000008", "ROLE000023", "ROLE000014", "ROLE000009",
+            "ROLE000022");
+
+    @Resource
+    private CorpInfoMapper corpInfoMapper;
+
+    @Resource
+    private TfProjectFilesMapper projectFilesMapper;
+
+    @Resource
+    private TfProjectInfoMapper tfProjectInfoMapper;
+
+    @Resource
+    private TfRateInfoMapper tfRateInfoMapper;
+
+    @Resource
+    private TfProjectAndCorpMapper tfProjectAndCorpMapper;
+
+    @Resource
+    TfProjectCreditMapper projectCreditMapper;
+
+    @Resource
+    ITfProjectDao projectDao;
+
+    @Resource
+    IUserDao userDao;
+
+    @Resource
+    TfProjectAssignMapper assignMapper;
+
+    @Resource
+    private ICommonService commonService;
+
+    @Resource
+    private SysUserMapper userMapper;
+
+
+    @Override
+    public String getProcessDefinitionKey() {
+        return ADVANCE_APPLY_BPM;
+    }
+
+
+    @Override
+    public void doStartBefore(BpmProcessContext bpmProcessContext) {
+
+        ProjectAddReqBean projectAddReqBean = (ProjectAddReqBean) bpmProcessContext.getT();
+        CorpInfo corpInfoSale = corpInfoByOrgn(projectAddReqBean.getOrgnNumSale());
+        CorpInfo corpInfoBuy = corpInfoByOrgn(projectAddReqBean.getOrgnNumBuy());
+        if (corpInfoSale != null && corpInfoBuy != null) {
+            Map<String, Object> param = new HashMap<>();
+            param.put("factoringType", projectAddReqBean.getFactoringType());
+            param.put("corpBuyId", corpInfoBuy.getCorpId());
+            param.put("corpSaleId", corpInfoSale.getCorpId());
+            List<Map<String, Object>> result = projectDao.findProjectInfo(param);
+            if (result != null && result.size() > 0) {
+                throw new BizException(ErrorCodeEnum.PROJECT_EXIST, "该项目该买卖方已立项");
+            }
+        }
+    }
+
+    private boolean checkCorpInfo(String orgnNum) {
+        CorpInfo corpInfo = corpInfoByOrgn(orgnNum);
+        if (corpInfo == null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+        if (bpmProcessContext.isProcessEnd()) {
+            ProjectAddReqBean projectAddReqBean = (ProjectAddReqBean) bpmProcessContext.getT();
+            addData(projectAddReqBean);
+        }
+    }
+
+    @Transactional
+    public void addData(ProjectAddReqBean projectAddReqBean) {
+        String projectId = ScfUUID.generate();
+        String rateId = ScfUUID.generate();
+        String buyId = addCorpInfoBuy(projectAddReqBean);
+        String saleId = addCorpInfoSale(projectAddReqBean);
+        addProjectInfo(projectAddReqBean, projectId, rateId);
+        addProjectAssign(projectId,projectAddReqBean.getUserId());
+        addCreditInfo(projectAddReqBean, projectId);
+        addProjectAndCorp(projectId, buyId, saleId);
+        addProjectFiles(projectAddReqBean, projectId);
+        addRateInfo(projectAddReqBean, rateId);
+        overdueWarningInfo("["+projectAddReqBean.getProjectName()+"]项目已分配至风险经理["+getUserName(projectAddReqBean.getUserId())+"]负责!");
+    }
+
+    private String getUserName(String userId){
+        return userMapper.selectByPrimaryKey(userId).getRealname();
+    }
+
+    //买卖方
+    private String addCorpInfoBuy(ProjectAddReqBean projectAddReqBean) {
+        String buyId = ScfUUID.generate();
+        CorpInfo corpInfo = corpInfoByOrgn(projectAddReqBean.getOrgnNumBuy());
+        if (corpInfo == null) {
+            CorpInfo buy = new CorpInfo();
+            buy.setCorpId(buyId);
+            buy.setOrgnNum(projectAddReqBean.getOrgnNumBuy());
+            buy.setCorpName(projectAddReqBean.getNameBuy());
+            buy.setStatus((byte) 1);
+            corpInfoMapper.insert(buy);
+            return buyId;
+        }
+        return corpInfo.getCorpId();
+
+    }
+
+    private String addCorpInfoSale(ProjectAddReqBean projectAddReqBean) {
+        String saleId = ScfUUID.generate();
+        CorpInfo corpInfo = corpInfoByOrgn(projectAddReqBean.getOrgnNumSale());
+        if (corpInfo == null) {
+            CorpInfo sale = new CorpInfo();
+            sale.setCorpId(saleId);
+            sale.setOrgnNum(projectAddReqBean.getOrgnNumSale());
+            sale.setCorpName(projectAddReqBean.getNameSale());
+            sale.setStatus((byte) 1);
+            corpInfoMapper.insert(sale);
+            return saleId;
+        }
+        return corpInfo.getCorpId();
+    }
+
+    private CorpInfo corpInfoByOrgn(String orng) {
+        CorpInfoExample corpInfoExample = new CorpInfoExample();
+        CorpInfoExample.Criteria criteria = corpInfoExample.createCriteria();
+        criteria.andOrgnNumEqualTo(orng);
+        List<CorpInfo> corpInfos = corpInfoMapper.selectByExample(corpInfoExample);
+        if (corpInfos != null && corpInfos.size() > 0) {
+            return corpInfos.get(0);
+        }
+        return null;
+    }
+
+    //项目信息
+    private void addProjectInfo(ProjectAddReqBean projectAddReqBean, String projectId, String rateId) {
+        TfProjectInfo tfProjectInfo = new TfProjectInfo();
+        tfProjectInfo.setCreateTime(new Date());
+
+        tfProjectInfo.setFactoringType(projectAddReqBean.getFactoringType());
+        tfProjectInfo.setFinancingAmount(projectAddReqBean.getFinancingAmount());
+        tfProjectInfo.setFinancingTerm(projectAddReqBean.getFinancingTerm());
+        tfProjectInfo.setProjectDescription(projectAddReqBean.getProjectDescription());
+        tfProjectInfo.setProjectId(projectId);
+        tfProjectInfo.setProjectName(projectAddReqBean.getProjectName());
+        tfProjectInfo.setProjectStatus("10");
+        tfProjectInfo.setRateId(rateId);
+        tfProjectInfo.setReapymentAmount(projectAddReqBean.getReapymentAmount());
+        tfProjectInfo.setRepaymentWay(projectAddReqBean.getRepaymentWay());
+        tfProjectInfo.setReturnRate(projectAddReqBean.getReturnRate());
+        tfProjectInfo.setRiskMitigationMeasures(projectAddReqBean.getRiskMitigationMeasures());
+        tfProjectInfoMapper.insert(tfProjectInfo);
+    }
+
+    //指派
+    private void addProjectAssign(String projectId,String userId){
+        TfProjectAssign projectAssign = new TfProjectAssign();
+        projectAssign.setId(ScfUUID.generate());
+        projectAssign.setProjectId(projectId);
+        projectAssign.setUserAssign(userId);
+        projectAssign.setProjectType("0");
+        assignMapper.insert(projectAssign);
+    }
+
+    //额度信息
+    private void addCreditInfo(ProjectAddReqBean projectAddReqBean, String projectId) {
+        TfProjectCredit projectCredit = new TfProjectCredit();
+        projectCredit.setCreditAmount(projectAddReqBean.getCreditAmount());
+        projectCredit.setCreditMain(projectAddReqBean.getCreditMain());
+        projectCredit.setCreditTerm(projectAddReqBean.getCreditTerm());
+        projectCredit.setCreditId(ScfUUID.generate());
+        projectCredit.setCreditUse(BigDecimal.ZERO);
+        projectCredit.setProjectId(projectId);
+        projectCreditMapper.insert(projectCredit);
+    }
+
+
+    //买卖方和项目的关系
+    private void addProjectAndCorp(String projectId, String buyId, String saleId) {
+        TfProjectAndCorp projectAndCorp = new TfProjectAndCorp();
+        projectAndCorp.setCorpBuyId(buyId);
+        projectAndCorp.setCorpSaleId(saleId);
+        projectAndCorp.setProjectId(projectId);
+        tfProjectAndCorpMapper.insert(projectAndCorp);
+    }
+
+    //项目文件
+    private void addProjectFiles(ProjectAddReqBean projectAddReqBean, String projectId) {
+        insertFiles(projectAddReqBean.getSaleFiles(), "1", projectId);
+        insertFiles(projectAddReqBean.getBuyFiles(), "0", projectId);
+        insertFiles(projectAddReqBean.getGuaranteeFiles(), "2", projectId);
+        insertFiles(projectAddReqBean.getTranFiles(), "3", projectId);
+
+    }
+
+    private void insertFiles(List<TfProjectFiles> projectFiles, String fileClass, String projectId) {
+        for (TfProjectFiles file : projectFiles) {
+            file.setProjectId(projectId);
+            file.setMaterialClass(fileClass);
+            file.setFileId(ScfUUID.generate());
+            file.setCreateTime(new Date());
+            projectFilesMapper.insert(file);
+        }
+    }
+
+    //费率
+    private void addRateInfo(ProjectAddReqBean projectAddReqBean, String rateId) {
+        TfRateInfo rateInfo = new TfRateInfo();
+        rateInfo.setCreateTime(new Date());
+        rateInfo.setInterestRate(projectAddReqBean.getInterestRate());
+        rateInfo.setManageFeeAmount(projectAddReqBean.getManageFeeAmount());
+        rateInfo.setManageFeeRate(projectAddReqBean.getManageFeeRate());
+        rateInfo.setMngFeePayWay(projectAddReqBean.getMngFeePayWay());
+        rateInfo.setRateId(rateId);
+        rateInfo.setReceiptWay(projectAddReqBean.getReceiptWay());
+        tfRateInfoMapper.insert(rateInfo);
+
+    }
+
+    private void overdueWarningInfo(String msg) {
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        paramMap.put("roleList", TARGET_ROLE_IDS_REPLY);
+        paramMap.put("warnType", 9);
+        paramMap.put("warnMsg", msg);
+        commonService.insertWarningInfo(paramMap);
+    }
+}

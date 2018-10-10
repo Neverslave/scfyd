@@ -1,0 +1,168 @@
+package com.ut.scf.service.query.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.ExcelUtil2;
+import com.ut.scf.dao.query.ISaleInfoListDao;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.ListRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.query.ISaleInfoQueryService;
+
+@Service("saleInfoQueryService")
+public class SaleInfoQueryServiceImpl implements ISaleInfoQueryService {
+
+	@Resource
+	private ISaleInfoListDao iSaleInfoListDao;
+
+	@Override
+	public BaseRespBean saleQueryList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = iSaleInfoListDao.getSaleInfoList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean saleAllQueryList(Map<String, Object> paramMap) {
+		
+		paramMap.put("ywlxId", "1");
+		//零售
+		List<Map<String, Object>> listAll = iSaleInfoListDao.getSaleAllInfoList(paramMap);
+		//大宗
+		paramMap.put("ywlxId", "2");
+		List<Map<String, Object>> listDz = iSaleInfoListDao.getSaleAllInfoList(paramMap);
+		
+		for(int i=0;i<listDz.size();i++){
+			listAll.add(listDz.get(i));
+		}
+		ListRespBean respBean = new ListRespBean();
+		respBean.setDataList(listAll);
+		return respBean;
+	}
+	
+
+	@Override
+	public void exportExcel(Map<String, Object> paramMap, String path) throws Exception {
+		String corpId = "";
+		String title = "";
+		if (!paramMap.containsKey("corpId")) {
+			corpId = String.valueOf(paramMap.get("corpId"));
+		}
+		if ("".equals(corpId)) {
+			title = "销售查询明细（悦达dyk查看）";
+		} else {
+			title = "销售查询明细（经销商查看）";
+		}
+		List<Map<String, Object>> listAll = iSaleInfoListDao.getSaleAllInfoList(paramMap);
+		List<Map<String, Object>> list = iSaleInfoListDao.getSaleInfoList(paramMap);
+
+		HSSFWorkbook hssfWorkbook = ExcelUtil2.crateBook();
+		HSSFFont font = ExcelUtil2.getFont(hssfWorkbook);
+		HSSFCellStyle style = ExcelUtil2.setCell(hssfWorkbook, font);
+		HSSFSheet sheet = ExcelUtil2.crateSheet(hssfWorkbook);
+
+		ExcelUtil2.writeTitle("销售查询累计", getAllTitles(), style, sheet);
+		ExcelUtil2.exportToExcel(getAllFields(), listAll, null, style, sheet);
+
+		ExcelUtil2.writeTitle(title, getTitles(corpId), style, sheet);
+		ExcelUtil2.exportToExcel(getFields(corpId), list, getMergeMap(corpId), style, sheet);
+
+		ExcelUtil2.writeExcel(hssfWorkbook, path);
+		hssfWorkbook.close();
+
+	}
+
+	private Map<String, String> getMergeMap(String corpId) {
+		Map<String, String> mergeMap = new HashMap<String, String>();
+		if ("".equals(corpId)) {
+			mergeMap.put("agencyNum", "agencyNum");
+			mergeMap.put("agencyName", "agencyNum");
+		}
+		return mergeMap;
+	}
+
+	private List<String> getTitles(String corpId) {
+		List<String> titles = new ArrayList<String>();
+		if ("".equals(corpId)) {
+			titles.add("经销商名称");
+			titles.add("经销商代码");
+		}
+		titles.add("付款承诺函编号");
+		titles.add("付款承诺函金额");
+		titles.add("车辆总数");
+		titles.add("销售回款金额");
+		titles.add("销售车辆数量");
+		titles.add("销售车辆数量比例(%)");
+		titles.add("销售金额比例(%)");
+		titles.add("未销售数量");
+		titles.add("未销售金额");
+		return titles;
+
+	}
+
+	private List<String> getFields(String corpId) {
+		List<String> fields = new ArrayList<String>();
+		if ("".equals(corpId)) {
+			fields.add("agencyName");
+			fields.add("agencyNum");
+		}
+		fields.add("payId");
+		fields.add("payAmt");
+		fields.add("totalCarNum");
+		fields.add("saleCarAmt");
+		fields.add("saleCarNum");
+		fields.add("numRate");
+		fields.add("amtRate");
+		fields.add("notSaleNum");
+		fields.add("notSaleAmt");
+		return fields;
+
+	}
+
+	private List<String> getAllTitles() {
+		List<String> titles = new ArrayList<String>();
+		titles.add("付款承诺函金额");
+		titles.add("车辆总数");
+		titles.add("销售回款金额");
+		titles.add("销售车辆数量");
+		titles.add("销售车辆数量比例(%)");
+		titles.add("销售金额比例(%)");
+		return titles;
+
+	}
+
+	private List<String> getAllFields() {
+		List<String> fields = new ArrayList<String>();
+		fields.add("payAmt");
+		fields.add("totalCarNum");
+		fields.add("saleCarAmt");
+		fields.add("saleCarNum");
+		fields.add("numRate");
+		fields.add("amtRate");
+		return fields;
+
+	}
+
+	@Override
+	public BaseRespBean saleInfoList(Map<String, Object> paramMap) {
+		List<Map<String, Object>> list = iSaleInfoListDao.getSaleInfoList(paramMap);
+		ListRespBean respBean = new ListRespBean();
+		respBean.setDataList(list);
+		return respBean;
+	}
+}

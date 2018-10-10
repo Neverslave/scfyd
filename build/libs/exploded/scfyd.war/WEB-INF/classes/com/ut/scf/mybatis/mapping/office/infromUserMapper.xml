@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ut.scf.dao.office.InfromUserDao">
+
+	<select id="selectUserInfoList" resultType="hashmap"
+		parameterType="hashmap">
+		select
+		rec_uid recUid,
+		inform_id informId
+		user_id userId
+		from
+		inform_user
+		<where>
+			1=1
+			<if test="informId != ''">
+				and inform_id = #{informId}
+			</if>
+		</where>
+	</select>
+
+	<delete id="deleteUserInfo" parameterType="hashmap">
+		delete from
+		inform_user
+		<where> 
+			<if test="informId != ''">
+				and inform_id = #{informId}
+			</if>
+        </where> 
+	</delete>
+
+	<insert id="insertUserInfo" parameterType="hashmap">
+		insert into
+		inform_user (rec_uid, inform_id, user_id)
+		values (#{recUid},
+		#{informId}, #{userId})
+	</insert>
+
+	<update id="updateUserInfo" parameterType="hashmap">
+		update inform_user
+		<set>
+			<if test="recUid != null">
+				rec_uid = #{recUid},
+			</if>
+			<if test="informId != null">
+				inform_id = #{informId},
+			</if>
+			<if test="userId != null">
+				user_id = #{userId},
+			</if>
+		</set>
+		where rec_uid = #{recUid}
+	</update>
+
+</mapper>

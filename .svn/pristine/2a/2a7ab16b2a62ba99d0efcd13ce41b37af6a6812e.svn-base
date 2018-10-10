@@ -1,0 +1,8 @@
+package com.ut.scf.service.tradfact;
+
+import com.ut.scf.reqbean.tradfact.ManagementFileAddReqBeqn;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface ManagementFileService {
+	public BaseRespBean updateManagement(ManagementFileAddReqBeqn reqBean);
+}

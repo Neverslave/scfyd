@@ -1,0 +1,668 @@
+var IS_INTEREST_DATE = false;
+var selRowsObj = {}; //保存选中行
+var allRowsObj = {}; //保存所有行
+var repayIndex=0;
+var repayAcuAmit=0;
+$(function () {
+	CloudUtils.getMenuNames("nav");
+	$("form").attr("autocomplete","off");
+
+	formValidator()
+	numFormat();
+	downloadTemp();
+	// 还款日期
+	$("#repaymentDate").val(store.get("serverDate"));
+	// 收息日
+	getProductId();
+	$("#interestDate").val(IS_INTEREST_DATE);
+
+		// 获取经销商下所有未还利息store.get("");
+		ajaxNotPayInterest();
+	
+	ajaxAllCarInfo();
+	initTableInfo();
+	initAmitTable();
+	ajaxFileUpload();
+	$('#addModal').on('hidden.bs.modal', function() {
+		$("#addAmitForm")[0].reset();
+    	$("#addAmitForm").bootstrapValidator('resetForm', true);
+	});
+});
+
+window.operateEvents = {
+		'click .remove': function (e, value, row, index) {
+			repayAcuAmit=Number(repayAcuAmit)-Number(row.repayCount)
+			$("#repayAutAmt").val(repayAcuAmit);
+			$("#payAmitListTable").bootstrapTable("remove", {
+				field: "tableId",
+				values: [row.tableId]
+			});
+		},
+};
+
+function searchFun(){
+	initTableInfo();
+}
+function initTableInfo() { 
+	$('#carInfoListTable').bootstrapTable('destroy'); 
+	$("#carInfoListTable").bootstrapTable({  
+		method: "post", 
+        url: "../../repayInfo/getRepayCarInfoList", 
+        striped: true,  //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 5,  //每页显示的记录数  
+        pageNumber:1, //当前第几页  
+        pageList: [5, 10, 15, 20, 25],  //记录数可选列表  
+        clickToSelect:true,     //是否选中
+        idField:"carFrameNum",
+        search: false,  //是否启用查询  
+        showColumns: false,  //显示下拉框勾选要显示的列  
+        showRefresh: false,  //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType : "undefined",   
+        queryParams: function queryParams(params) {   //设置查询参数  
+        	var carFrameNumVal=$("#carFrameNum").val();
+        	var param = {
+    			carFrameNum: carFrameNumVal,
+                pageNumber: params.pageNumber,
+                pageSize: params.pageSize,
+               
+            };    
+            return JSON.stringify(param);
+        },  
+        responseHandler:function responseHandler(res) {
+	       	if (res.result==0) {
+	       		$.each(res.dataList, function(i, row) {
+	       			row.checkStatus = row.carFrameNum in selRowsObj;
+	       		});
+	       		
+	        	return {
+	        		"rows": res.dataList,
+	        		"total": res.records
+	        	};
+	
+	       	} else {
+	       		bootbox.alert(res.resultNote);
+	       		return {
+		        	"rows": [],
+		        	"total": 0
+	        	};
+	       	}
+        },
+         columns: [{
+	 	        field: 'checkStatus',
+	 	        checkbox: true
+		 	}, {
+	 	        field: 'carFrameNum',
+	 	        title: '车架号',
+	 	        align: 'center',
+	            valign: 'middle'
+		 	}, {
+	 	        field: 'carActualPrice',
+	 	        title: '实际提车价（元）',
+	 	        align: 'center',
+	            valign: 'middle',
+	            formatter:function(value,row,index){
+					 return $.number(value, 2);
+		        }
+	 	    }, {
+	 	        field: 'financeId',
+	 	        title: '融资编号',
+	 	        align: 'center',
+	             valign: 'middle'
+	 	    }, {
+	 	        field: 'financeStartDate',
+	 	        title: '融资起始日',
+	 	        align: 'center',
+	             valign: 'middle'
+	 	    }, {
+	 	        field: 'financeEndDate',
+	 	        title: '融资到期日',
+	 	        align: 'center',
+	             valign: 'middle'
+	 	    }, {
+	 	        field: 'financeAmount',
+	 	        title: '融资金额',
+	 	        align: 'center',
+	             valign: 'middle',
+	             formatter:function(value,row,index){
+					 return $.number(value, 2);
+		        }
+	 	    }, {
+	 	        field: 'payAmt',
+	 	        title: '付款金额',
+	 	        align: 'center',
+	             valign: 'middle',
+	             formatter:function(value,row,index){
+					 return $.number(value, 2);
+		        }
+	 	    }, {
+	 	        field: 'financeBalance',
+	 	        title: '付款余额',
+	 	        align: 'center',
+	             valign: 'middle',
+	             formatter:function(value,row,index){
+					 return $.number(value, 2);
+		        }
+	 	    }, {
+	 	        field: 'revenueDay',
+	 	        title: '逾期天数',
+	 	        align: 'center',
+	             valign: 'middle',
+	             formatter:function(value,row,index){
+	            	 if(value==null||value==""||value==0)
+	            		 {
+	            		 return "未逾期";
+	            		 }
+					 return value+"天";
+		        }
+	 	    }],
+	 	   onCheck: function(row) {
+	 		   selRowsObj[row.carFrameNum] = row;
+	 		   calAmt(row.carActualPrice, 'add');
+	 	   },
+	 	   onUncheck: function(row) {
+	 		   delete selRowsObj[row.carFrameNum];
+	 		   calAmt(row.carActualPrice, 'sub');
+	 	   },
+	 	   onCheckAll: function(rows) {
+	 		   $.each(rows, function(i, row) {
+	 			   if (!(row.carFrameNum in selRowsObj)) {
+	 				  selRowsObj[row.carFrameNum] = row;
+	 				  calAmt(row.carActualPrice, 'add');
+	 			   }
+	 		   });
+	 	   },
+	 	   onUncheckAll: function(rows) {
+	 		   $.each(rows, function(i, row) {
+	 			   if (row.carFrameNum in selRowsObj) {
+	 				  delete selRowsObj[row.carFrameNum];
+	 				  calAmt(row.carActualPrice, 'sub');
+	 			   }
+	 		   });
+	 	   }
+       });  
+}
+
+function addFun() {
+	repayIndex=Number(repayIndex)+1;
+    $('#tableId').val(repayIndex);
+    $('#addModal').modal({ backdrop: 'static', keyboard: false }); //防止点击空白/ESC 关闭
+    $('#isEdit').val(1); //新增1；修改2
+
+}
+function save(){
+	$('#addForm').data('bootstrapValidator').validate();
+	if(!$('#addForm').data('bootstrapValidator').isValid()){  
+	    //没有通过校验 
+		return false;
+	} else {
+		var data = CloudUtils.convertStringJson('addForm');
+		var jsonData = eval("(" + data + ")");
+		
+		if (!selRowsObj) {
+			bootbox.alert("请选择车辆");
+			return false;
+		}
+		var payAmitListData = $("#payAmitListTable").bootstrapTable('getData');
+		if (payAmitListData.length == 0) {
+			bootbox.alert("还款明细不能为空");
+			return false;
+		}
+		if(parseInt($("#repayAutAmt").val())<parseInt($("#repayCapitalAmt").val()))
+			{
+			bootbox.alert("实还金额必须大于或等于应还本金");
+			return false;
+			}
+		var carFrameNums = [];
+		for (var key in selRowsObj) {
+			if (selRowsObj.hasOwnProperty(key)) {
+				carFrameNums.push(key);
+			}
+		}
+		jsonData.carListInfo = carFrameNums.join(",");
+		jsonData.allCarInfo = JSON.stringify(allRowsObj);
+		jsonData.payAmitInfo=JSON.stringify(payAmitListData);
+		var options = {
+			url : "../../repayInfo/startProcess",
+			data : JSON.stringify(jsonData),
+			callBackFun : function(data) {
+				if(data.result==0){
+					bootbox.alert(data.resultNote, function() {
+						window.location.href="../../project/dykManager/repayManager.html";
+					});
+				}else{
+					bootbox.alert(data.resultNote);
+					return false;
+				}
+			},
+			errorCallback:function(data){
+				bootbox.alert("error");
+			}
+		};
+		CloudUtils.ajax(options);
+	}
+}
+
+//下载模板
+function downloadTemp() {
+	var options = {
+		url : '../../user/configKey',
+		data :'{"itemKey":"carFrameDetailExcelTemp"}',
+		callBackFun : function(data) {
+			if (data.result == 0) {
+				var excelUrl = "../../"+data.itemValue;
+				$('#downloadTemp').attr('href',excelUrl);
+			} else {
+				bootbox.alert(data.resultNote);
+				return false;
+			}
+		},
+		errorCallback : function(data) {
+			bootbox.alert(data.resultNote);
+			return false;
+		}
+	};
+	CloudUtils.ajax(options);
+}
+
+// 文件上传
+
+function ajaxFileUpload() {
+ 	$('#carFile').fileupload({
+ 		  url:"../../repayInfo/import?pathId=3",
+	        dataType: 'json',
+	        // 上传完成后的执行逻辑
+	        done: function(e, data) {
+	        	data = data.result;
+	            if(data.result==0){
+            		var currDatas = $("#carInfoListTable").bootstrapTable('getData');
+            		$.each(data.dataList, function(i, rec) {
+            			if (!(rec.carFrameNum in selRowsObj)) {
+            				selRowsObj[rec.carFrameNum] = rec.carFrameNum;
+            				calAmt(rec.carActualPrice, 'add');
+            				$.each(currDatas, function(i, row) {
+            					if (row.carFrameNum == rec.carFrameNum) {
+            						row.checkStatus = true;
+            						$("#carInfoListTable").bootstrapTable('updateRow', {
+            							index:i,
+            							row:row
+            						});
+            						return false;
+            					}
+            				});
+            			}
+            		});
+//            		$("#" + id).val("");
+            	} else {
+	                bootbox.alert(data.resultNote);
+	            }
+	            
+	     }
+
+ 	    
+    });
+ 	
+ 	
+ 	$('#certificateFile').fileupload({
+		  url:"../../file/uploadFile?pathId=2",
+	        dataType: 'json',
+	        // 上传完成后的执行逻辑
+	        done: function(e, data) {
+	        	
+	        	data = data.result;
+	            if(data.result==0){
+            		$("#carStolenCertificate").val(data.fileName);
+            		$("#carStolenCertificateUrl").val(data.fileUrl);
+            	} else {
+	                bootbox.alert(data.resultNote);
+	            }
+	            
+	     }
+
+	    
+  });
+ 	
+}
+
+
+function btn_click(){
+	document.getElementById("downloadTemp").click();
+}
+
+
+function getProductId(){
+
+	var options = {
+		url : '../../finance/productId',
+		data : '{}',
+		callBackFun : function(data) {
+			if(data){
+				ajaxReceptionDate(data);
+			}
+		},
+		errorCallback : function(data) {
+			bootbox.alert(data.resultNote);
+			return false;
+		}
+	};
+	CloudUtils.ajax(options);
+
+}
+
+
+//productId
+function ajaxReceptionDate(productId) {
+	var data = {productId:productId};
+	var options = {
+		url : '../../finance/getProGuarantee',
+		data : JSON.stringify(data),
+		callBackFun : function(data) {
+			if (data.result == 0) {
+				// 是否为收息日
+				IS_INTEREST_DATE = isInterestDate($("#repaymentDate").val(), data.bett, data.receptionDate);
+			} else {
+				bootbox.alert(data.resultNote);
+				return false;
+			}
+		},
+		errorCallback : function(data) {
+			bootbox.alert(data.resultNote);
+			return false;
+		}
+	};
+	CloudUtils.ajax(options);
+}
+
+function ajaxNotPayInterest() {
+	var options = {
+		url : '../../repayInfo/getAllNotPayInterest',
+		data : '{}',
+		callBackFun : function(data) {
+			if (data.result == 0) {
+				if (data.str != null && data.str != "" && +data.str > 0) {
+					$("#repayInterestAmt").val(data.str);
+					$("#repaySumAmt").val(data.str);
+				}
+			} else {
+				bootbox.alert(data.resultNote);
+				return false;
+			}
+		},
+		errorCallback : function(data) {
+			bootbox.alert(data.resultNote);
+			return false;
+		}
+	};
+	CloudUtils.ajax(options);
+}
+
+function numFormat(){
+	$("#repaySumAmt").number(true, 2);
+	$("#repayCapitalAmt").number(true, 2);
+	$("#repayInterestAmt").number(true, 2);
+	$("#repayAutAmt").number(true, 2);
+	$("#repayCount").number(true, 2);
+}
+
+function formValidator(){
+	$('#addForm').bootstrapValidator({
+		 message: 'This value is not valid',
+	      excluded:':disabled',
+	      group:".valid_group",
+	      feedbackIcons: {
+	          valid: 'glyphicon glyphicon-ok',
+	          invalid: 'glyphicon glyphicon-remove',
+	          validating: 'glyphicon glyphicon-refresh'
+	      },
+	      fields: {
+	    	  note:{
+	        	  validators: {
+	        		  notEmpty: {message: '备注不能为空'},
+	        		  stringLength: {
+			              max: 128,
+			              message: '备注长度不能超过128'
+			          }
+	        	  } 
+	          }
+	      }
+		}).on('success.form.bv', function (e) {
+			e.preventDefault();
+		});
+}
+
+function isInterestDate(repaymentDate, bett, receptionDate) {
+	if (receptionDate != null
+			&& receptionDate != ""
+			&& eval(receptionDate) < 10) {
+		receptionDate = 0 + "" + receptionDate;
+	}
+	if (bett == 0) {// 按季结息
+		var mmdd = repaymentDate.slice(5, 10);
+		if (mmdd == ('03-' + receptionDate)
+				|| mmdd == ('06-' + receptionDate)
+				|| mmdd == ('09-' + receptionDate)
+				|| mmdd == ('12-' + receptionDate)) {
+			return true;
+		}
+	} else if (bett == 1) {// 按月结息
+		var dd = repaymentDate.slice(8, 10);
+		if (dd == receptionDate) {
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+function calAmt(carActualPrice, type) {
+	// 本金
+	$("#repayCapitalAmt").val(CloudUtils.Math($("#repayCapitalAmt").val(), carActualPrice, type));
+	// 总额
+	$("#repaySumAmt").val(CloudUtils.Math($("#repaySumAmt").val(), carActualPrice, type));
+}
+
+function ajaxAllCarInfo() {
+	var options = {
+		url : '../../repayInfo/getRepayCarInfoList',
+		data : '{"isPage" : 0}',
+		callBackFun : function(data) {
+			if (data.result == 0) {
+				$.each(data.dataList, function(i, row) {
+					allRowsObj[row.carFrameNum] = row.financeBalance
+				});
+			} else {
+				bootbox.alert(data.resultNote);
+				return false;
+			}
+		},
+		errorCallback : function(data) {
+			bootbox.alert(data.resultNote);
+			return false;
+		}
+	};
+	CloudUtils.ajax(options);
+}
+
+function addAmitSave() {
+	var data = CloudUtils.convertStringJson("addAmitForm");
+	
+		$("#payAmitListTable").bootstrapTable('append', JSON.parse(data));
+		repayAcuAmit=Number(repayAcuAmit)+Number(JSON.parse(data).repayCount)
+		$("#repayAutAmt").val(repayAcuAmit);
+		
+	$('#addModal').modal('hide');
+}
+
+function initAmitTable() { 
+	$('#payAmitListTable')
+	.bootstrapTable('destroy')
+	.bootstrapTable({  
+         method: "post", 
+         url: "", 
+         striped: true,  //表格显示条纹  
+         pagination: false, //启动分页  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为limit可以获取limit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+        	 return null;
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [
+        {
+        field: 'tableId', 
+        title: '序号',  	     
+	    align: 'center',
+        valign: 'middle',
+	    visible:false
+        }, {
+ 	        field: 'repayType',
+ 	        title: '付款方式',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'repayCount',
+ 	        title: '付款金额',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+				 return $.number(value, 2);
+	        }
+ 	    },{
+ 	        field: 'repayNote',
+ 	        title: '备注',
+ 	        align: 'center',
+            valign: 'middle',
+ 	    }, {
+ 	        field: 'operation',
+ 	        title: '操作',
+ 	        align: 'center',
+            valign: 'middle',
+ 	        formatter:function(value,row,index){
+				var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" href="javascript:void(0)"></a>';
+ 	            return  r ;
+ 	        },
+ 	        events: 'operateEvents'
+ 	    }]
+       });
+}
+
+function initAddTable() { 
+	$('#addTable')
+	.bootstrapTable('destroy')
+	.bootstrapTable({  
+         method: "post", 
+         url: "../../repayInfo/getaddInfoList", 
+         striped: true,  //表格显示条纹  
+         pagination: false, //启动分页  
+         search: false,  //是否启用查询  
+         showColumns: false,  //显示下拉框勾选要显示的列  
+         showRefresh: false,  //显示刷新按钮  
+         sidePagination: "server", //表示服务端请求  
+         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+         //设置为limit可以获取limit, offset, search, sort, order  
+         queryParamsType : "undefined",   
+         queryParams: function queryParams(params) {   //设置查询参数  
+        	var param = {
+                pageNumber: params.pageNumber,
+                pageSize: params.pageSize,
+            };    
+            return JSON.stringify(param);
+         },  
+         responseHandler:function responseHandler(res) {
+        	 if (res.result==0) {
+	        	 return {
+	        		 "rows": res.dataList,
+	        		 "total": res.records
+	        	 };
+
+        	 } else {
+        		 bootbox.alert(res.resultNote);
+        		 return {
+			        	 "rows": [],
+			        	 "total": 0
+			        	 };
+        	 }
+         },
+         columns: [
+        {
+        field: 'tableId', 
+        title: '序号',  	     
+	    align: 'center',
+        valign: 'middle',
+	    visible:false
+        }, {
+ 	        field: 'cprYear',
+ 	        title: '合作年份',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'cprMonth',
+ 	        title: '月份',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'payId',
+ 	        title: '付款编号',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    }, {
+ 	        field: 'payAmt',
+ 	        title: '付款金额',
+ 	        align: 'center',
+            valign: 'middle'
+ 	    },{
+ 	        field: 'payAbleGuarantee',
+ 	        title: '应缴保证金金额 ',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+				 return $.number(value, 2);
+	        }
+ 	    },{
+ 	        field: 'payActGuarantee',
+ 	        title: '实缴保证金金额',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+				 return $.number(value, 2);
+	        }
+ 	    },{
+ 	        field: 'guaranteeBalance',
+ 	        title: '保证金余额',
+ 	        align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+				 return $.number(value, 2);
+	        }
+ 	    }]
+       });
+}
+
+
+function repayTypeChange(value){
+	if(value == '保证金冲抵'){
+	    initAddTable();
+	}
+}

@@ -1,0 +1,558 @@
+package com.ut.scf.service.pub.impl;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.dict.ScfBizConsts;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.CorpInfoMapper;
+import com.ut.scf.dao.auto.LimitInfoMapper;
+import com.ut.scf.dao.crm.IShareHolderInfoDao;
+import com.ut.scf.dao.pub.IContractInfoDao;
+import com.ut.scf.dao.pub.ICustDao;
+import com.ut.scf.dao.pub.IUploadFileRelaDao;
+import com.ut.scf.pojo.auto.CorpInfo;
+import com.ut.scf.pojo.auto.CorpInfoExample;
+import com.ut.scf.pojo.auto.CorpInfoExample.Criteria;
+import com.ut.scf.pojo.auto.LimitInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.reqbean.pub.CorpInfoReqBean;
+import com.ut.scf.reqbean.pub.CustAgreeInfoReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.respbean.StringRespBean;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.pub.ICustManagerService;
+@Service("custManagerService ")
+public class CustManagerServiceImpl implements ICustManagerService {
+	private static final Logger log = LoggerFactory
+			.getLogger(CustManagerServiceImpl.class);
+	@Resource private ICustDao custDao;
+	@Resource private CorpInfoMapper corpInfoMapper;
+	@Resource private IShareHolderInfoDao shareHolderInfoDao;
+	@Resource private IUploadFileRelaDao uploadFileRelaDao;
+	@Resource private IContractInfoDao contractInfoDao;
+	@Resource ProcessEngine processEngine;
+	@Resource RuntimeService runtimeService;
+	@Resource TaskService taskService;
+	@Resource RepositoryService repositoryService;
+	@Resource LimitInfoMapper limitInfoMapper;
+	@Resource private IProcessRepeatChkService processRepeatChkService;
+
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getcorpList(Map<String,Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = custDao.getCorpInfoList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	@Override
+	public BaseRespBean addCorp(CorpInfoReqBean corpInfo) {
+		BaseRespBean respBean = new BaseRespBean();
+		
+		//企业名称不能重复
+		CorpInfoExample corpInfoExample = new CorpInfoExample();
+		Criteria criteria = corpInfoExample.createCriteria();
+		criteria.andCorpNameEqualTo(corpInfo.getCorpName());
+		int exampleNum = corpInfoMapper.countByExample(corpInfoExample);
+		
+		if(exampleNum > 0){
+			respBean.setResult(ErrorCodeEnum.CORP_NAME_EXIST);
+			return respBean;
+		}
+				
+		//组织机构代码唯一性验证
+		if(!StringUtils.isEmpty(corpInfo.getOrgnNum())) {
+			corpInfoExample = new CorpInfoExample();
+			criteria = corpInfoExample.createCriteria();
+			criteria.andOrgnNumEqualTo(corpInfo.getOrgnNum());
+			exampleNum = corpInfoMapper.countByExample(corpInfoExample);
+			if(exampleNum>0){
+				respBean.setResult(ErrorCodeEnum.ORGN_NUM_EXIST);
+				return respBean;
+			}
+		}
+		
+//		1.添加到corp_info数据库
+		String corpId = ScfUUID.generate();
+				
+		corpInfo.setCorpId(corpId);
+		corpInfo.setStatus((byte) ScfBizConsts.STATUS_NORMAL);
+		corpInfo.setCreateTime(new Date());
+		CorpInfo corpInfoAuto = new CorpInfo();
+		BeanUtil.BeanToBean(corpInfoAuto, corpInfo);
+		int insertNum =  corpInfoMapper.insert(corpInfoAuto);
+		log.debug("insertMenuNum : {}", insertNum);
+		
+		if (insertNum <= 0) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		
+//		插入到额度信息表
+		if(corpInfo.getSysType() == 4){
+		LimitInfo limitInfo = new LimitInfo();
+		limitInfo.setCorpId(corpId);
+		limitInfo.setMaxCreditAmount(corpInfo.getMaxCreditAmount());
+		limitInfo.setUseAbleCreditAmt(corpInfo.getMaxCreditAmount());
+		limitInfo.setMaxLscreditAmount(corpInfo.getMaxLscreditAmount());
+		limitInfo.setUseAbleLscreditAmt(corpInfo.getMaxLscreditAmount());
+		limitInfo.setPreOccupancyAmt(BigDecimal.ZERO);
+		limitInfo.setOccupiedAmt(BigDecimal.ZERO);
+		limitInfoMapper.insert(limitInfo);
+		}
+//		2.添加到share_holder_info数据库
+//		循环插入
+		
+		@SuppressWarnings("unchecked")
+		List<Map<String,Object>> shareInfoList = (List<Map<String, Object>>) corpInfo.getShareInfoList();
+		if(shareInfoList.size()>0){
+			for(Map<String,Object> map:shareInfoList){
+				map.put("shareHolderId", ScfUUID.generate());
+				map.put("corpId", corpId);
+				shareHolderInfoDao.insertShareHolder(map);
+			}
+		}
+		
+//		3.添加到upload_file_rela表中
+		@SuppressWarnings("unchecked")
+		List<Map<String,Object>> attachInfoList = (List<Map<String, Object>>) corpInfo.getAttachInfoList();
+		if(attachInfoList.size()>0){
+			for(Map<String,Object> attachMap:attachInfoList){
+				attachMap.put("fileId", ScfUUID.generate());
+				attachMap.put("corpId", corpId);
+//				attachMap.put("relaCorpId", corpInfo.getRelaCorpId());
+				uploadFileRelaDao.insertFileRela(attachMap);
+			}
+		}
+		return respBean;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Transactional(propagation = Propagation.REQUIRED)
+	@Override
+	public BaseRespBean updateCorp(CorpInfoReqBean corpInfo) {
+		BaseRespBean respBean = new BaseRespBean();
+		if(corpInfo.getSysType()!=4){
+			//企业名称不能重复
+			CorpInfoExample corpInfoExample = new CorpInfoExample();
+			Criteria criteria = corpInfoExample.createCriteria();
+			int exampleNum = 0;
+			if("0".equals(corpInfo.getOrginCorpName())){
+				criteria.andCorpNameEqualTo(corpInfo.getCorpName());
+				 exampleNum = corpInfoMapper.countByExample(corpInfoExample);
+				
+				if(exampleNum > 0){
+					respBean.setResult(ErrorCodeEnum.CORP_NAME_EXIST);
+					return respBean;
+				}
+			}
+			
+			if("0".equals(corpInfo.getOrginOrgnNum())){
+				//组织机构代码唯一性验证
+				if(!StringUtils.isEmpty(corpInfo.getOrgnNum())) {
+					corpInfoExample = new CorpInfoExample();
+					criteria = corpInfoExample.createCriteria();
+					criteria.andOrgnNumEqualTo(corpInfo.getOrgnNum());
+					exampleNum = corpInfoMapper.countByExample(corpInfoExample);
+					if(exampleNum>0){
+						respBean.setResult(ErrorCodeEnum.ORGN_NUM_EXIST);
+						return respBean;
+					}
+				}
+			}
+		}
+//		1.修改corp_info的信息
+		CorpInfo corpInfoAuto = new CorpInfo();
+		BeanUtil.BeanToBean(corpInfoAuto, corpInfo);
+		int updateNum =  corpInfoMapper.updateByPrimaryKeySelective(corpInfoAuto);
+		log.debug("updateMenuNum : {}", updateNum);
+		if (updateNum <= 0) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		if(corpInfo.getSysType() == 4&&(!(corpInfo.getDzId()==null&&corpInfo.getLsId()==null&&corpInfo.getMaxCreditAmount()==null&&corpInfo.getMaxLscreditAmount()==null))){
+//			修改额度信息表
+			LimitInfo limitInfo = new LimitInfo();
+			limitInfo.setCorpId(corpInfo.getCorpId());
+			limitInfo.setDzId(corpInfo.getDzId());
+			limitInfo.setLsId(corpInfo.getLsId());
+			//获取可用额度后，更新大宗零售的可用额度 --现有-之前+可用额度=现在的可用额度
+			LimitInfo limitInfo2 = limitInfoMapper.selectByPrimaryKey(corpInfo.getCorpId());
+			BigDecimal zero=new BigDecimal(0);
+			if(corpInfo.getMaxCreditAmount()!=null && corpInfo.getMaxCreditAmount().compareTo(BigDecimal.ZERO)!=0){
+				if(limitInfo2.getMaxCreditAmount()==null){
+					limitInfo2.setMaxCreditAmount(zero);
+				}
+				if(limitInfo2.getUseAbleCreditAmt()==null){
+					limitInfo2.setUseAbleCreditAmt(zero);
+				}
+				
+				limitInfo.setUseAbleCreditAmt(corpInfo.getMaxCreditAmount().subtract(limitInfo2.getMaxCreditAmount()).add(limitInfo2.getUseAbleCreditAmt()));
+				limitInfo.setMaxCreditAmount(corpInfo.getMaxCreditAmount());
+			}
+			if(corpInfo.getMaxLscreditAmount()!=null && corpInfo.getMaxLscreditAmount().compareTo(BigDecimal.ZERO)!=0){
+				if(limitInfo2.getMaxLscreditAmount()==null){
+					limitInfo2.setMaxLscreditAmount(zero);
+				}
+				if(limitInfo2.getUseAbleLscreditAmt()==null){
+					limitInfo2.setUseAbleLscreditAmt(zero);
+				}
+				limitInfo.setUseAbleLscreditAmt(corpInfo.getMaxLscreditAmount().subtract(limitInfo2.getMaxLscreditAmount()).add(limitInfo2.getUseAbleLscreditAmt()));
+				limitInfo.setMaxLscreditAmount(corpInfo.getMaxLscreditAmount());
+			}
+			limitInfoMapper.updateByPrimaryKeySelective(limitInfo);
+		}
+//		2.修改share_holder_info表
+//		1)先删除
+		Map<String,Object> paramMap = new HashMap<String,Object>();
+		if(!corpInfo.getCorpId().equals(null)||!corpInfo.getCorpId().equals("")){
+			paramMap.put("corpId", corpInfo.getCorpId());
+			shareHolderInfoDao.deleteShareHolder(paramMap);
+		}
+//		2)后添加
+		List<Map<String,Object>> shareInfoList = (List<Map<String, Object>>) corpInfo.getShareInfoList();
+		if(shareInfoList.size()>0){
+			for(Map<String,Object> map:shareInfoList){
+				map.put("shareHolderId", ScfUUID.generate());
+				map.put("corpId", corpInfo.getCorpId());
+				shareHolderInfoDao.insertShareHolder(map);
+			}
+		}
+//		3.修改upload_file_rela表
+//		1)先删除
+		if(!corpInfo.getCorpId().equals(null)||!corpInfo.getCorpId().equals("")){
+			uploadFileRelaDao.deleteFileRela(corpInfo.getCorpId());
+		}
+//		2)后添加
+		List<Map<String,Object>> attachInfoList = (List<Map<String, Object>>) corpInfo.getAttachInfoList();
+		if(attachInfoList.size()>0){
+			for(Map<String,Object> attachMap:attachInfoList){
+				attachMap.put("fileId", ScfUUID.generate());
+				attachMap.put("corpId", corpInfo.getCorpId());
+//				attachMap.put("relaCorpId", corpInfo.getRelaCorpId());
+				uploadFileRelaDao.insertFileRela(attachMap);
+			}
+		}
+//		4.修改contract_info表
+//		1)先删除
+		if(!corpInfo.getCorpId().equals(null)||!corpInfo.getCorpId().equals("")){
+			contractInfoDao.deleteContract(corpInfo.getCorpId());
+		}
+//		2)后添加
+		List<Map<String,Object>> contractInfoList = (List<Map<String, Object>>) corpInfo.getContractInfoList();
+		if(contractInfoList.size()>0){
+			for(Map<String,Object> contractMap:contractInfoList){
+				contractMap.put("contractid", ScfUUID.generate());
+				contractMap.put("corpId", corpInfo.getCorpId());
+//				attachMap.put("relaCorpId", corpInfo.getRelaCorpId());
+				contractInfoDao.insertContract(contractMap);
+			}
+		}
+		return respBean;
+	}
+	
+	/**
+	 * 发起流程
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean startProcess(JSONObject jsonObject) {
+		BaseRespBean respBean = new BaseRespBean();
+//		去重
+		List<ProcessRepeatCheck> checks = new ArrayList<ProcessRepeatCheck>();
+		// 经销商重复推荐验证
+		respBean = checkAgency(jsonObject, checks);
+		if (respBean.getResult() != 0) {
+			return respBean;
+		}
+		String userName = (String) jsonObject.get("userId");
+		String key = (String) jsonObject.get("activitiKey");
+//		加上当前用户
+		ProcessInstance pi = processEngine.getRuntimeService()//管理流程实例和执行对象，也就是表示正在执行的操作  
+		            .startProcessInstanceByKey(key);
+		String procInstId = pi.getProcessInstanceId();
+//		TaskService taskService = processEngine.getTaskService();//获取任务的Service，设置和获取流程变量  
+		Task task = taskService.createTaskQuery().processInstanceId(pi.getId()).singleResult();
+//		拾取用户
+		taskService.claim(task.getId(), userName);
+//		设置变量
+		taskService.setVariableLocal(task.getId(), "agencyJson", jsonObject.toString());
+		taskService.setVariable(task.getId(), "launchUser", userName);//发起者
+//		完成节点
+		taskService.complete(task.getId());
+		for (ProcessRepeatCheck check : checks) {
+			check.setProcInstId(procInstId);
+			int result = processRepeatChkService.insert(check);
+			if (result < 1) {
+				throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+			}
+		}
+		return respBean;
+	}
+	
+	
+	private BaseRespBean checkAgency(JSONObject jsonObject, List<ProcessRepeatCheck> checks) {
+		BaseRespBean respBean = new BaseRespBean();
+		String corpName = jsonObject.getString("corpName");
+		String agencyNum = jsonObject.getString("agencyNum");
+		String orgnNum = jsonObject.getString("orgnNum");
+		String orginCorpName = jsonObject.getString("orginCorpName");
+		String orginAgencyNum = jsonObject.getString("orginAgencyNum");
+		String orginOrgnNum = jsonObject.getString("orginOrgnNum");
+		String corpId = jsonObject.has("corpId") ? jsonObject.getString("corpId") : null;
+//		校验企业名称重复
+		CorpInfoExample corpInfoExample = new CorpInfoExample();
+		Criteria criteria = corpInfoExample.createCriteria();
+		criteria.andCorpNameEqualTo(corpName);
+		if (StringUtils.isNotEmpty(corpId)) {
+			criteria.andCorpIdNotEqualTo(corpId);
+		}
+		int exampleNum = corpInfoMapper.countByExample(corpInfoExample);
+		if("0".equals(orginCorpName) && exampleNum>0){
+			respBean.setResult(ErrorCodeEnum.CORP_NAME_EXIST);
+			return respBean;
+		}
+		
+//		校验经销商代码
+		corpInfoExample = new CorpInfoExample();
+		criteria = corpInfoExample.createCriteria();
+		criteria.andAgencyNumEqualTo(agencyNum);
+		if (StringUtils.isNotEmpty(corpId)) {
+			criteria.andCorpIdNotEqualTo(corpId);
+		}
+		exampleNum = corpInfoMapper.countByExample(corpInfoExample);
+		
+		if("0".equals(orginAgencyNum) && exampleNum > 0){
+			respBean.setResult(ErrorCodeEnum.AGENCY_NUM_EXIST);
+			return respBean;
+		}
+//		校验经销商代码
+		corpInfoExample = new CorpInfoExample();
+		criteria = corpInfoExample.createCriteria();
+		criteria.andOrgnNumEqualTo(orgnNum);
+		if (StringUtils.isNotEmpty(corpId)) {
+			criteria.andCorpIdNotEqualTo(corpId);
+		}
+		exampleNum = corpInfoMapper.countByExample(corpInfoExample);
+		if("0".equals(orginOrgnNum)&&!orgnNum.isEmpty() && exampleNum > 0){
+			respBean.setResult(ErrorCodeEnum.ORGN_NUM_EXIST);
+			return respBean;
+		}
+		
+		ProcessRepeatCheck checkInfo = new ProcessRepeatCheck();
+		checkInfo.setProcessKey("custManage");
+		checkInfo.setItemKey("CORP_NAME");
+		checkInfo.setItemValue(corpName);
+		checks.add(checkInfo);
+		if (processRepeatChkService.isProcessExist(checkInfo)) {
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			respBean.setResultNote("企业名称为【" + corpName + "】的修改经销商信息审批流程已发起，不能再次发起");
+			return respBean;
+		} else {
+			checkInfo = new ProcessRepeatCheck();
+			checkInfo.setProcessKey("custManage");
+			checkInfo.setItemKey("AGENCY_NUM");
+			checkInfo.setItemValue(agencyNum);
+			checks.add(checkInfo);
+			if (processRepeatChkService.isProcessExist(checkInfo)) {
+				respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+				respBean.setResultNote("经销商代码为【" + agencyNum + "】的修改经销商信息审批流程已发起，不能再次发起");
+				return respBean;
+			}else {
+				if(!orgnNum.isEmpty()){
+					checkInfo = new ProcessRepeatCheck();
+					checkInfo.setProcessKey("custManage");
+					checkInfo.setItemKey("ORGN_NUM");
+					checkInfo.setItemValue(orgnNum);
+					checks.add(checkInfo);
+					if (processRepeatChkService.isProcessExist(checkInfo)) {
+						respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+						respBean.setResultNote("社会统一信用代码证号为【" + orgnNum + "】的修改经销商信息审批流程已发起，不能再次发起");
+						return respBean;
+					}
+				}
+			}
+		}
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean doAgree(JSONObject jsonObject) {
+		boolean flag;
+		StringRespBean respBean = new StringRespBean();
+//		1.获取taskId和当前用户
+		String taskId = (String) jsonObject.get("taskId");
+		String agree = (String) jsonObject.get("agree");
+		String userId = (String) jsonObject.get("userId");
+//		2.拾取用户
+		taskService.claim(taskId, userId);
+//		3.设置变量
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+//		4.流程走向
+		if(agree.equals("0")){
+			flag = 	true;
+		}else{
+			flag = 	false;
+		}
+		taskService.setVariable(taskId, "agree", flag);
+//		5.完成流程
+		taskService.complete(taskId);
+		respBean.setStr(jsonObject.toString());
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean reApply(JSONObject jsonObject) {
+		BaseRespBean respBean = new BaseRespBean(); 
+//		1.获取taskId和userId
+		String taskId = (String) jsonObject.get("taskId");
+		String userId = (String) jsonObject.get("userId");
+		String procInstId = processEngine.getHistoryService().createHistoricTaskInstanceQuery().
+				taskId(taskId).singleResult().getProcessInstanceId();
+		int deleteCnt = processRepeatChkService.deleteByProcInstId(procInstId);
+		if (deleteCnt < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+		List<ProcessRepeatCheck> checks = new ArrayList<ProcessRepeatCheck>();
+		respBean = checkAgency(jsonObject, checks);
+		if (respBean.getResult() == ErrorCodeEnum.ORGN_NUM_EXIST.getValue()) {
+			throw new BizException(ErrorCodeEnum.ORGN_NUM_EXIST,respBean.getResultNote());
+		} else if (respBean.getResult() == ErrorCodeEnum.AGENCY_NUM_EXIST.getValue()) {
+			throw new BizException(ErrorCodeEnum.AGENCY_NUM_EXIST, respBean.getResultNote());
+		} else if (respBean.getResult() == ErrorCodeEnum.CORP_NAME_EXIST.getValue()) {
+			throw new BizException(ErrorCodeEnum.CORP_NAME_EXIST, respBean.getResultNote());
+		} else if (respBean.getResult() == ErrorCodeEnum.ADD_FAILED.getValue()) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED, respBean.getResultNote());
+		}
+//		2.拾取用户
+		taskService.claim(taskId, userId);
+//		3.设置流程变量
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+//		4.完成流程
+		taskService.complete(taskId);
+		for (ProcessRepeatCheck check : checks) {
+			check.setProcInstId(procInstId);
+			int result = processRepeatChkService.insert(check);
+			if (result < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		}
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean agreeThenAdd(CustAgreeInfoReqBean custAgreeInfoReqBean) {
+//		流程同意
+		String taskId = custAgreeInfoReqBean.getTaskId();
+		JSONObject jsonObject = new JSONObject(custAgreeInfoReqBean);
+		doAgree(jsonObject);
+//		添加进业务表中
+		CorpInfoReqBean corpInfoReqBean = new CorpInfoReqBean(); 
+		BeanUtil.BeanToBean(corpInfoReqBean, custAgreeInfoReqBean);
+		BaseRespBean addCorpRespBean = updateCorp(corpInfoReqBean);
+		String procInstId = processEngine.getHistoryService().createHistoricTaskInstanceQuery().
+				taskId(taskId).singleResult().getProcessInstanceId();
+		int deleteCnt = processRepeatChkService.deleteByProcInstId(procInstId);
+		if (deleteCnt < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+		return addCorpRespBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean agreeThenMod(CustAgreeInfoReqBean custAgreeInfoReqBean) {
+		String taskId = custAgreeInfoReqBean.getTaskId();
+//		流程同意
+		JSONObject jsonObject = new JSONObject(custAgreeInfoReqBean);
+		doAgree(jsonObject);
+		CorpInfoReqBean corpInfoReqBean = new CorpInfoReqBean(); 
+		BeanUtil.BeanToBean(corpInfoReqBean, custAgreeInfoReqBean);
+		BaseRespBean updateCorpRespBean = updateCorp(corpInfoReqBean);
+		String procInstId = processEngine.getHistoryService().createHistoricTaskInstanceQuery().
+				taskId(taskId).singleResult().getProcessInstanceId();
+		int deleteCnt = processRepeatChkService.deleteByProcInstId(procInstId);
+		if (deleteCnt < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+		return updateCorpRespBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean doAgreeWechat(CustAgreeInfoReqBean custAgreeInfoReqBean) {
+		boolean flag;
+		StringRespBean respBean = new StringRespBean();
+		
+//		1.获取taskId和当前用户
+		JSONObject jsonObject = new JSONObject(custAgreeInfoReqBean);
+		String procInstId = (String) jsonObject.get("procInstId");
+		String taskId = (String) jsonObject.get("taskId");
+		String agree = (String) jsonObject.get("agree");
+		String userId = (String) jsonObject.get("userId");
+//		2.拾取用户
+		taskService.claim(taskId, userId);
+//		3.设置变量
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+//		4.流程走向
+		if(agree.equals("0")){
+			flag = 	true;
+		}else{
+			flag = 	false;
+		}
+		taskService.setVariable(taskId, "agree", flag);
+//		5.完成流程
+		taskService.complete(taskId);
+		respBean.setStr(jsonObject.toString());
+		ProcessInstance pi = runtimeService.createProcessInstanceQuery()
+				.processInstanceId(procInstId).singleResult();
+		String isEdit = custAgreeInfoReqBean.getIsEdit();
+			if (pi == null) { //流程已结束
+				CorpInfoReqBean corpInfoReqBean = new CorpInfoReqBean(); 
+				BeanUtil.BeanToBean(corpInfoReqBean, custAgreeInfoReqBean);
+				if("1".equals(isEdit)){
+					addCorp(corpInfoReqBean);
+				}else{
+					updateCorp(corpInfoReqBean);
+				}
+				procInstId = processEngine.getHistoryService().createHistoricTaskInstanceQuery().
+						taskId(taskId).singleResult().getProcessInstanceId();
+				int deleteCnt = processRepeatChkService.deleteByProcInstId(procInstId);
+				if (deleteCnt < 1) {
+					throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+				}
+			}
+		return respBean;
+	}
+}

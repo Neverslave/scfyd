@@ -1,0 +1,43 @@
+package com.ut.scf.service.test;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.query.IFinanceQueryService;
+import com.ut.scf.web.controller.project.AgencyManageController;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class FinanceQueryServiceTest {
+	private static final Logger log = LoggerFactory
+			.getLogger(AgencyManageController.class);
+
+	@Resource
+	private IFinanceQueryService financeQueryService;
+
+	@Test
+	public void getCarInfoListTest() {
+		log.info("=============================agencyListTest start=============================");
+		try {
+			Map<String, Object> paramMap = null;
+			PageInfoBean page = null;
+			BaseRespBean getCarInfoList = financeQueryService.getCarInfoList(
+					paramMap, page);
+			System.out.println(getCarInfoList);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		log.info("=============================agencyListTest end=============================");
+	}
+
+}

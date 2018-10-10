@@ -1,0 +1,308 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+	 dateload();
+    initTable();
+   
+});
+
+function searchFun() {
+    initTable();
+    
+}
+function dateload() {
+$('#cprYear').datetimepicker({
+    language: 'zh-CN',
+    autoclose: 1,
+    todayBtn: true, // 显示今天时间
+    pickerPosition: "bottom-left",
+    minuteStep: 5,
+    format: 'yyyy',
+    startView: 4,
+    minView: 4,
+     // 日期时间选择器所能够提供的最精确的时间选择视图。
+    initialDate: new Date()
+});
+
+}
+function initTable() {
+    $('#YuQiInfoListTable').bootstrapTable('destroy');
+    $("#YuQiInfoListTable").bootstrapTable({
+        method: "post",
+        url: "../YUQI/yuQiStatistics",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 5, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [5, 10, 15, 20, 25], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+            var param = {
+                    pageNumber: params.pageNumber,
+                    pageSize: params.pageSize,
+                    cprYear: jsonData.cprYear
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'Number',
+            title: '序号',
+            align: 'center',
+            valign: 'middle',
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'cprYear',
+            title: '合作年份',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'cprMonth',
+            title: '合作月份',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'typeName',
+            title: '业务类型',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'corpName',
+            title: '经销商名称',
+            align: 'center',
+            valign: 'middle',
+       
+        }, {
+            field: 'payId',
+            title: '付款函编号',
+            align: 'center',
+            valign: 'middle',
+      
+        }, {
+            field: 'payAmit',
+            title: '付款金额',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                return $.number(value, 2);
+            }
+        }, {
+            field: 'yuqiAmitM1',
+            title: '延期1-30天',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                return $.number(value, 2);
+            }
+        }, {
+        	 field: 'yuqiAmitM2',
+             title: '延期31-60天',
+             align: 'center',
+             valign: 'middle',
+             formatter: function(value) {
+                 return $.number(value, 2);
+             }
+      
+        },{
+        	 field: 'yuqiAmitM3',
+             title: '延期61-90天',
+             align: 'center',
+             valign: 'middle',
+             formatter: function(value) {
+                 return $.number(value, 2);
+             }
+        }, {
+        	 field: 'yuqiAmitM4',
+             title: '延期90天以上',
+             align: 'center',
+             valign: 'middle',
+             formatter: function(value) {
+                 return $.number(value, 2);
+             }
+        }
+        ],
+        onLoadSuccess: function (data) {},
+        
+    });
+    
+
+    $('#YuQiHistoryInfoListTable').bootstrapTable('destroy');
+    $("#YuQiHistoryInfoListTable").bootstrapTable({
+        method: "post",
+        url: "../YUQI/yuQiHistoryStatistics",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 5, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [5, 10, 15, 20, 25], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+            var param = {
+                    pageNumber: params.pageNumber,
+                    pageSize: params.pageSize,
+                    
+                };
+        	 return JSON.stringify(param);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'Number',
+            title: '序号',
+            align: 'center',
+            valign: 'middle',
+            formatter: function (value, row, index) {  
+                return index+1;  
+            }  
+        },{
+            field: 'corpName',
+            title: '经销商名称',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'agencyNum',
+            title: '经销商代码',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'areaName',
+            title: '所属区域',
+            align: 'center',
+            valign: 'middle'
+        }, {
+            field: 'representName',
+            title: '所属事业部',
+            align: 'center',
+            valign: 'middle'
+       
+        }, {
+            field: 'yuqiTimes',
+            title: '延期次数',
+            align: 'center',
+            valign: 'middle'
+      
+        },{
+            field: 'yuqiTimes',
+            title: '延期次数',
+            align: 'center',
+            valign: 'middle'
+      
+        },{
+            field: 'financeStatus',
+            title: '状态',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+            	if(value==5)
+            		{
+            		return "延期中";
+            		}
+            	else
+            		{
+            		return "已结清";
+            		}              
+            }
+      
+        }
+        
+        ],
+        onLoadSuccess: function (data) {},
+        
+    });
+
+}
+
+function mergeCells(data, fieldName, colspan, target) {
+    if (data.length == 0) {
+        alert("不能传入空数据");
+        return;
+    }
+    var numArr = [];
+    var value = data[0][fieldName];
+    var num = 0;
+    for (var i = 0; i < data.length; i++) {
+        if (value != data[i][fieldName]) {
+            numArr.push(num);
+            value = data[i][fieldName];
+            num = 1;
+            continue;
+        }
+        num++;
+    }
+    var merIndex = 0;
+    for (var i = 0; i < numArr.length; i++) {
+        $(target).bootstrapTable('mergeCells', { index: merIndex, field: fieldName, colspan: colspan, rowspan: numArr[i] })
+        merIndex += numArr[i];
+    }
+}
+
+function mergeColspan(data, fieldNameArr, target) {
+    if (data.length == 0) {
+        alert("不能传入空数据");
+        return;
+    }
+    if (fieldNameArr.length == 0) {
+        alert("请传入属性值");
+        return;
+    }
+    var num = -1;
+    var index = 0;
+    for (var i = 0; i < data.length; i++) {
+        num++;
+        for (var v in fieldNameArr) {
+            index = 1;
+            if (data[i][fieldNameArr[v]] != data[i][fieldNameArr[0]]) {
+                index = 0;
+                break;
+            }
+        }
+        if (index == 0) {
+            continue;
+        }
+        $(target).bootstrapTable('mergeCells', { index: num, field: fieldNameArr[0], colspan: fieldNameArr.length, rowspan: 1 });
+    }
+}

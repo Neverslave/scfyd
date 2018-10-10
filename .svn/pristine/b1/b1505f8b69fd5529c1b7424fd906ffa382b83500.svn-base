@@ -1,0 +1,457 @@
+package com.ut.scf.service.query.impl;
+
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.impl.util.json.JSONArray;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.ExcelUtil2;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.FinanceInfoMapper;
+import com.ut.scf.dao.auto.FqcrGuaranteeHistoryInfoMapper;
+import com.ut.scf.dao.auto.FqcrGuaranteeInfoMapper;
+import com.ut.scf.dao.auto.FqcrGuaranyeeCashHistoryMapper;
+import com.ut.scf.dao.auto.GuaranteeHistoryInfoMapper;
+import com.ut.scf.dao.auto.GuaranteeInfoMapper;
+import com.ut.scf.dao.auto.RepaymentPlanInfoMapper;
+import com.ut.scf.dao.query.IGuaranteeHistoryInfoDao;
+import com.ut.scf.dao.query.IGuaranteeInfoDao;
+import com.ut.scf.pojo.auto.FinanceInfo;
+import com.ut.scf.pojo.auto.FqcrGuaranteeHistoryInfo;
+import com.ut.scf.pojo.auto.FqcrGuaranteeInfo;
+import com.ut.scf.pojo.auto.FqcrGuaranyeeCashHistory;
+import com.ut.scf.pojo.auto.GuaranteeInfo;
+import com.ut.scf.pojo.auto.RepaymentPlanInfo;
+import com.ut.scf.pojo.auto.RepaymentPlanInfoExample;
+import com.ut.scf.pojo.auto.RepaymentPlanInfoExample.Criteria;
+import com.ut.scf.reqbean.query.GuaranteeHistoryQueryReqBean;
+import com.ut.scf.reqbean.query.GuaranteeThQueryReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.impl.RepayManagerServiceImpl;
+import com.ut.scf.service.query.IGuaranteeQueryService;
+
+@Service("guaranteeQueryService")
+public class GuaranteeQueryServiceImpl implements IGuaranteeQueryService {
+
+	@Resource
+	private IGuaranteeInfoDao guaranteeInfoDao;
+	@Resource
+	private IGuaranteeHistoryInfoDao guaranteeHistoryInfoDao;
+	@Resource
+	private GuaranteeInfoMapper guaranteeInfoMapper;
+	@Resource
+	private GuaranteeHistoryInfoMapper guaranteeHistoryInfoMapper;
+	
+	@Resource
+	private FinanceInfoMapper financeInfoMapper;
+	@Resource
+	private RepayManagerServiceImpl repayManagerServiceImpl;
+	@Resource
+	private IGuaranteeHistoryInfoDao iGuaranteeHistoryInfoDao;
+	@Resource
+	private FqcrGuaranteeHistoryInfoMapper fqcrGuaranteeHistoryInfoMapper;
+	@Resource
+	private FqcrGuaranteeInfoMapper fqcrGuaranteeInfoMapper;
+	@Resource
+	private RepaymentPlanInfoMapper repaymentPlanInfoMapper;
+	@Resource
+	private FqcrGuaranyeeCashHistoryMapper fqcrGuaranyeeCashHistoryMapper;
+	
+	
+	@Override
+	public BaseRespBean getGuaranteeQueryList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = guaranteeInfoDao.getGuaranteeQueryList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	/*-----------------------------查询统计新需求------------------------------*/
+	@Override
+	public BaseRespBean getGuaranteeList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = guaranteeInfoDao.getGuaranteeList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+	/*-----------------------------保证金管理最新需求------------------------------*/
+	@Override
+	public BaseRespBean getGuaranteeHistoryList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = guaranteeHistoryInfoDao.getGuaranteeHistoryList(paramMap, page);
+		String sumGuar=guaranteeHistoryInfoDao.selectSumPayGuarantee(paramMap.get("financeId").toString());
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		respBean.setResultNote(sumGuar);
+		return respBean;
+	}
+	@Override
+	public BaseRespBean getGuaranteeHistoryInsert(GuaranteeHistoryQueryReqBean paramMap) {
+		BaseRespBean respBean = new BaseRespBean();
+		try{
+			JSONArray jsonArray = new JSONArray(StringUtils.isEmpty(paramMap.getGuaranteeListInfo())?"":paramMap.getGuaranteeListInfo());
+			String financeId="";
+			GuaranteeHistoryQueryReqBean guaranteeHistoryQueryReqBean=new GuaranteeHistoryQueryReqBean();
+			for (int i = 0; i < jsonArray.length(); i++) {
+				guaranteeHistoryQueryReqBean = new GuaranteeHistoryQueryReqBean();
+				JSONObject amitObj = jsonArray.getJSONObject(i);		
+			
+				financeId=amitObj.getString("financeId");
+				if(StringUtils.isNotEmpty(amitObj.getString("financeId")))
+				{
+					guaranteeHistoryQueryReqBean.setFinanceId(amitObj.getString("financeId"));
+				}
+				else if(StringUtils.isNotEmpty(paramMap.getFinanceId()))
+				{
+					guaranteeHistoryQueryReqBean.setFinanceId(paramMap.getFinanceId());
+				}
+				if(StringUtils.isNotEmpty(amitObj.getString("payDate")))
+				{
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					guaranteeHistoryQueryReqBean.setPayDate(amitObj.getString("payDate"));
+				}
+				if(StringUtils.isNotEmpty(amitObj.getString("payGuarantee")))
+				{
+					if(StringUtils.isNotEmpty(amitObj.getString("opearte"))&&amitObj.getString("opearte").equals("delete"))
+					{
+						guaranteeHistoryQueryReqBean.setPayGuarantee((new BigDecimal(amitObj.getString("payGuarantee"))).multiply(new BigDecimal(-1)));
+
+					}
+					else
+					{
+						guaranteeHistoryQueryReqBean.setPayGuarantee(new BigDecimal(amitObj.getString("payGuarantee")));
+						
+					}
+					
+				}
+				if(StringUtils.isNotEmpty(amitObj.getString("payWay")))
+				{
+				
+					guaranteeHistoryQueryReqBean.setPayWay(amitObj.getString("payWay"));
+				}
+				if(StringUtils.isNotEmpty(amitObj.getString("note")))
+				{
+				
+					guaranteeHistoryQueryReqBean.setNote(amitObj.getString("note"));
+				}
+				guaranteeHistoryInfoMapper.insertSelective(guaranteeHistoryQueryReqBean);
+				
+				FinanceInfo financeInfo = financeInfoMapper.selectByPrimaryKey(guaranteeHistoryQueryReqBean.getFinanceId());
+				BigDecimal lsamount=BigDecimal.ZERO;
+				BigDecimal dzamount=BigDecimal.ZERO;
+				if((financeInfo.getYwlxId()==null)||financeInfo.getYwlxId().equals("1"))
+				{
+					lsamount = guaranteeHistoryQueryReqBean.getPayGuarantee() == null ?
+							 BigDecimal.ZERO
+							 : guaranteeHistoryQueryReqBean.getPayGuarantee();
+				}
+				else
+				{
+					dzamount = guaranteeHistoryQueryReqBean.getPayGuarantee() == null ?
+							 BigDecimal.ZERO
+							 : guaranteeHistoryQueryReqBean.getPayGuarantee();
+				}
+				respBean =repayManagerServiceImpl.UpdateLimitInfo(financeInfo.getCorpId(),lsamount,dzamount);
+			
+			}
+			
+			financeId=financeId.isEmpty()?(paramMap.getFinanceId()==null?"":paramMap.getFinanceId()): financeId ;
+			String sumGuaraPriceString=iGuaranteeHistoryInfoDao.selectSumPayGuarantee(financeId);
+			BigDecimal sumGuaraPriceDecimal=(sumGuaraPriceString==null||sumGuaraPriceString.isEmpty())?(new BigDecimal(0)):(new BigDecimal(sumGuaraPriceString));
+	
+			// 新增保证金情报
+			GuaranteeInfo guaranteeInfo = new GuaranteeInfo();
+			
+			try {
+				guaranteeInfo.setFinanceId(financeId);
+
+				guaranteeInfo.setGuaranteeBalance(sumGuaraPriceDecimal);
+		
+			} catch (Exception e) {
+				
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+			int recGuarantee = guaranteeInfoMapper.updateByPrimaryKeySelective(guaranteeInfo);
+			
+			if (recGuarantee < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+			//更新可用额度表
+		
+		}
+		catch(Exception e)
+		{
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+		}
+		
+		
+		
+		return respBean;
+		
+	}
+
+	
+	@Override
+	public BaseRespBean getfqcrGuaranteeHistoryInsert(GuaranteeHistoryQueryReqBean paramMap) {
+		BaseRespBean respBean = new BaseRespBean();
+		try{
+			JSONArray jsonArray = new JSONArray(StringUtils.isEmpty(paramMap.getGuaranteeListInfo())?"":paramMap.getGuaranteeListInfo());
+			String batchId="";
+			FqcrGuaranteeHistoryInfo guaranteeHistoryQueryReqBean=new FqcrGuaranteeHistoryInfo();
+			for (int i = 0; i < jsonArray.length(); i++) {
+				guaranteeHistoryQueryReqBean = new FqcrGuaranteeHistoryInfo();
+				JSONObject amitObj = jsonArray.getJSONObject(i);		
+				guaranteeHistoryQueryReqBean.setId(ScfUUID.generate());
+				batchId=amitObj.getString("batchId");
+				if(StringUtils.isNotEmpty(amitObj.getString("batchId")))
+				{
+					guaranteeHistoryQueryReqBean.setBatchId(amitObj.getString("batchId"));
+				}
+				else if(StringUtils.isNotEmpty(paramMap.getFinanceId()))
+				{
+					guaranteeHistoryQueryReqBean.setBatchId(paramMap.getBatchId());
+				}
+				if(StringUtils.isNotEmpty(amitObj.getString("payDate")))
+				{
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					guaranteeHistoryQueryReqBean.setPayDate(amitObj.getString("payDate"));
+				}
+				if(StringUtils.isNotEmpty(amitObj.getString("payGuarantee")))
+				{
+					if(StringUtils.isNotEmpty(amitObj.getString("opearte"))&&amitObj.getString("opearte").equals("delete"))
+					{
+						guaranteeHistoryQueryReqBean.setPayGuarantee((new BigDecimal(amitObj.getString("payGuarantee"))).multiply(new BigDecimal(-1)));
+
+					}
+					else
+					{
+						guaranteeHistoryQueryReqBean.setPayGuarantee(new BigDecimal(amitObj.getString("payGuarantee")));
+						
+					}
+					
+				}
+				if(StringUtils.isNotEmpty(amitObj.getString("payWay")))
+				{
+				
+					guaranteeHistoryQueryReqBean.setPayWay(amitObj.getString("payWay"));
+				}
+				if(StringUtils.isNotEmpty(amitObj.getString("note")))
+				{
+				
+					guaranteeHistoryQueryReqBean.setNote(amitObj.getString("note"));
+				}
+				fqcrGuaranteeHistoryInfoMapper.insertSelective(guaranteeHistoryQueryReqBean);
+				
+			
+			}
+			
+			batchId=batchId.isEmpty()?(paramMap.getBatchId()==null?"":paramMap.getBatchId()): batchId ;
+			String sumGuaraPriceString=iGuaranteeHistoryInfoDao.selectSumFqcrPayGuarantee(batchId);
+			BigDecimal sumGuaraPriceDecimal=(sumGuaraPriceString==null||sumGuaraPriceString.isEmpty())?(new BigDecimal(0)):(new BigDecimal(sumGuaraPriceString));
+	
+			// 更新保证金情报
+			FqcrGuaranteeInfo guaranteeInfo = new FqcrGuaranteeInfo();
+			
+			try {
+				guaranteeInfo.setBatchId(batchId);
+
+				guaranteeInfo.setGuaranteeBalance(sumGuaraPriceDecimal);
+		
+			} catch (Exception e) {
+				
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+			int recGuarantee = fqcrGuaranteeInfoMapper.updateByPrimaryKeySelective(guaranteeInfo);
+			
+			if (recGuarantee < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+			
+		
+		}
+		catch(Exception e)
+		{
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+		}
+		
+		
+		
+		return respBean;
+		
+	}
+	
+	
+	@Override
+	public BaseRespBean getGuaranteeList(Map<String, Object> paramMap) {
+		List<Map<String, Object>> list = guaranteeInfoDao.getGuaranteeList(paramMap);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	// 导出Excel
+	@Override
+	public String exportExcel(Map<String, Object> paramMap, String path) throws Exception {
+		List<Map<String, Object>> list = guaranteeInfoDao.getGuaranteeList(paramMap);
+		HSSFWorkbook hssfWorkbook = ExcelUtil2.crateBook();
+		HSSFFont font = ExcelUtil2.getFont(hssfWorkbook);
+		HSSFCellStyle style = ExcelUtil2.setCell(hssfWorkbook, font);
+		HSSFSheet sheet = ExcelUtil2.crateSheet(hssfWorkbook);
+		ExcelUtil2.writeTitle("保证金信息", getTitles(), style, sheet);
+		ExcelUtil2.exportToExcel(getFields(), list, null, style, sheet);
+		ExcelUtil2.writeExcel(hssfWorkbook, path);
+		hssfWorkbook.close();
+		return path;
+	}
+
+	private List<String> getTitles() {
+		List<String> titles = new ArrayList<String>();
+		titles.add("融资编号");
+		titles.add("客户名称");
+		titles.add("融资金额");
+		titles.add("放款金额");
+		titles.add("应缴保证金金额");
+		titles.add("缴纳日期");
+		titles.add("实缴保证金金额");
+		titles.add("剩余保证金金额");
+		return titles;
+
+	}
+
+	private List<String> getFields() {
+		List<String> fields = new ArrayList<String>();
+		fields.add("financeId");
+		fields.add("agencyName");
+		fields.add("financeAmount");
+		fields.add("payAmt");
+		fields.add("payAbleGuarantee");
+		fields.add("guaranteePayDate");
+		fields.add("payActGuarantee");
+		fields.add("guaranteeBalance");
+		return fields;
+
+	}
+
+	@Override
+	public BaseRespBean getFqcrGuaranteeHistoryList(Map<String, Object> paramMap, PageInfoBean page) {
+
+		List<Map<String, Object>> list = guaranteeHistoryInfoDao.getFqcrGuaranteeHistoryList(paramMap, page);
+		String sumGuar=guaranteeHistoryInfoDao.selectFqcrSumPayGuarantee(paramMap.get("batchId").toString());
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		respBean.setResultNote(sumGuar);
+		return respBean;
+	
+	}
+	@Override
+	public BaseRespBean getFqcrGuaranteeList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = guaranteeInfoDao.getFqcrGuaranteeList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+	
+	@Override
+	public BaseRespBean getFqcrGuaranteeThList(Map<String, Object> paramMap, PageInfoBean page) {
+		
+		List<Map<String, Object>> list= guaranteeInfoDao.getFqcrGuaranteeThList(paramMap,page);
+		
+		
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+	
+	@Override
+	public BaseRespBean getFqcrGuaranteeThAddList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list=guaranteeInfoDao.getFqcrGuaranteeThAddList(paramMap,page);
+		
+		Map<String, Object> sumGuarMap=guaranteeInfoDao.getSumFqcrGuaranteeThAddList(paramMap);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setResultExtalMap(sumGuarMap);
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean getFqcrGuaranteeThAddListInsert(GuaranteeThQueryReqBean reqBean) {
+		// TODO Auto-generated method stub
+		BaseRespBean respBean=new BaseRespBean();
+		//插入至保证金退换表
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd "); 
+		FqcrGuaranyeeCashHistory  fqcrGuaranyeeCashHistory=new FqcrGuaranyeeCashHistory();
+		fqcrGuaranyeeCashHistory.setCashId(ScfUUID.generate());
+		fqcrGuaranyeeCashHistory.setCashDateTo(reqBean.getCashdateTo());
+		fqcrGuaranyeeCashHistory.setCashDate(sdf.format(new Date()));
+		fqcrGuaranyeeCashHistory.setCashMoney(new BigDecimal(reqBean.getCheckEnsureAmt()));
+		fqcrGuaranyeeCashHistory.setCashNote(reqBean.getNote());
+		
+		fqcrGuaranyeeCashHistoryMapper.insertSelective(fqcrGuaranyeeCashHistory);
+		
+		
+		String[] strings= StringUtils.split(reqBean.getReplaymentIdListInfo(), ",") ;
+		
+		//将选择的还款计划ID转换成List类型
+		List<String> list=new ArrayList<String> ();
+		for (String string : strings) {
+			if(string.isEmpty())
+			{
+				continue;
+			}
+			list.add(string);
+		}
+		//更新还款计划中的保证金兑付状态
+		RepaymentPlanInfo record=new RepaymentPlanInfo();
+		record.setEnsureMoneyState(1);
+		record.setGuaranyeeCashId(fqcrGuaranyeeCashHistory.getCashId());
+		RepaymentPlanInfoExample example=new RepaymentPlanInfoExample();
+		Criteria criteria=example.createCriteria();
+		criteria.andRepaymentIdIn(list);
+		repaymentPlanInfoMapper.updateByExampleSelective(record, example);
+		
+
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean getFqcrGuaranteeThAddThList(Map<String, Object> paramMap, PageInfoBean page) {
+	
+		List<Map<String, Object>> list=guaranteeInfoDao.getFqcrGuaranteeThAddThList(paramMap,page);
+
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+}

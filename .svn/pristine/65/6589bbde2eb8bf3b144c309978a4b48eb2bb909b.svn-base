@@ -1,0 +1,63 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.TfProjectFilesMapper;
+import com.ut.scf.pojo.auto.TfProjectFiles;
+import com.ut.scf.pojo.auto.TfProjectFilesExample;
+import com.ut.scf.pojo.auto.TfProjectFilesExample.Criteria;
+import com.ut.scf.reqbean.tradfact.ManagementFileAddReqBeqn;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.tradfact.ManagementFileService;
+
+@Service("managementFileService")
+public class ManagementFileServiceImpl implements ManagementFileService {
+
+	@Resource
+	private TfProjectFilesMapper projectFilesMapper;
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean updateManagement(ManagementFileAddReqBeqn reqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+		deleteProjectFiles(reqBean.getProjectId());
+		addProjectFiles(reqBean);
+		return respBean;
+	}
+
+	public void deleteProjectFiles(String projectId) {
+		TfProjectFilesExample example = new TfProjectFilesExample();
+		Criteria criteria = example.createCriteria();
+		criteria.andProjectIdEqualTo(projectId);
+		projectFilesMapper.deleteByExample(example);
+	}
+
+	private void addProjectFiles(ManagementFileAddReqBeqn reqBean) {
+		insertFiles(reqBean.getSaleFiles(), "1", reqBean.getProjectId());
+		insertFiles(reqBean.getBuyFiles(), "0", reqBean.getProjectId());
+		insertFiles(reqBean.getGuaranteeFiles(), "2", reqBean.getProjectId());
+		insertFiles(reqBean.getTranFiles(), "3", reqBean.getProjectId());
+		insertFiles(reqBean.getReportFiles(), "5", reqBean.getProjectId());
+		insertFiles(reqBean.getApprovalFiles(), "4", reqBean.getProjectId());
+		insertFiles(reqBean.getRetReportFiles(), "6", reqBean.getProjectId());
+		insertFiles(reqBean.getSignFiles(), "7", reqBean.getProjectId());
+	}
+
+	private void insertFiles(List<TfProjectFiles> projectFiles, String fileClass, String projectId) {
+		for (TfProjectFiles file : projectFiles) {
+			file.setProjectId(projectId);
+			file.setMaterialClass(fileClass);
+			file.setFileId(ScfUUID.generate());
+			file.setCreateTime(new Date());
+			projectFilesMapper.insert(file);
+		}
+	}
+}

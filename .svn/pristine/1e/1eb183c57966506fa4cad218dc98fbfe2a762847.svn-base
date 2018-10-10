@@ -1,0 +1,25 @@
+package com.ut.scf.reqbean.query;
+
+import com.ut.scf.reqbean.PageReqBean;
+
+public class SaleInfoListReqBean extends PageReqBean {
+	private String repaymentDate;
+	private String corpId;
+
+	public String getRepaymentDate() {
+		return repaymentDate;
+	}
+
+	public void setRepaymentDate(String repaymentDate) {
+		this.repaymentDate = repaymentDate;
+	}
+
+	public String getCorpId() {
+		return corpId;
+	}
+
+	public void setCorpId(String corpId) {
+		this.corpId = corpId;
+	}
+
+}

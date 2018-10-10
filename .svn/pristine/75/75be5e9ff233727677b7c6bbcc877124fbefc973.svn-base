@@ -1,0 +1,141 @@
+package com.ut.scf.service.tradfact.impl;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.TfProjectCreditFlowMapper;
+import com.ut.scf.dao.auto.TfProjectCreditMapper;
+import com.ut.scf.dao.tradfact.IProjectFileDao;
+import com.ut.scf.pojo.auto.TfProjectCredit;
+import com.ut.scf.pojo.auto.TfProjectCreditExample;
+import com.ut.scf.pojo.auto.TfProjectCreditFlow;
+import com.ut.scf.pojo.auto.TfProjectCreditFlowExample;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.tradfact.IProjectCreditService;
+import com.ut.scf.service.tradfact.IProjectFileService;
+import org.aspectj.weaver.patterns.PerObject;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+@Service
+public class ProjectCreditServiceImpl implements IProjectCreditService {
+    @Resource
+    private TfProjectCreditMapper projectCreditMapper;
+
+    @Resource
+    private TfProjectCreditFlowMapper tfProjectCreditFlowMapper;
+
+    //获取可用授信额度
+    @Override
+    public BigDecimal getCreditAvailable(String projectId) {
+        TfProjectCredit credit = getCreditInfo(projectId);
+        BigDecimal creditUsed = credit.getCreditUse() == null ? BigDecimal.ZERO : credit.getCreditUse();
+        BigDecimal creditAll = credit.getCreditAmount() == null ? BigDecimal.ZERO : credit.getCreditAmount();
+        return creditAll.subtract(creditUsed);
+    }
+
+    //获取总授信额度
+    @Override
+    public BigDecimal getCreditAll(String projectId) {
+        TfProjectCredit credit = getCreditInfo(projectId);
+        BigDecimal creditAll = credit.getCreditAmount() == null ? BigDecimal.ZERO : credit.getCreditAmount();
+        return creditAll;
+    }
+
+    //获取可用授信额度
+    @Override
+    public BigDecimal getCreditUsed(String projectId) {
+        TfProjectCredit credit = getCreditInfo(projectId);
+        BigDecimal creditUsed = credit.getCreditUse() == null ? BigDecimal.ZERO : credit.getCreditUse();
+        return creditUsed;
+    }
+
+    //占用授信额度
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void freezeCredit(String projectId, String flag, BigDecimal credit) {
+        TfProjectCredit projectCredit = getCreditInfo(projectId);
+        if (projectCredit != null) {
+            BigDecimal creditUsed = projectCredit.getCreditUse() == null ? BigDecimal.ZERO : projectCredit.getCreditUse();
+            creditUsed = creditUsed.add(credit);
+            projectCredit.setCreditUse(creditUsed);
+            projectCreditMapper.updateByPrimaryKeySelective(projectCredit);
+            addCreditFlow(projectCredit.getCreditId(), credit, flag);
+        }
+
+    }
+
+
+    private void addCreditFlow(String creditId, BigDecimal amount, String flag) {
+        TfProjectCreditFlow flow = new TfProjectCreditFlow();
+        flow.setId(ScfUUID.generate());
+        flow.setAmount(amount);
+        flow.setOperateType("0");
+        flow.setCreditId(creditId);
+        flow.setRemark(flag);
+        tfProjectCreditFlowMapper.insert(flow);
+    }
+
+    //s释放授信额度
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void unfreezeCredit(String projectId, String flag, BigDecimal creditUnfreeze) {
+        //先解冻
+        TfProjectCreditFlow tfProjectCreditFlow = findCreditFlow(flag);
+        BigDecimal credit = tfProjectCreditFlow.getAmount();
+        TfProjectCredit projectCredit = getCreditInfo(projectId);
+        projectCredit.setCreditUse(projectCredit.getCreditUse().subtract(credit));
+        projectCreditMapper.updateByPrimaryKeySelective(projectCredit);
+        updateCreditFlow(tfProjectCreditFlow);
+
+        //再冻结
+        credit = credit.subtract(creditUnfreeze);
+        if (credit.compareTo(BigDecimal.ZERO) == 1){
+            freezeCredit(projectId,flag,credit);
+        }
+
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void unfreezeCredit(String projectId, String flag) {
+        TfProjectCreditFlow tfProjectCreditFlow = findCreditFlow(flag);
+        BigDecimal credit = tfProjectCreditFlow.getAmount();
+        TfProjectCredit projectCredit = getCreditInfo(projectId);
+        projectCredit.setCreditUse(projectCredit.getCreditUse().subtract(credit));
+        projectCreditMapper.updateByPrimaryKeySelective(projectCredit);
+        updateCreditFlow(tfProjectCreditFlow);
+    }
+
+    private TfProjectCreditFlow findCreditFlow(String flag) {
+        TfProjectCreditFlowExample example = new TfProjectCreditFlowExample();
+        TfProjectCreditFlowExample.Criteria criteria = example.createCriteria();
+        criteria.andRemarkEqualTo(flag);
+        criteria.andOperateTypeEqualTo("0");
+        return tfProjectCreditFlowMapper.selectByExample(example).get(0);
+    }
+
+    private void updateCreditFlow(TfProjectCreditFlow tfProjectCreditFlow) {
+        tfProjectCreditFlow.setOperateType("1");
+        tfProjectCreditFlowMapper.updateByPrimaryKeySelective(tfProjectCreditFlow);
+    }
+
+    private TfProjectCredit getCreditInfo(String projectId) {
+        TfProjectCreditExample example = new TfProjectCreditExample();
+        TfProjectCreditExample.Criteria criteria = example.createCriteria();
+        criteria.andProjectIdEqualTo(projectId);
+        List<TfProjectCredit> credits = projectCreditMapper.selectByExample(example);
+        if (credits != null && credits.size() > 0) {
+            return credits.get(0);
+        }
+        return null;
+    }
+
+
+}

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.project.IAgencyDao" >
+
+  <select id="agencyList" resultType="hashmap" parameterType="hashmap" >
+    select
+    	ci.corp_id corpId,
+    	ci.corp_name corpName,
+    	ci.agency_num agencyNum,
+    	ci.corp_type corpType,
+    	ci.office_address officeAddress,
+    	ci.contact_info contactInfo,
+    	ci.fixed_phone fixedPhone,
+    	ci.area area,
+    	ci.represent represent,
+    	ci.first_two_years_pickup_num firstTwoYearsPickupNum,
+    	ci.first_two_years_retail_num firstTwoYearsRetailNum,
+    	ci.first_two_years_sale_rank firstTwoYearsSaleRank,
+    	ci.this_year_plan_pickup_num thisYearPlanPickupNum,
+    	ci.this_year_plan_sales thisYearPlanSales,
+    	ci.note note, linfo.max_credit_amount maxCreditAmount,linfo.max_lscredit_amount maxLscreditAmount,
+    	 linfo.use_able_credit_amt useAbleCreditAmt,linfo.use_able_lscredit_amt useAbleLscreditAmt,
+    	 linfo.dz_id dzId,linfo.ls_id lsId
+    from corp_info ci 
+    left join limit_info linfo on linfo.corp_id=ci.corp_id 
+    <where>
+        	ci.status=1 and ci.sys_type = 4
+    	<if test="agencyCode!=null and agencyCode!='' ">  
+            and ci.agency_num LIKE CONCAT(CONCAT('%', #{agencyCode}),'%')   
+        </if>  
+    	<if test="agencyName!=null and agencyName!='' ">  
+            and ci.corp_name LIKE CONCAT(CONCAT('%', #{agencyName}),'%')   
+        </if>
+          	<if test="area!=null and area!='' ">  
+            and area =#{area}   
+        </if>
+        	<if test="represent!=null and represent!='' ">  
+            and represent=#{represent}   
+        </if>
+    	<if test="maxCreditAmountStart!=null and maxCreditAmountStart!='' ">  
+           <if test="maxCreditAmountEnd !=null and maxCreditAmountEnd !='' ">  
+	            AND linfo.max_credit_amount BETWEEN #{maxCreditAmountStart} AND #{maxCreditAmountEnd}   
+	        </if>
+	        <if test="maxCreditAmountEnd ==null or maxCreditAmountEnd =='' ">  
+	            AND linfo.max_credit_amount <![CDATA[ >= ]]> #{maxCreditAmountStart}    
+	        </if>
+        </if>
+    	<if test="maxCreditAmountEnd !=null and maxCreditAmountEnd !='' ">  
+	        <if test="maxCreditAmountStart ==null or maxCreditAmountStart =='' ">  
+	            AND linfo.max_credit_amount <![CDATA[ <= ]]> #{maxCreditAmountEnd}    
+	        </if>
+        </if>
+    	<if test="maxLscreditAmountStart !=null and maxLscreditAmountStart !='' ">  
+           <if test="maxLscreditAmountEnd !=null and maxLscreditAmountEnd !='' ">  
+	            AND linfo.max_lscredit_amount BETWEEN #{maxLscreditAmountStart} AND #{maxLscreditAmountEnd}   
+	        </if>
+	        <if test="maxLscreditAmountEnd ==null or maxLscreditAmountEnd =='' ">  
+	            AND linfo.max_lscredit_amount <![CDATA[ >= ]]> #{maxLscreditAmountStart}    
+	        </if>
+        </if>
+    	<if test="maxLscreditAmountEnd !=null and maxLscreditAmountEnd !='' ">  
+	        <if test="maxLscreditAmountEnd ==null or maxLscreditAmountEnd =='' ">  
+	            AND linfo.max_lscredit_amount <![CDATA[ <= ]]> #{maxLscreditAmountEnd}    
+	        </if>
+        </if>
+        
+    	<if test="useAbleAmountStrat !=null and useAbleAmountStrat !='' ">  
+           <if test="useAbleAmountEnd !=null and useAbleAmountEnd !='' ">  
+	            AND linfo.use_able_credit_amt BETWEEN #{useAbleAmountStrat} AND #{useAbleAmountEnd}   
+	        </if>
+	        <if test="useAbleAmountEnd ==null or useAbleAmountEnd =='' ">  
+	            AND linfo.use_able_credit_amt <![CDATA[ >= ]]> #{useAbleAmountStrat}    
+	        </if>
+        </if>
+    	<if test="useAbleAmountEnd !=null and useAbleAmountEnd !='' ">  
+	        <if test="useAbleAmountStrat ==null or useAbleAmountStrat =='' ">  
+	            AND linfo.use_able_credit_amt <![CDATA[ <= ]]> #{useAbleAmountEnd}    
+	        </if>
+        </if>
+        
+    	<if test="useLsableAmountStrat !=null and useLsableAmountStrat !='' ">  
+           <if test="useLsableAmountEnd !=null and useLsableAmountEnd !='' ">  
+	            AND linfo.use_able_lscredit_amt BETWEEN #{useLsableAmountStrat} AND #{useLsableAmountEnd}   
+	        </if>
+	        <if test="useLsableAmountEnd ==null or useLsableAmountEnd =='' ">  
+	            AND linfo.use_able_lscredit_amt <![CDATA[ >= ]]> #{useLsableAmountStrat}    
+	        </if>
+        </if>
+    	<if test="useLsableAmountEnd !=null and useLsableAmountEnd !='' ">  
+	        <if test="useLsableAmountStrat ==null or useLsableAmountStrat =='' ">  
+	            AND linfo.use_able_lscredit_amt <![CDATA[ <= ]]> #{maxCreditAmountEnd}    
+	        </if>
+        </if>
+        order by CONVERT(ci.agency_num USING gbk )
+    </where>
+  </select>
+
+</mapper>

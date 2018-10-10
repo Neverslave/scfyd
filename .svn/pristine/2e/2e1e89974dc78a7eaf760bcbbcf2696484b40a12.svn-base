@@ -1,0 +1,783 @@
+$(document).ready(function() {
+	getLastFinanceDate();
+    initTable();
+    dateload();
+    numFormat();
+	
+});
+
+function searchFun() {
+    initTable();
+
+}
+function numFormat() {
+    $("#repayCurrentMoneyAut").number(true, 2);
+    $("#repayInterestAut").number(true, 2);
+    $("#repayMarketingFeeYiAut").number(true, 2);
+    $("#tiRestCurrentMoneyAut").number(true, 2);
+    $("#tiRestInterestAut").number(true, 2);
+    $("#tiRestMarketingFeeYiAut").number(true, 2);
+}
+function initTable() {
+    $('#financeRepayHistoryTable').bootstrapTable('destroy');
+    
+    if($('#peopleType02 option:selected').val()==3){
+    	$("#financeRepayHistoryTable").bootstrapTable({
+            method: "post",
+            url: "../../finaceRepay/getFqcrFinaceRepayHistoryList",
+            striped: false, //表格显示条纹  
+            pagination: true, //启动分页  
+            pageSize: 5, //每页显示的记录数  
+            pageNumber: 1, //当前第几页  
+            pageList: [5, 10, 15, 20, 25], //记录数可选列表  
+            search: false, //是否启用查询  
+            showColumns: false, //显示下拉框勾选要显示的列  
+            showRefresh: false, //显示刷新按钮  
+            sidePagination: "server", //表示服务端请求 
+            //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+            //设置为limit可以获取limit, offset, search, sort, order  
+            queryParamsType: "undefined",
+            queryParams: function queryParams(params) {
+                var dataTemp = CloudUtils.convertStringJson('searchForm');
+                var jsonData = eval("(" + dataTemp + ")");
+                jsonData.pageNumber = params.pageNumber;
+                jsonData.pageSize = params.pageSize;
+                 return JSON.stringify(jsonData);
+            },
+            responseHandler: function responseHandler(res) {
+                if (res.result == 0) {
+                    return {
+                        "rows": res.dataList,
+                        "total": res.records
+                    };
+
+                } else {
+                    bootbox.alert(res.resultNote);
+                    return {
+                        "rows": [],
+                        "total": 0
+                    };
+                }
+            },
+            columns: [{
+                field: 'peopleType',
+                title: '订单类型',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                    if(value=="1")
+                 	   {
+                 	   return "学生";
+                 	   }
+                    else if(value=="2")
+     	        	   {
+     	        	   return "家庭宽带";
+     	        	   }
+                    else if(value=="3")
+     	        	   {
+     	        	   return "翼支付";
+     	        	   }
+                    else
+                 	   {
+                 	   return value;
+                 	   }
+                 }
+            }, {
+                field: 'financeDate',
+                title: '做账日期',
+                align: 'center',
+                valign: 'middle'
+            },  {
+                field: 'financeDateBegin',
+                title: '开始日期',
+                align: 'center',
+                valign: 'middle'
+            },  {
+                field: 'financeDateEnd',
+                title: '截止日期',
+                align: 'center',
+                valign: 'middle'
+            },  {
+                field: 'repayCount',
+                title: '应收账款数量（正常）',
+                align: 'center',
+                valign: 'middle'
+            },{
+                field: 'repayCurrentMoney',
+                title: '应收账款本金总额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                    return $.number(value, 2);
+                },
+                visible:false
+            },{
+                field: 'repayInterest',
+                title: '应收账款利息总额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                    return $.number(value, 2);
+                }
+            ,
+            visible:false
+            },{
+                field: 'repayMarketingFeeYi',
+                title: '应收账款营销费总额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                    return $.number(value, 2);
+                }
+            ,
+            visible:false
+            }, {
+                field: 'repaySum',
+                title: '应收账款总金额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value,row,index) {
+                    return $.number(row.repayCurrentMoney+row.repayInterest+row.repayMarketingFeeYi, 2);
+                }
+            
+            }, {
+                field: 'tiRepayCount',
+                title: '提前结清数量',
+                align: 'center',
+                valign: 'middle'
+            }, {
+                field: 'tiRestCurrentMoney',
+                title: '提前结清剩余本金',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                    return $.number(value, 2);
+                },
+                visible:false
+            }, {
+                field: 'tiRestInterest',
+                title: '提前结清应收利息（一期）',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                    return $.number(value, 2);
+                },
+                visible:false
+            }, {
+                field: 'tiRestMarketingFeeYi',
+                title: '提前结清剩余营销费',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                    return $.number(value, 2);
+                },
+                visible:false
+            }, {
+                field: 'tiRestSum',
+                title: '提前结清总金额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value,row,index) {
+           
+                    return $.number(row.tiRestCurrentMoney+row.tiRestInterest+row.tiRestMarketingFeeYi, 2);
+                }
+            },{
+                field: 'repayCurrentMoneyAut',
+                title: '实际应收账款本金总额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                	if(value==null||value==""){
+                	
+                    		return "";
+                	}
+                    return $.number(value, 2);
+                },
+                visible:false
+            }, {
+                field: 'repayInterestAut',
+                title: '实际应收账款利息总额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                	if(value==null||value==""){
+                		return "";
+                	}
+                    return $.number(value, 2);
+                },
+                visible:false
+            }, {
+                field: 'repayMarketingFeeYiAut',
+                title: '实际应收账款营销费总额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                	if(value==null||value==""){
+                		return "";
+                	}
+                    return $.number(value, 2);
+                },
+                visible:false
+            },{
+                field: 'repaySumAut',
+                title: '实际入账提前结清总金额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value,row,index) {
+                    return $.number(row.repayCurrentMoneyAut+row.repayInterestAut+row.repayMarketingFeeYiAut, 2);
+                }
+            }, {
+                field: 'tiRestCurrentMoneyAut',
+                title: '实际提前结清剩余本金',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                	if(value==null||value==""){
+                		return "";
+                	}
+                    return $.number(value, 2);
+                },
+                visible:false
+            }, {
+                field: 'tiRestInterestAut',
+                title: '实际提前结清应收利息',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                	if(value==null||value==""){
+                		return "";
+                	}
+                    return $.number(value, 2);
+                },
+                visible:false
+            }, {
+                field: 'tiRestMarketingFeeYiAut',
+                title: '实际提前结清剩余营销费',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                	if(value==null||value==""){
+                		return "";
+                	}
+                    return $.number(value, 2);
+                },
+                visible:false
+            }, {
+                field: 'restSumAut',
+                title: '实际入账提前结清总金额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value,row,index) {
+                    return $.number(row.tiRestCurrentMoneyAut+row.tiRestInterestAut+row.tiRestMarketingFeeYiAut, 2);
+                }
+            }, {
+                field: 'note',
+                title: '备注',
+                align: 'center',
+                valign: 'middle', 
+                formatter: function(value) {
+                	if(value==null||value==""){
+                		return "";
+                	}
+                    return value;
+                },
+                visible:false
+              
+            }, {
+                field: 'bankStatement',
+                title: '银行流水',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                	if(value==null||value==""){
+                		return "";
+                	}
+                    return value;
+                },
+                visible:false
+            }, {
+                field: 'filePath',
+                title: '应收账款附件',
+                align: 'center',
+                valign: 'middle',
+                formatter:function(value,row,index){
+            	   if(value!=""&&value!=null)
+        		   {
+            		   var n = '<a  class = "downloadfile" >下载</a>';
+            		   return n;
+        		   }
+        	        else
+         		   {	        	
+        	        	return '';
+         		   } 
+        	     },
+        	        events: 'operateEvents'
+            },{
+                field: 'operate',
+                title: '操作',
+                align: 'center',
+                valign: 'middle',
+                formatter:function(value,row,index){
+             	   if(row.bankStatement!=""&&row.bankStatement!=null)
+         		   {
+             		 
+             		   return "历史记录";
+         		   }
+         	        else
+          		   {	
+         	        	 if(row.bankStatement==null||row.bankStatement=="")
+         	     		   {
+    	     	           var s = '<a  class = "confirmhistory" href="javascript:void(0)">确认</a>';
+    	        		   var n = '<a  class = "deletehistory" href="javascript:void(0)">&nbsp&nbsp&nbsp&nbsp删除</a>';
+    	        		   var m = '<a  class = "detail" href="javascript:void(0)">&nbsp&nbsp&nbsp&nbsp详情</a>';
+    		        		   return s+''+n+''+m;
+         	     		 }
+         	        	 else{
+         	        		   var m = '<a  class = "detail" href="javascript:void(0)">&nbsp&nbsp&nbsp&nbsp详情</a>';
+         	        		   return m;
+         	        	 }
+            		
+          		   } 
+         	     },
+         	        events: 'operateEvents'
+            } ]
+        });
+    }
+    else{
+    	$("#financeRepayHistoryTable").bootstrapTable({
+            method: "post",
+            url: "../../finaceRepay/getFqcrFinaceRepayHistoryList",
+            striped: false, //表格显示条纹  
+            pagination: true, //启动分页  
+            pageSize: 5, //每页显示的记录数  
+            pageNumber: 1, //当前第几页  
+            pageList: [5, 10, 15, 20, 25], //记录数可选列表  
+            search: false, //是否启用查询  
+            showColumns: false, //显示下拉框勾选要显示的列  
+            showRefresh: false, //显示刷新按钮  
+            sidePagination: "server", //表示服务端请求 
+            //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+            //设置为limit可以获取limit, offset, search, sort, order  
+            queryParamsType: "undefined",
+            queryParams: function queryParams(params) {
+                var dataTemp = CloudUtils.convertStringJson('searchForm');
+                var jsonData = eval("(" + dataTemp + ")");
+                jsonData.pageNumber = params.pageNumber;
+                jsonData.pageSize = params.pageSize;
+                 return JSON.stringify(jsonData);
+            },
+            responseHandler: function responseHandler(res) {
+                if (res.result == 0) {
+                    return {
+                        "rows": res.dataList,
+                        "total": res.records
+                    };
+
+                } else {
+                    bootbox.alert(res.resultNote);
+                    return {
+                        "rows": [],
+                        "total": 0
+                    };
+                }
+            },
+            columns: [{
+                field: 'peopleType',
+                title: '订单类型',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                    if(value=="1")
+                 	   {
+                 	   return "学生";
+                 	   }
+                    else if(value=="2")
+     	        	   {
+     	        	   return "家庭宽带";
+     	        	   }
+                    else if(value=="3")
+     	        	   {
+     	        	   return "翼支付";
+     	        	   }
+                    else
+                 	   {
+                 	   return value;
+                 	   }
+                 }
+            }, {
+                field: 'financeDate',
+                title: '做账日期',
+                align: 'center',
+                valign: 'middle'
+            },  {
+                field: 'financeDateBegin',
+                title: '开始日期',
+                align: 'center',
+                valign: 'middle'
+            },  {
+                field: 'financeDateEnd',
+                title: '截止日期',
+                align: 'center',
+                valign: 'middle'
+            },  {
+                field: 'repayCount',
+                title: '应收账款数量（正常）',
+                align: 'center',
+                valign: 'middle'
+            },{
+                field: 'repayCurrentMoney',
+                title: '应收账款本金总额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                    return $.number(value, 2);
+                },
+                visible:false
+            },{
+                field: 'repayInterest',
+                title: '应收账款利息总额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                    return $.number(value, 2);
+                }
+            ,
+            visible:false
+            },{
+                field: 'repaySum',
+                title: '应收账款总金额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value,row,index) {
+                    return $.number(row.repayCurrentMoney+row.repayInterest, 2);
+                }
+            
+            },{
+                field: 'repayCurrentMoneyAut',
+                title: '实际应收账款本金总额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                	if(value==null||value==""){
+                	
+                    		return "";
+                	}
+                    return $.number(value, 2);
+                },
+                visible:false
+            }, {
+                field: 'repayInterestAut',
+                title: '实际应收账款利息总额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                	if(value==null||value==""){
+                		return "";
+                	}
+                    return $.number(value, 2);
+                },
+                visible:false
+            },{
+                field: 'repaySumAut',
+                title: '实际入账总金额',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value,row,index) {
+                    return $.number(row.repayCurrentMoneyAut+row.repayInterestAut, 2);
+                }
+            }, {
+                field: 'note',
+                title: '备注',
+                align: 'center',
+                valign: 'middle', 
+                formatter: function(value) {
+                	if(value==null||value==""){
+                		return "";
+                	}
+                    return value;
+                },
+                visible:false
+              
+            }, {
+                field: 'bankStatement',
+                title: '银行流水',
+                align: 'center',
+                valign: 'middle',
+                formatter: function(value) {
+                	if(value==null||value==""){
+                		return "";
+                	}
+                    return value;
+                },
+                visible:false
+            }, {
+                field: 'filePath',
+                title: '应收账款附件',
+                align: 'center',
+                valign: 'middle',
+                formatter:function(value,row,index){
+            	   if(value!=""&&value!=null)
+        		   {
+            		   var n = '<a  class = "downloadfile" >下载</a>';
+            		   return n;
+        		   }
+        	        else
+         		   {	        	
+        	        	return '';
+         		   } 
+        	     },
+        	        events: 'operateEvents'
+            },{
+                field: 'operate',
+                title: '操作',
+                align: 'center',
+                valign: 'middle',
+                formatter:function(value,row,index){
+             	   if(row.bankStatement!=""&&row.bankStatement!=null)
+         		   {
+             		 
+             		   return "历史记录";
+         		   }
+         	        else
+          		   {	
+         	        	 if(row.bankStatement==null||row.bankStatement=="")
+         	     		   {
+    	     	           var s = '<a  class = "confirmhistory" href="javascript:void(0)">确认</a>';
+    	        		   var n = '<a  class = "deletehistory" href="javascript:void(0)">&nbsp&nbsp&nbsp&nbsp删除</a>';
+    	        		   var m = '<a  class = "detail" href="javascript:void(0)">&nbsp&nbsp&nbsp&nbsp详情</a>';
+    		        		   return s+''+n+''+m;
+         	     		 }
+         	        	 else{
+         	        		   var m = '<a  class = "detail" href="javascript:void(0)">&nbsp&nbsp&nbsp&nbsp详情</a>';
+         	        		   return m;
+         	        	 }
+            		
+          		   } 
+         	     },
+         	        events: 'operateEvents'
+            } ]
+        });
+    }
+    
+    
+}
+
+function dateload() {
+
+
+    $('#dateEnd').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+    $('#searchDateBegin').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+    $('#searchDateEnd').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyy-mm-dd',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+}
+
+function exportFinacneRepayExcel(){
+    var dataTemp = CloudUtils.convertStringJson('financeFrom');
+    var options = {
+        url: '../../finaceRepay/exportFinacneRepayExcel',
+        data: dataTemp,
+        callBackFun: function(data) {
+            if (data.result==0) {
+                var datamap= data.resultMap;
+
+                CloudUtils.setForm(datamap, 'detailForm');
+                $('#detailModal #financeRepayAut').hide();
+          
+                $('#detailModal #saveButton').show();
+                $('#detailModal #confirmButton').hide();                
+                $('#detailModal #filePath').val(data.resultNote);
+                $('#detailModal #peopleType').attr("disabled","disabled");
+                
+                hideOrShowYzfGroup(data.resultNote.peopleType);
+                
+                $('#detailModal').modal("show");
+                
+                
+                
+            } else {
+                bootbox.alert(data.resultNote);
+            }
+
+        }
+    };
+    CloudUtils.ajax(options);
+}
+
+function download(){	
+	 window.open($('#detailModal #filePath').val());
+}
+function getLastFinanceDate(){
+    var dataTemp = CloudUtils.convertStringJson('financeFrom');
+    var options = {
+        url: '../../finaceRepay/getLastFinanceDate',
+        data: dataTemp,
+        callBackFun: function(data) {
+            if (data.result==0) {
+            	$('#dateBegin').val(data.resultNote);
+            } else {
+                bootbox.alert(data.resultNote);
+                return false;
+            }
+
+        }
+    };
+    CloudUtils.ajax(options);
+}
+function saveFun(){
+    $('#detailModal #peopleType').removeAttr("disabled"); 
+    var dataTemp = CloudUtils.convertStringJson('detailForm');
+    var options = {
+        url: '../../finaceRepay/saveFun',
+        data: dataTemp,
+        callBackFun: function(data) {
+            if (data.result==0) {
+            	   bootbox.alert("操作成功"); 
+            	   $('#detailModal').modal("hide");
+            	   
+            	   $("#detailForm")[0].reset();
+
+            	   initTable();
+            	   getLastFinanceDate();
+            } else {
+                bootbox.alert(data.resultNote);
+                return false;
+            }
+
+        }
+    };
+    CloudUtils.ajax(options);
+}
+
+function hideOrShowYzfGroup(peopleType){
+	
+	 if(peopleType=='3'){
+	    	
+	        $('#detailModal .yzf-group').show();
+	    }
+	    else {
+	    	 $('#detailModal .yzf-group').hide();
+	    }
+}
+function confirmFun(row){
+	 $("#detailForm")[0].reset();
+    CloudUtils.setForm(row, 'detailForm');
+    $('#detailModal #financeRepayAut').show();
+    
+    hideOrShowYzfGroup(row.peopleType);
+    
+    $('#detailModal #saveButton').hide();
+    $('#detailModal #confirmButton').show();
+    $('#detailModal #peopleType').attr("disabled","disabled");
+    $('#detailModal').modal("show");
+    $('#detailModal #financeRepayAut').find("input").attr('readonly',false);
+	
+	
+}
+
+function confirm(){
+
+	$('#detailModal #peopleType').removeAttr("disabled");
+    var dataTemp = CloudUtils.convertStringJson('detailForm');
+    var options = {
+        url: '../../finaceRepay/confirmFun',
+        data:  dataTemp,
+        callBackFun: function(data) {
+            if (data.result==0) {
+                var datamap= data.resultMap;
+
+                CloudUtils.setForm(datamap, 'detailForm');
+                $('#detailModal #filePath').val(data.resultNote);
+                $('#detailModal').modal();
+                initTable();
+         	   getLastFinanceDate();
+                
+                
+            } else {
+                bootbox.alert(data.resultNote);
+                return false;
+            }
+
+        }
+    };
+    CloudUtils.ajax(options);
+}
+function deleteFun(row){
+    var options = {
+        url: '../../finaceRepay/deleteFun',
+        data:  JSON.stringify(row),
+        callBackFun: function(data) {
+            if (data.result==0) {
+                var datamap= data.resultMap;
+
+                bootbox.alert("删除成功");
+                initTable();
+          	   getLastFinanceDate();
+                
+                
+            } else {
+                bootbox.alert("删除失败");
+                return false;
+            }
+
+        }
+    };
+    CloudUtils.ajax(options);
+}
+function detailFun(row){
+	 $("#detailForm")[0].reset();
+	 	$('#detailForm').find("select").attr('disabled',true);
+	 	$('#detailForm').find("input").attr('readonly',true);
+	 	$('#detailModal').modal({backdrop: 'static', keyboard: false});
+	 	
+	    CloudUtils.setForm(row, 'detailForm');
+	    $('#detailModal #financeRepayAut').show();
+	    $('#detailModal #saveButton').hide();
+	    $('#detailModal #confirmButton').hide();
+	    $('#detailModal #peopleType').attr("disabled","disabled");
+	    hideOrShowYzfGroup(row.peopleType);
+	    $('#detailModal').modal("show");
+	
+}
+window.operateEvents = {
+	    'click .downloadfile': function (e, value, row, index) {
+	    	window.open(value);
+	    },
+	    'click .confirmhistory': function (e, value, row, index) {
+	    	confirmFun(row);
+	    },
+	    'click .deletehistory': function (e, value, row, index) {
+	    	deleteFun(row);
+	    },
+	    'click .detail': function (e, value, row, index) {
+	    	detailFun(row);
+	    },
+
+	};
+
+

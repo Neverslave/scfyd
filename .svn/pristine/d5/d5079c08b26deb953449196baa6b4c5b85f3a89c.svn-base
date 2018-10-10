@@ -1,0 +1,77 @@
+package com.ut.scf.web.controller.statistics;
+
+import java.io.File;
+import java.util.Date;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.core.util.ScfDateUtil;
+import com.ut.scf.reqbean.statistics.AgencyInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.statistics.IAgencyInfoService;
+import com.ut.scf.web.controller.BaseJsonController;
+
+@Controller
+@RequestMapping("/agencyInfo")
+public class AgencyInfoController extends BaseJsonController {
+	
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
+	
+	@Resource
+	private IAgencyInfoService agencyInfoService;
+	
+	@RequestMapping(value = "/agencyList")
+	@ResponseBody
+	public BaseRespBean AgencyList(@Valid @RequestBody AgencyInfoListReqBean reqBean,
+			BindingResult bindingResult){
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		PageInfoBean page = new PageInfoBean();
+		page.setPageNumber(reqBean.getPageNumber());
+		page.setPageSize(reqBean.getPageSize());
+		BaseRespBean respBean = agencyInfoService.AgencyInfoList(paramMap, page);
+		
+		log.debug("agencyInfoList: {}", respBean);
+		
+		return respBean;
+	}
+	
+	@RequestMapping(value = "/exportExcel")
+	@ResponseBody
+	public String exportExcel(HttpSession httpSession, @RequestBody AgencyInfoListReqBean reqBean,
+			HttpServletRequest request) {
+		
+		try {
+
+			String signPath = "/exportExcel/AgencyInformation" + ScfDateUtil.format(new Date(), "-yyyyMMddhhmmss") + ".xls";
+			String path = request.getSession().getServletContext().getRealPath(signPath);
+
+			File tempFile = new File(path);
+			File fileParent = tempFile.getParentFile();
+			if (!fileParent.exists()) {
+				fileParent.mkdirs();
+			}
+
+			Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+			agencyInfoService.exportExcel(paramMap, path);
+			return request.getContextPath() + signPath;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
+}

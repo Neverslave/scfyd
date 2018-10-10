@@ -1,0 +1,94 @@
+<style type="text/css">
+#planInfo .th-inner {
+    height: 80px;
+}
+.fixed-table-body
+{
+max-height:1000px;
+}
+</style>
+<script src='../../js/referrer-killer.js'></script>
+
+<body class="">
+    <section>
+        <div class="main-content-child modal-lg" style="padding-right:60px">
+            <div class="row whiteBgDiv">
+                <form class="form-horizontal" role="form" id="detailHisForm">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="orderBatchId2Detail">订单批次001</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="batchId" class="form-control" id="orderBatchId2Detail" placeholder="订单批次" readonly>
+                        </div>
+                       <label class="col-sm-2 control-label" for="syncDateDetail">同步时间</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="syncDate" class="form-control" id="syncDateDetail" placeholder="同步时间" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="col-sm-2 control-label" for="orderTotalNumDetail">同步订单总数</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="orderTotalNum" class="form-control" id="orderTotalNumDetail" placeholder="同步订单总数" readonly>
+                        </div>
+                        <label class="col-sm-2 control-label" for="orderTotalAmtDetail">同步订单总金额</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="totalPrice" class="form-control" id="orderTotalAmtDetail" placeholder="同步订单总金额" readonly>
+                        </div>
+                      
+                    </div>
+                    <div class="form-group">
+                      <label class="col-sm-2 control-label" for="recOrderNumDetail">接受订单数量</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="recOrderNum" class="form-control" id="recOrderNumDetail" placeholder="接受订单数量" readonly>
+                        </div>
+                        <label class="col-sm-2 control-label" for="recOrderAmtDetail">接受订单金额</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="recOrderAmt" class="form-control" id="recOrderAmtDetail" placeholder="接受订单金额" readonly>
+                        </div>
+                
+                    </div>
+             	    <div class="form-group">
+                      <label class="col-sm-2 control-label" for="rejOrderNum">拒绝订单数量</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="rejOrderNum" class="form-control" id="rejOrderNum" placeholder="拒绝订单数量" readonly>
+                        </div>
+                        <label class="col-sm-2 control-label" for="rejOrderAmt">拒绝订单金额</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="rejOrderAmt" class="form-control" id="rejOrderAmt" placeholder="拒绝订单金额" readonly>
+                        </div>
+                    
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="selDateDetail">确认时间</label>
+                        <div class="col-sm-3 scf_valid">
+                            <input type="text" name="selDate" class="form-control" id="selDateDetail" placeholder="确认时间" readonly>
+                        </div>
+                            <label class="col-sm-2 control-label" for="peopleType">业务类型</label>
+                    
+                            <div class="col-sm-3 scf_valid">
+	                            <select id="peopleType" name="peopleType" class="form-control" readonly disabled">
+	                            <option value="1">学生</option>
+	                            <option value="2">家庭宽带</option>
+	                            <option value="3">翼支付</option>
+						        </select>
+	                      	 </div>
+                    </div>
+                  
+                </form>
+                <div class="panel-body" >
+                    <div class="nav">
+                        <ol class="breadcrumb">
+                            <li class="active">订单信息表</li>
+                        </ol>
+                    </div>
+                    <!-- <div class="col-sm-1">
+                        <input type='button' id="btnRepayPlan" data-toggle="modal" data-target="#planInfo" class="btn btn-default add" value="查看还款计划" onclick='getPlanInfos()'>
+                    </div> -->
+                    <table id="orderListDetail" class="table" height="100%" cellspacing="0" width="100%">
+                    </table>
+                </div>
+          
+            </div>
+                  <div id="agencyDetailModal"></div>
+        </div>
+    </section>
+  

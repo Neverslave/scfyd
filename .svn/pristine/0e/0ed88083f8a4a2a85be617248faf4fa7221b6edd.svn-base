@@ -1,0 +1,354 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.PDFUtil2;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.CorpAccountInfoMapper;
+import com.ut.scf.dao.auto.TfLoanInfoMapper;
+import com.ut.scf.dao.auto.TfRateInfoMapper;
+import com.ut.scf.dao.auto.TfRepayInfoMapper;
+import com.ut.scf.dao.tradfact.ILoanApplicationDao;
+import com.ut.scf.pojo.auto.CorpAccountInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.pojo.auto.TfLoanInfo;
+import com.ut.scf.pojo.auto.TfLoanInfoExample;
+import com.ut.scf.pojo.auto.TfLoanInfoExample.Criteria;
+import com.ut.scf.pojo.auto.TfNoticeInfo;
+import com.ut.scf.pojo.auto.TfRateInfo;
+import com.ut.scf.pojo.auto.TfRepayInfo;
+import com.ut.scf.reqbean.tradfact.LoanApplicationInfoBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.tradfact.ILoanApplicationService;
+import com.ut.scf.service.tradfact.INoticeService;
+import com.ut.scf.service.tradfact.IProjectCreditService;
+import com.ut.scf.service.tradfact.IProjectLoanService;
+
+@Service("loanApplicationService")
+public class LoanApplicationServiceImpl extends BaseActivitiService<LoanApplicationInfoBean> implements IActivitiService<LoanApplicationInfoBean>,
+        ILoanApplicationService {
+
+	private static final String ADVANCE_APPLY_BPM = "loanApplication";
+
+	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+	@Override
+	public String getProcessDefinitionKey() {
+		return ADVANCE_APPLY_BPM;
+	}
+
+	@Resource
+	private TfLoanInfoMapper tfLoanInfoMapper;
+
+	@Resource
+	private TfRateInfoMapper tfRateInfoMapper;
+
+	@Resource
+	private CorpAccountInfoMapper corpAccountInfoMapper;
+
+	@Resource
+	private IProjectCreditService projectCreditService;
+
+	@Resource
+	private ILoanApplicationDao loanApplicationDao;
+
+	@Resource
+	private IProjectLoanService projectLoanService;
+
+	@Resource
+	private TfRepayInfoMapper tfRepayInfoMapper;
+
+	@Resource
+	IProcessRepeatChkService iProcessRepeatChkService;
+
+	@Autowired(required = false)
+	private HttpSession session;
+
+	@Resource
+	private INoticeService noticeService;
+
+	@Override
+	public void doStartAfter(BpmProcessContext processContext) {
+		super.doStartAfter(processContext);
+		LoanApplicationInfoBean loanApplicationInfoBean = (LoanApplicationInfoBean) processContext.getT();
+		// 放款编号不能重复
+		if (!checkLoanNo(loanApplicationInfoBean)) {
+			throw new BizException(ErrorCodeEnum.LOAN_ID_EXIST, "该放款编号已经存在");
+		}
+		insertProcessCheck(loanApplicationInfoBean.getLoanId(), processContext.getProcessId());
+		projectCreditService.freezeCredit(loanApplicationInfoBean.getProjectId(), loanApplicationInfoBean.getLoanId(),
+		                                  loanApplicationInfoBean.getFactFinance());
+	}
+
+	private boolean checkLoanNo(LoanApplicationInfoBean loanApplicationInfoBean) {
+		TfLoanInfoExample tfLoanInfoExample = new TfLoanInfoExample();
+		Criteria criteria = tfLoanInfoExample.createCriteria();
+		criteria.andLoanNoEqualTo(loanApplicationInfoBean.getLoanId());
+		int num = tfLoanInfoMapper.countByExample(tfLoanInfoExample);
+		if (num > 0) {
+			return false;
+		}
+		ProcessRepeatCheck processRepeatCheck = new ProcessRepeatCheck();
+		processRepeatCheck.setItemKey("TF_LOAN_NO");
+		processRepeatCheck.setItemValue(loanApplicationInfoBean.getLoanId());
+		processRepeatCheck.setProcessKey("loanApplication");
+		if (iProcessRepeatChkService.isProcessExist(processRepeatCheck)) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+		if (bpmProcessContext.isProcessEnd()) {
+			LoanApplicationInfoBean loanApplicationInfoBean = (LoanApplicationInfoBean) bpmProcessContext.getT();
+			addLoanApplicationInfo(loanApplicationInfoBean);
+			outToPDF(loanApplicationInfoBean);
+		}
+	}
+
+	// 再申请时额度需要 先解冻 再冻结
+	@Override
+	public void reApplyAfter(BpmProcessContext processContext) {
+		super.reApplyAfter(processContext);
+		LoanApplicationInfoBean loanApplicationInfoBean = (LoanApplicationInfoBean) processContext.getT();
+		projectCreditService.unfreezeCredit(loanApplicationInfoBean.getProjectId(), loanApplicationInfoBean.getLoanId());
+		projectCreditService.freezeCredit(loanApplicationInfoBean.getProjectId(), loanApplicationInfoBean.getLoanId(),
+		                                  loanApplicationInfoBean.getFactFinance());
+		insertProcessCheck(loanApplicationInfoBean.getLoanId(), loanApplicationInfoBean.getProcInstId());
+	}
+
+	@Override
+	public void reApplyBefore(BpmProcessContext processContext) {
+		LoanApplicationInfoBean loanApplicationInfoBean = (LoanApplicationInfoBean) processContext.getT();
+		// 放款编号不能重复
+		String projectId = loanApplicationInfoBean.getProcInstId();
+		iProcessRepeatChkService.deleteByProcInstId(projectId);
+		if (!checkLoanNo(loanApplicationInfoBean)) {
+			throw new BizException(ErrorCodeEnum.LOAN_ID_EXIST, "该放款编号已经存在");
+		}
+		if (!checkCredit(loanApplicationInfoBean.getProjectId(), loanApplicationInfoBean.getFactFinance())) {
+			throw new BizException(ErrorCodeEnum.CREDIT_ERROR, "本次投放的金额不能大于授信额度");
+		}
+
+	}
+
+	// 撤销需要解冻授信额度
+	@Override
+	public void deleteProcessAfter(JSONObject jsonObject) {
+		String projectId = (String) jsonObject.get("projectId");
+		String loanId = (String) jsonObject.get("loanId");
+		projectCreditService.unfreezeCredit(projectId, loanId);
+	}
+
+	// 验证授信额度 和 本次金额 不能光放在前端验证
+	private boolean checkCredit(String projectId, BigDecimal credit) {
+		BigDecimal creditAvailable = projectCreditService.getCreditAvailable(projectId);
+		if (credit.compareTo(creditAvailable) == 1) {
+			return false;
+		}
+		return true;
+
+	}
+
+	@Override
+	@Transactional
+	public void addLoanApplicationInfo(LoanApplicationInfoBean loanApplicationInfoBean) {
+		Date loanDate = null;
+		try {
+			loanDate = simpleDateFormat.parse(loanApplicationInfoBean.getLoanDate());
+		}
+		catch (ParseException e) {
+			e.printStackTrace();
+		}
+		// 添加到放款表tf_loan_info
+		TfLoanInfo tfLoanInfo = new TfLoanInfo();
+		String id = ScfUUID.generate();
+		String rateId = ScfUUID.generate();
+		tfLoanInfo.setId(id);
+		tfLoanInfo.setRateId(rateId);
+		tfLoanInfo.setLoanNo(loanApplicationInfoBean.getLoanId());
+		tfLoanInfo.setContractNo(loanApplicationInfoBean.getContractId());
+		tfLoanInfo.setLoanAmount(loanApplicationInfoBean.getFactFinance());
+		tfLoanInfo.setLoanDate(loanDate);
+		tfLoanInfo.setLoanTerm(loanApplicationInfoBean.getLoanPeriod());
+		tfLoanInfo.setCreateTime(new Date());
+		tfLoanInfo.setDepositRate(loanApplicationInfoBean.getDepositeRate());
+		tfLoanInfo.setInterestAmount(BigDecimal.ZERO);
+		if ("2".equals(loanApplicationInfoBean.getPayType())) {
+			tfLoanInfo.setRepayStatus("1");// 利息一次性付清
+			int days = differentDays(loanDate, addMonth(loanApplicationInfoBean.getLoanDate(), loanApplicationInfoBean.getLoanPeriod()));
+			BigDecimal interestAmount = projectLoanService.calInterestByDay(loanApplicationInfoBean.getFactRate(),
+			                                                                loanApplicationInfoBean.getFactFinance(), new BigDecimal(days));
+			tfLoanInfo.setInterestAmount(interestAmount);
+			repayInterest(loanApplicationInfoBean, interestAmount);
+		} else {
+			tfLoanInfo.setRepayStatus("0");
+			tfLoanInfo.setInterestAmount(BigDecimal.ZERO);
+		}
+
+		tfLoanInfoMapper.insert(tfLoanInfo);
+
+		// 添加的费率表tf_rate_info
+		TfRateInfo tfRateInfo = new TfRateInfo();
+		tfRateInfo.setManageFeeRate(loanApplicationInfoBean.getManageRate());
+		tfRateInfo.setRateId(rateId);
+		tfRateInfo.setCreateTime(new Date());
+		tfRateInfo.setInterestRate(loanApplicationInfoBean.getFactRate());
+		tfRateInfo.setManageFeeAmount(loanApplicationInfoBean.getManageFiance());
+		tfRateInfo.setReceiptWay(loanApplicationInfoBean.getPayType());
+		tfRateInfoMapper.insert(tfRateInfo);
+
+		// 添加到账户信息表corp_account_info
+		String corpId = ScfUUID.generate();
+		CorpAccountInfo corpAccountInfo = new CorpAccountInfo();
+		corpAccountInfo.setCorpId(corpId);
+		corpAccountInfo.setAccountName(loanApplicationInfoBean.getAccountName());
+		corpAccountInfo.setBankName(loanApplicationInfoBean.getOpenBank());
+		corpAccountInfo.setCreateTime(new Date());
+		corpAccountInfo.setSerialNum(loanApplicationInfoBean.getBankNum());
+		corpAccountInfo.setAccountNo(loanApplicationInfoBean.getShroffAccount());
+		corpAccountInfoMapper.insert(corpAccountInfo);
+
+	}
+
+	private void outToPDF(LoanApplicationInfoBean loanApplicationInfoBean) {
+		String corpName;
+		String noticeNo = "YDBL" + DateTime.now().getYear() + "ZF" + noticeService.getMaxNoticeNo();
+		if ("0".equals(loanApplicationInfoBean.getFinancingCus())) {
+			corpName = loanApplicationInfoBean.getBuyerName();
+		} else {
+			corpName = loanApplicationInfoBean.getSellerName();
+		}
+		String filePath = session.getServletContext().getRealPath("/importTemp/paymentNoticeTemplate.pdf");
+		String toPath = session.getServletContext().getRealPath("/notice/notice-" + noticeNo + ".pdf");
+		File tempFile = new File(toPath);
+		File fileParent = tempFile.getParentFile();
+		if (!fileParent.exists()) {
+			fileParent.mkdirs();
+		}
+		Map<String, String> map = new HashMap<>();
+		map.put("corpName", corpName);
+		map.put("noticeNo", noticeNo);
+		map.put("contractNo", loanApplicationInfoBean.getContractId());
+		map.put("year", String.valueOf(DateTime.now().getYear()));
+		map.put("month", String.valueOf(DateTime.now().getMonthOfYear()));
+		map.put("day", String.valueOf(DateTime.now().getDayOfMonth()));
+		try {
+			PDFUtil2.exportToPDF(filePath, toPath, map);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			throw new BizException(ErrorCodeEnum.NOTICE_ERROR, "生成支付通知单异常");
+		}
+
+		TfNoticeInfo tfNoticeInfo = new TfNoticeInfo();
+		tfNoticeInfo.setContractNo(loanApplicationInfoBean.getContractId());
+		tfNoticeInfo.setCreateTime(new Date());
+		tfNoticeInfo.setId(ScfUUID.generate());
+		tfNoticeInfo.setNoticeNo(noticeNo);
+		tfNoticeInfo.setNoticePath(session.getServletContext().getContextPath() + "/notice/notice-" + noticeNo + ".pdf");
+		noticeService.addNotice(tfNoticeInfo);
+	}
+
+	private void repayInterest(LoanApplicationInfoBean loanApplicationInfoBean, BigDecimal interestAmount) {
+		TfRepayInfo tfRepayInfo = new TfRepayInfo();
+		tfRepayInfo.setId(ScfUUID.generate());
+		tfRepayInfo.setAccountName(loanApplicationInfoBean.getAccountName());
+		tfRepayInfo.setAccountNo(loanApplicationInfoBean.getShroffAccount());
+		tfRepayInfo.setBankName(loanApplicationInfoBean.getOpenBank());
+		tfRepayInfo.setBankNo(loanApplicationInfoBean.getBankNum());
+		tfRepayInfo.setCeateTime(new Date());
+		tfRepayInfo.setLoanId(loanApplicationInfoBean.getLoanId());
+		tfRepayInfo.setThisRepayInterest(interestAmount);
+		tfRepayInfo.setThisRepayPrinciple(BigDecimal.ZERO);
+		tfRepayInfoMapper.insert(tfRepayInfo);
+	}
+
+	private void insertProcessCheck(String loanId, String processId) {
+		ProcessRepeatCheck processRepeatCheck = new ProcessRepeatCheck();
+		processRepeatCheck.setItemKey("TF_LOAN_NO");
+		processRepeatCheck.setItemValue(loanId);
+		processRepeatCheck.setProcessKey("loanApplication");
+		processRepeatCheck.setRecUid(ScfUUID.generate());
+		processRepeatCheck.setProcInstId(processId);
+		iProcessRepeatChkService.insert(processRepeatCheck);
+	}
+
+	private Date addMonth(String date, int month) {
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			Date dt = sdf.parse(date);
+			Calendar rightNow = Calendar.getInstance();
+			rightNow.setTime(dt);
+			rightNow.add(Calendar.MONTH, month);
+			return rightNow.getTime();
+		}
+		catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private int differentDays(Date date1, Date date2) {
+		Calendar cal1 = Calendar.getInstance();
+		cal1.setTime(date1);
+
+		Calendar cal2 = Calendar.getInstance();
+		cal2.setTime(date2);
+		int day1 = cal1.get(Calendar.DAY_OF_YEAR);
+		int day2 = cal2.get(Calendar.DAY_OF_YEAR);
+
+		int year1 = cal1.get(Calendar.YEAR);
+		int year2 = cal2.get(Calendar.YEAR);
+		if (year1 != year2) {
+			int timeDistance = 0;
+			for (int i = year1; i < year2; i++) {
+				if (i % 4 == 0 && i % 100 != 0 || i % 400 == 0) {// 闰年
+					timeDistance += 366;
+				} else {
+					timeDistance += 365;
+				}
+			}
+			return timeDistance + (day2 - day1);
+		} else {
+			return day2 - day1;
+		}
+	}
+
+	@Override
+	public BaseRespBean getContractList(Map<String, Object> paramMap, PageInfoBean page) {
+		List<Map<String, Object>> list = loanApplicationDao.getContractInfoList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+}

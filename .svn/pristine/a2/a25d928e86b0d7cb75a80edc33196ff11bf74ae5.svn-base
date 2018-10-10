@@ -1,0 +1,242 @@
+package com.ut.scf.service.project.impl;
+
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.util.json.JSONArray;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.DykRepaymentInfoMapper;
+import com.ut.scf.dao.auto.RepaymentFinanceBatchMapper;
+import com.ut.scf.dao.auto.RevenueManagementMapper;
+import com.ut.scf.dao.project.IRevenueDao;
+import com.ut.scf.pojo.auto.DykRepaymentInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.pojo.auto.RepaymentFinanceBatch;
+import com.ut.scf.pojo.auto.RevenueManagement;
+import com.ut.scf.reqbean.project.RevenueProcessReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.project.IRevenueService;
+
+@Service("revenueService")
+public class RevenueServiceimpl implements IRevenueService {
+
+	private static final Logger log = LoggerFactory
+			.getLogger(RevenueServiceimpl.class);
+
+	private static SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd");
+
+	@Resource
+	private IRevenueDao revenueDao;
+
+	@Resource
+	private RevenueManagementMapper revenueManagementMapper;
+
+	@Resource
+	private ProcessEngine processEngine;
+
+	@Resource
+	private RuntimeService runtimeService;
+
+	@Resource
+	private TaskService taskService;
+
+	@Resource
+	private RepositoryService repositoryService;
+
+	@Resource
+	private IProcessRepeatChkService processRepeatChkService;
+
+	@Resource
+	private DykRepaymentInfoMapper dykRepaymentInfoMapper;
+
+	@Resource
+	private RepaymentFinanceBatchMapper batchMapper;
+
+	/**
+	 * 发起流程
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean startProcess(JSONObject jsonObject) {
+		BaseRespBean respBean = new BaseRespBean();
+
+		// 流程重复验证
+		String agencyCorpId = jsonObject.getString("corpId");
+		ProcessRepeatCheck checkInfo = new ProcessRepeatCheck();
+		checkInfo.setProcessKey("revenue");
+		checkInfo.setItemKey("AGENCY_CORP_ID");
+		checkInfo.setItemValue(agencyCorpId);
+		if (processRepeatChkService.isProcessExist(checkInfo)) {
+			respBean.setResult(ErrorCodeEnum.REVENUE_AGENCY);
+			return respBean;
+		}
+		
+		// 还款管理重复验证
+		checkInfo.setProcessKey("dykRepayment");
+		if (processRepeatChkService.isProcessExist(checkInfo)) {
+			respBean.setResult(ErrorCodeEnum.REPAY_REVENUE_CONFLICT);
+			return respBean;
+		}
+		checkInfo.setProcessKey("revenue");
+
+		String userName = (String) jsonObject.get("userId");
+		String key = (String) jsonObject.get("activitiKey");
+		// 加上当前用户
+		ProcessInstance pi = processEngine.getRuntimeService()// 管理流程实例和执行对象，也就是表示正在执行的操作
+				.startProcessInstanceByKey(key);
+		String procInstId = pi.getProcessInstanceId();
+		Task task = taskService.createTaskQuery().processInstanceId(pi.getId())
+				.singleResult();
+
+		// 拾取用户
+		taskService.claim(task.getId(), userName);
+		// 设置变量
+		taskService.setVariableLocal(task.getId(), "agencyJson",
+				jsonObject.toString());
+		// 完成节点
+		taskService.complete(task.getId());
+
+		checkInfo.setProcInstId(procInstId);
+		int result = processRepeatChkService.insert(checkInfo);
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean doAgree(RevenueProcessReqBean reqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+
+		// 1.获取taskId和当前用户
+		JSONObject jsonObject = new JSONObject(reqBean);
+		String procInstId = (String) jsonObject.get("procInstId");
+		String taskId = (String) jsonObject.get("taskId");
+		String userId = (String) jsonObject.get("userId");
+		String agree = (String) jsonObject.get("agree");
+		boolean flag = agree.equals("0") ? true : false;
+
+		// 2.拾取用户
+		taskService.claim(taskId, userId);
+		// 3.设置变量
+		taskService.setVariableLocal(taskId, "agencyJson",
+				jsonObject.toString());
+		// 4.流程走向
+		taskService.setVariable(taskId, "agree", flag);
+		// 5.完成流程
+		taskService.complete(taskId);
+		// 6.查看流程状态
+		ProcessInstance pi = runtimeService.createProcessInstanceQuery()
+				.processInstanceId(procInstId).singleResult();
+		if (pi == null) { // 流程已结束
+			addRepayInfo(reqBean);
+		}
+
+		return respBean;
+	}
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean addRepayInfo(RevenueProcessReqBean reqBean) {
+		
+		BaseRespBean respBean = new BaseRespBean();
+		// DYK还款表登入
+		DykRepaymentInfo dykRepaymentInfo = new DykRepaymentInfo();
+		String repaymentId = ScfUUID.generate();
+
+		try {
+			dykRepaymentInfo.setRepaymentId(repaymentId);
+			dykRepaymentInfo.setRepaymentDate(SDF.parse(reqBean
+					.getRepaymentDate()));
+			dykRepaymentInfo.setRepaySumAmt(new BigDecimal(reqBean
+					.getRepaySumAmt()));
+			dykRepaymentInfo.setRepayCapitalAmt(BigDecimal.ZERO);
+			dykRepaymentInfo.setRepayInterestAmt(new BigDecimal(reqBean
+					.getRepaySumAmt()));
+			dykRepaymentInfo.setActRepayAmt(new BigDecimal(reqBean
+					.getActRepayAmt()));
+			dykRepaymentInfo.setRepaymentType((byte) 1);
+			dykRepaymentInfo.setRepaymentCorpId(reqBean.getCorpId());
+		} catch (Exception e) {
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			return respBean;
+		}
+
+		int insertNum = dykRepaymentInfoMapper
+				.insertSelective(dykRepaymentInfo);
+		if (insertNum < 1) {
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			return respBean;
+		}
+
+		// 计息表更新
+		String financeInfoList = reqBean.getFinanceInfoList();
+		JSONArray jsonArray = new JSONArray(financeInfoList);
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject jsonObject = jsonArray.getJSONObject(i);
+			String financeId = jsonObject.getString("financeId");
+			//String notPayInterest = jsonObject.getString("notPayInterest");
+
+			try {
+				RevenueManagement revenueManagement = revenueManagementMapper
+						.selectByPrimaryKey(financeId);
+				revenueManagement.setHasPayInterest(revenueManagement
+						.getHasPayInterest()
+						.add(new BigDecimal(reqBean.getActRepayAmt())));
+				revenueManagement.setNotPayInterest(revenueManagement
+						.getNotPayInterest().subtract(new BigDecimal(reqBean.getActRepayAmt())));
+				revenueManagement.setLastCalDate(SDF.parse(reqBean
+						.getRepaymentDate()));
+
+				int upd = revenueManagementMapper
+						.updateByPrimaryKey(revenueManagement);
+				if (upd < 1) {
+					respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+					return respBean;
+				}
+			} catch (Exception e) {
+				respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+				return respBean;
+			}
+
+			// 还款批次表登入
+			RepaymentFinanceBatch batch = new RepaymentFinanceBatch();
+			batch.setRecUid(ScfUUID.generate());
+			batch.setRepaymentId(repaymentId);
+			batch.setFinanceId(financeId);
+			int insertBatchNum = batchMapper.insert(batch);
+			if (insertBatchNum < 1) {
+				respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+				return respBean;
+			}
+		}
+
+	/*	// 申请流程删除
+		int result = processRepeatChkService.deleteByProcInstId(reqBean
+				.getProcInstId());
+		if (result < 1) {
+			respBean.setResult(ErrorCodeEnum.ADD_FAILED);
+			return respBean;
+		}*/
+		return respBean;
+	}
+}

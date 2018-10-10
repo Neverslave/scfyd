@@ -1,0 +1,53 @@
+package com.ut.scf.web.scheduled;
+
+import com.ut.scf.core.util.IdCardUtil;
+import com.ut.scf.core.util.ScfDateUtil;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.*;
+import com.ut.scf.pojo.auto.*;
+import com.ut.scf.pojo.auto.FinanceInfoExample.Criteria;
+import com.ut.scf.reqbean.project.OrderManagerReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.ICommonService;
+import com.ut.scf.service.project.ISSMHttpConnService;
+import com.ut.scf.service.sys.IBatchService;
+import com.ut.scf.service.tradfact.IProjectLoanService;
+import org.activiti.engine.impl.util.json.JSONArray;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+@Component
+@Lazy(value = false)
+public class TfInterfaceSyncJob {
+
+	private static final Logger log = LoggerFactory.getLogger(TfInterfaceSyncJob.class);
+
+	@Resource
+	private IProjectLoanService projectLoanService;
+
+	// 计息处理
+	// 自动 定时任务
+	public void calInterestTask() {
+		Date date = new Date();
+		log.info("传统保理计息处理任务开始，日期{}", date);
+		projectLoanService.calInterestByDay();
+	}
+
+
+
+}

@@ -1,0 +1,35 @@
+package com.ut.scf.dao.query;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Select;
+
+import com.ut.scf.core.dict.PageInfoBean;
+
+public interface IFinanceRepayDao {
+
+
+	
+	/*-----------------------------查询统计新需求------------------------------*/
+	List<Map<String, Object>> fqcrYXFFinanceOrderList(Map<String, Object> paramMap);
+	List<Map<String, Object>> fqcrYIFTiqianjqOrderList(Map<String, Object> paramMap);
+	List<Map<String, Object>> fqcrSumYIFTiqianjqOrderList(Map<String, Object> paramMap);
+	
+	List<Map<String, Object>> fqcrYIFZCJSRepayList(Map<String, Object> paramMap);
+	List<Map<String, Object>> fqcrSumYIFZCJSRepayList(Map<String, Object> paramMap);
+	
+	List<Map<String, Object>> getfqcrJtkdFinanceRepay(Map<String, Object> paramMap);
+	List<Map<String, Object>> getfqcrSumJtkdFinanceRepay(Map<String, Object> paramMap);
+	
+	List<Map<String, Object>> getFqcrFinaceRepayHistoryList(Map<String, Object> paramMap, PageInfoBean page);
+	
+	@Select("select  MAX(finance_date) from fqcr_finance_repay_hisotory WHERE people_type=#{peopleType}")
+	String  getLastFinanceDate(String peopleType);
+	
+	
+	List<Map<String, Object>> createFqcrDayFinanceList(Map<String, Object> paramMap);
+	
+}
+
+

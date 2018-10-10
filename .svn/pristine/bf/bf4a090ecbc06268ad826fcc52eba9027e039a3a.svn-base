@@ -1,0 +1,256 @@
+package com.ut.scf.service.test.project;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.ContextLoaderListener;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.project.RepayProcessReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IRepayManagerService;
+import com.ut.scf.service.project.impl.RepayManagerServiceImpl;
+
+@WebAppConfiguration
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class RepayManagerServiceTest {
+	private static final Logger log = LoggerFactory
+			.getLogger(RepayManagerServiceImpl.class);
+	
+	@Resource
+	private IRepayManagerService repayManagerService;
+	
+	@Before
+	public void getContext(){
+		MockServletContext sc = new MockServletContext("");
+		sc.addInitParameter(ContextLoader.CONFIG_LOCATION_PARAM, "/spring-mybatis-test.xml");
+		ServletContextListener listener = new ContextLoaderListener();
+		ServletContextEvent event = new ServletContextEvent(sc);
+		listener.contextInitialized(event);
+	}
+	
+	@Test
+	public void getAllNotPayInterest(){
+		log.info("=============================getAllNotPayInterest start=============================");
+		try {
+
+			BaseRespBean respBean = new BaseRespBean();
+			Map<String, Object> paramMap = new HashMap<String, Object>();
+			respBean = repayManagerService.getAllNotPayInterest(paramMap);
+			log.info("respBean:"+respBean.toString());
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================getAllNotPayInterest end=============================");
+	}
+	
+	@Test
+	public void getRepayCarInfoList(){
+		log.info("=============================getRepayCarInfoList start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			Map<String, String> paramMap = new HashMap<String, String>();
+			paramMap.put("corpId", "2c9984a75c82966851f1852f729f0005");
+			PageInfoBean page = new PageInfoBean();
+			page.setPageNumber(1);
+			page.setPageSize(5);
+			respBean = repayManagerService.getRepayCarInfoList(paramMap, page);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================getRepayCarInfoList end=============================");
+	
+	}
+	
+	@Test
+	public void getCarInfoList(){
+		log.info("=============================getCarInfoList start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			Map<String, Object> paramMap = new HashMap<String, Object>();
+			paramMap.put("repaymentId", "2c9984965cf2828d477bf2a84a990010");
+			PageInfoBean page = new PageInfoBean();
+			page.setPageNumber(1);
+			page.setPageSize(5);
+			respBean = repayManagerService.getCarInfoList(paramMap, page);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================getCarInfoList end=============================");
+	
+	}
+	
+	@Test
+	public void getRepayList(){
+		log.info("=============================getCarInfoList start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			PageInfoBean page = new PageInfoBean();
+			page.setPageNumber(1);
+			page.setPageSize(5);
+			Map<String, Object> paramMap = new HashMap<String,Object>();
+			respBean = repayManagerService.getRepayList(paramMap, page);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================getCarInfoList end=============================");
+	
+	}
+	
+	@Test
+	public void findRepayPlanByStatus(){
+		log.info("=============================findRepayPlanByStatus start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			Map<String, Object> paramMap = new HashMap<String,Object>();
+			respBean = repayManagerService.findRepayPlanByStatus(paramMap);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================findRepayPlanByStatus end=============================");
+	
+	}
+	
+	@Test
+	public void selectSumAmt(){
+		log.info("=============================findRepayPlanByStatus start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			Map<String, Object> paramMap = new HashMap<String,Object>();
+			paramMap.put("currentRepayDate", "2018-01-26");
+			respBean = repayManagerService.selectSumAmt(paramMap);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================findRepayPlanByStatus end=============================");
+	
+	}
+	
+	@Test
+	public void startProcess(){
+		log.info("=============================findRepayPlanByStatus start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			
+			RepayProcessReqBean repayProcessReqBean = new RepayProcessReqBean();
+			repayProcessReqBean.setUserId("jxs");
+			repayProcessReqBean.setRepaymentCorpId("2c9984ba5c6220441654627080b60019");
+			repayProcessReqBean.setActivitiKey("dykRepayment");
+			repayProcessReqBean.setCarListInfo("1461");
+			repayProcessReqBean.setCarStolenCertificate("chrome.dll");
+			repayProcessReqBean.setCarStolenCertificateUrl("/scfyd/uploadFile/common/2c9984b15d102e4d545410b80d2e0004.dll");
+			repayProcessReqBean.setInterestDate(false);
+			repayProcessReqBean.setNote("sdfs");
+			repayProcessReqBean.setRepayInterestAmt("120000.12");
+			repayProcessReqBean.setRepaySumAmt("120000.12");
+			repayProcessReqBean.setRepaymentDate("2017-07-05");
+			
+			JSONObject repayInfoStr = new JSONObject(repayProcessReqBean);
+			respBean = repayManagerService.startProcess(repayInfoStr);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================findRepayPlanByStatus end=============================");
+	
+	}
+	
+	@Test
+	public void doAgree(){
+		log.info("=============================doAgree start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			RepayProcessReqBean reqBean = new RepayProcessReqBean();
+			reqBean.setUserId("jiangl");
+			reqBean.setTaskId("1435016");
+			reqBean.setProcInstId("1435001");
+			reqBean.setAgree("1");
+			respBean = repayManagerService.doAgree(reqBean);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================doAgree end=============================");
+	
+	}
+	
+	@Test
+	public void reApply(){
+		log.info("=============================reApply start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			RepayProcessReqBean reqBean = new RepayProcessReqBean();
+			reqBean.setUserId("jxs");
+			reqBean.setRepaymentCorpId("2c9984ba5c6220441654627080b60019");
+			reqBean.setCarListInfo("1461");
+			reqBean.setInterestDate(false);
+			reqBean.setTaskId("1437506");
+			reqBean.setProcInstId("1435001");
+			JSONObject jsonObject = new JSONObject(reqBean);
+			respBean = repayManagerService.reApply(jsonObject);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================reApply end=============================");
+	
+	}
+	
+	@Test
+	public void addRepayInfo(){
+		log.info("=============================addRepayInfo start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			RepayProcessReqBean repayProcessReqBean = new RepayProcessReqBean();
+			repayProcessReqBean.setRepaymentCorpId("2c9984905ccef1b21ee6cefa99320004");
+			repayProcessReqBean.setCarListInfo("1461");
+			repayProcessReqBean.setCarStolenCertificate("chrome.dll");
+			repayProcessReqBean.setCarStolenCertificateUrl("/scfyd/uploadFile/common/2c9984b15d102e4d545410b80d2e0004.dll");
+			repayProcessReqBean.setInterestDate(false);
+			repayProcessReqBean.setNote("sdfs");
+			repayProcessReqBean.setRepayInterestAmt("120000.12");
+			repayProcessReqBean.setRepaySumAmt("120000.12");
+			repayProcessReqBean.setRepaymentDate("2017-07-05");
+			repayProcessReqBean.setProcInstId("1435001");
+			repayManagerService.addRepayInfo(repayProcessReqBean);
+			log.info("respBean:"+respBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================addRepayInfo end=============================");
+	
+	}
+	
+}

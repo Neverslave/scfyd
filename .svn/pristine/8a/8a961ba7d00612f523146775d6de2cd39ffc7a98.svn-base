@@ -1,0 +1,47 @@
+package com.ut.scf.service.project.impl;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.project.SignContractBpmReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+import com.ut.scf.service.project.ISignContractService;
+
+@Service("signContractBpmService")
+public class SignContractBpmServiceImpl extends BaseActivitiService<SignContractBpmReqBean>
+implements IActivitiService<SignContractBpmReqBean>{
+
+	private static final String ADVANCE_APPLY_BPM = "contractSign";
+
+	@Resource
+	private ISignContractService signContractService;
+	
+	@Override
+	public String getProcessDefinitionKey() {
+		return ADVANCE_APPLY_BPM;
+	}
+
+	@Override
+	public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+		if (bpmProcessContext.isProcessEnd()) {
+			SignContractBpmReqBean signContractBpmReqBean = (SignContractBpmReqBean)bpmProcessContext.getT();
+			Map<String, Object> paramMap = BeanUtil.beanToMap(signContractBpmReqBean);
+			try {
+				signContractService.insertContract(paramMap);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			
+		}
+	}
+}

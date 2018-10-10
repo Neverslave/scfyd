@@ -1,0 +1,392 @@
+package com.ut.scf.service.sys.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.dao.auto.AgencySequenceMapper;
+import com.ut.scf.dao.auto.LimitInfoMapper;
+import com.ut.scf.dao.project.IMainContractInfoDao;
+import com.ut.scf.pojo.auto.AgencySequence;
+import com.ut.scf.pojo.auto.AgencySequenceExample;
+import com.ut.scf.pojo.auto.AgencySequenceExample.Criteria;
+import com.ut.scf.pojo.auto.LimitInfo;
+import com.ut.scf.service.sys.ISequenceService;
+
+@Service("sequenceService")
+public class SequenceServiceImpl implements ISequenceService {
+	@Resource
+	private AgencySequenceMapper agencySequenceMapper;
+
+	@Resource
+	private LimitInfoMapper limitInfoMapper;
+	@Resource
+	private IMainContractInfoDao iMainContractInfoDao;
+	
+/*	private static final String rz = "YDBL2017RZ0017-";
+	private static final String yw = "YDBL2017YW0017-";
+	private static final String fk = "YDBL2017FK0017-";*/
+	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+
+	/***
+	 * agencyNum:经销商id type：编号类型 rz：融资管理 yw：合同管理 fk:付款承诺函
+	 * 
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public String getNextSequence(String corpId,String ywlxId, String type) {
+		String agencySequence = "";
+		if ("rz".equalsIgnoreCase(type)) {
+			agencySequence=findSequence(corpId,ywlxId, type);
+			//获取该经销商所在业务类型的融资编号规则（主合同设置）
+			//rz=???
+			String firstString="";
+			//获取该经销商所在业务类型的融资编号规则（主合同设置）
+			Map<String, Object> paramMap =new HashMap<String, Object>();		
+			paramMap.put("typeid", ywlxId);
+			
+			List<Map<String, Object>>  rzSS=iMainContractInfoDao.getContractList(paramMap);
+			
+			if(rzSS!=null&&rzSS.size()>0)
+			{
+				firstString=rzSS.get(0).get("rzhgz").toString();
+			}
+			
+			agencySequence = firstString +"-"+ agencySequence;
+
+		} else if ("yw".equalsIgnoreCase(type)) {
+			agencySequence=findSequence(corpId,ywlxId, type);
+			String firstString="";
+			//获取该经销商所在业务类型的融资编号规则（主合同设置）
+			Map<String, Object> paramMap =new HashMap<String, Object>();		
+			paramMap.put("typeid", ywlxId);
+			
+			List<Map<String, Object>>  rzSS=iMainContractInfoDao.getContractList(paramMap);
+			
+			if(rzSS!=null&&rzSS.size()>0)
+			{
+				firstString=rzSS.get(0).get("fkhgz").toString();
+			}
+			
+			agencySequence = firstString +"-"+ agencySequence;
+			
+		} else if ("fk".equalsIgnoreCase(type)) {
+			agencySequence=findSequence(corpId,ywlxId, type);
+			
+			//获取该经销商所在业务类型的付款编号规则（主合同设置）
+			//fk=???
+			String firstString="";
+			//获取该经销商所在业务类型的融资编号规则（主合同设置）
+			Map<String, Object> paramMap =new HashMap<String, Object>();		
+			paramMap.put("typeid", ywlxId);
+			
+			List<Map<String, Object>>  rzSS=iMainContractInfoDao.getContractList(paramMap);
+			
+			if(rzSS!=null&&rzSS.size()>0)
+			{
+				firstString=rzSS.get(0).get("fkhgz").toString();
+			}
+			
+			agencySequence = firstString +"-"+ agencySequence;
+			
+	
+		} else if ("ht".equalsIgnoreCase(type)) {
+			agencySequence=findSequence(corpId,ywlxId, type);
+			agencySequence = dateFormat.format(new Date()) + agencySequence;
+			
+		} 
+		//2018-08-29新增的通知单编码规则
+		else if ("tzd".equalsIgnoreCase(type)) {
+			agencySequence=findAddSequence(corpId, ywlxId, type);
+			String firstString="";
+			if("1".equals(ywlxId)){
+				//零售
+				firstString="YDBL2017LSTZD";
+			}else if("2".equals(ywlxId)){
+				//大宗
+				firstString="YDBL2017DZTZD";
+			}
+			
+			agencySequence = firstString +"-"+ agencySequence;
+
+		}
+		return agencySequence;
+	}
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public String getNextAddSequence(String corpId, String ywlxId,String type) {
+		String agencySequence = findAddSequence(corpId,ywlxId, type);
+		if ("rz".equalsIgnoreCase(type)) {
+			
+			String firstString="";
+			//获取该经销商所在业务类型的融资编号规则（主合同设置）
+			Map<String, Object> paramMap =new HashMap<String, Object>();		
+			paramMap.put("typeid", ywlxId);
+			
+			List<Map<String, Object>>  rzSS=iMainContractInfoDao.getContractList(paramMap);
+			
+			if(rzSS!=null&&rzSS.size()>0)
+			{
+				firstString=rzSS.get(0).get("rzhgz").toString();
+			}
+			
+			agencySequence = firstString +"-"+ agencySequence;
+		} else if ("yw".equalsIgnoreCase(type)) {
+			
+			String firstString="";
+			//获取该经销商所在业务类型的融资编号规则（主合同设置）
+			Map<String, Object> paramMap =new HashMap<String, Object>();		
+			paramMap.put("typeid", ywlxId);
+			
+			List<Map<String, Object>>  rzSS=iMainContractInfoDao.getContractList(paramMap);
+			
+			if(rzSS!=null&&rzSS.size()>0)
+			{
+				firstString=rzSS.get(0).get("fkhgz").toString();
+			}
+			
+			agencySequence = firstString +"-"+agencySequence;
+		} else if ("fk".equalsIgnoreCase(type)) {
+			
+			//获取该经销商所在业务类型的付款编号规则（主合同设置）
+			//fk=???
+			String firstString="";
+			//获取该经销商所在业务类型的融资编号规则（主合同设置）
+			Map<String, Object> paramMap =new HashMap<String, Object>();		
+			paramMap.put("typeid", ywlxId);
+			
+			List<Map<String, Object>>  rzSS=iMainContractInfoDao.getContractList(paramMap);
+			
+			if(rzSS!=null&&rzSS.size()>0)
+			{
+				firstString=rzSS.get(0).get("fkhgz").toString();
+			}
+			
+			agencySequence = firstString +"-"+ agencySequence;
+		} else if ("ht".equalsIgnoreCase(type)) {
+			agencySequence = dateFormat.format(new Date()) + agencySequence;
+		}
+
+		return agencySequence;
+	}
+	private String findSequence(String corpId,String ywlxId, String type) {
+		AgencySequenceExample agencySequenceExample = new AgencySequenceExample();
+
+		Criteria criteria = agencySequenceExample.createCriteria();
+		criteria.andCorpIdEqualTo(corpId);
+		criteria.andYwlxIdEqualTo(ywlxId);
+
+		List<AgencySequence> agencySequenceList = agencySequenceMapper
+				.selectByExample(agencySequenceExample);
+		AgencySequence agencySequence=new AgencySequence();
+		if (agencySequenceList == null||agencySequenceList.size()==0) {
+			AgencySequenceExample example = new AgencySequenceExample();
+			example.setOrderByClause("agency_first desc");
+			List<AgencySequence> list = agencySequenceMapper
+					.selectByExample(example);
+
+			AgencySequence sequence = new AgencySequence();
+			int agencyFirst = 1;
+			sequence.setCorpId(corpId);
+			sequence.setYwlxId(ywlxId);
+			if (!CollectionUtils.isEmpty(list)) {
+				agencyFirst = list.get(0).getAgencyFirst() + 1;
+			}
+			sequence.setAgencyFirst((byte) agencyFirst);
+			sequence.setAgencySecend((byte) 0);
+			sequence.setAgencySecendFk((byte) 0);
+			sequence.setAgencyThird((byte)0);
+			//agencySequenceMapper.insert(sequence);
+			agencySequence = sequence;
+		}
+		else
+		{
+			agencySequence=agencySequenceList.get(0);
+		}
+
+		/*String strFirst = String
+				.format("%02d", agencySequence.getAgencyFirst());*/
+		
+		//获取该经销商所对应的业务类型的ID号
+		String strFirst ="";
+		LimitInfo limitInfo = limitInfoMapper.selectByPrimaryKey(corpId);
+		if(limitInfo!=null)
+		{
+			if(ywlxId==null||ywlxId.isEmpty()||ywlxId.equals("1"))
+			{
+				strFirst=limitInfo.getLsId();
+			}
+			else
+			{
+				strFirst=limitInfo.getDzId();
+			}
+		}
+	
+		
+		if ("rz".equalsIgnoreCase(type)) {
+			int secend = agencySequence.getAgencySecend();
+			secend += 1;
+		/*	if (secend > 99) {
+				secend = 1;
+			}*/
+			String strSecend = String.format("%02d", secend);
+		
+			return strFirst + "-" + strSecend;
+			
+		} else if ("fk".equalsIgnoreCase(type)) {
+			int secendFK = agencySequence.getAgencySecendFk();
+			secendFK += 1;
+		/*	if (secendFK > 99) {
+				secendFK = 1;
+			}*/
+			String strSecend = String.format("%02d", secendFK);
+			
+			return strFirst + "-" + strSecend;
+			
+		} else if ("ht".equalsIgnoreCase(type)) {
+			int secendFK = agencySequence.getAgencySecendFk();
+			secendFK += 1;
+		/*	if (secendFK > 99) {
+				secendFK = 1;
+			}*/
+			String strSecend = String.format("%02d", secendFK);
+	
+			return strSecend;
+		}
+
+		return strFirst;
+	}
+	private String findAddSequence(String corpId,String ywlxId, String type) {
+		AgencySequenceExample agencySequenceExample = new AgencySequenceExample();
+
+		Criteria criteria = agencySequenceExample.createCriteria();
+		criteria.andCorpIdEqualTo(corpId);
+		criteria.andYwlxIdEqualTo(ywlxId);
+
+		List<AgencySequence> agencySequenceList = agencySequenceMapper
+				.selectByExample(agencySequenceExample);
+		AgencySequence agencySequence=new AgencySequence();
+		if (agencySequenceList == null||agencySequenceList.size()==0) {
+			AgencySequenceExample example = new AgencySequenceExample();
+			example.setOrderByClause("agency_first desc");
+			List<AgencySequence> list = agencySequenceMapper
+					.selectByExample(example);
+
+			AgencySequence sequence = new AgencySequence();
+			int agencyFirst = 1;
+			sequence.setCorpId(corpId);
+			sequence.setYwlxId(ywlxId);
+			if (!CollectionUtils.isEmpty(list)) {
+				agencyFirst = list.get(0).getAgencyFirst() + 1;
+			}
+			sequence.setAgencyFirst((byte) agencyFirst);
+			sequence.setAgencySecend((byte) 0);
+			sequence.setAgencySecendFk((byte) 0);
+			sequence.setAgencyThird((byte)0);
+			agencySequenceMapper.insert(sequence);
+			agencySequence = sequence;
+		}
+		else
+		{
+			agencySequence=agencySequenceList.get(0);
+		}
+
+		
+		//获取该经销商所对应的业务类型的ID号
+		String strFirst ="";
+		LimitInfo limitInfo = limitInfoMapper.selectByPrimaryKey(corpId);
+		if(limitInfo!=null)
+		{
+			if(ywlxId==null||ywlxId.isEmpty()||ywlxId.equals("1"))
+			{
+				strFirst=limitInfo.getLsId();
+			}
+			else
+			{
+				strFirst=limitInfo.getDzId();
+			}
+		}
+	
+		if ("rz".equalsIgnoreCase(type)) {
+			int secend = agencySequence.getAgencySecend();
+			secend += 1;
+		/*	if (secend > 99) {
+				secend = 1;
+			}*/
+			String strSecend = String.format("%02d", secend);
+			agencySequence.setAgencySecend((byte) secend);
+			
+			AgencySequenceExample sequenceExampleUpdate = new AgencySequenceExample();
+			Criteria criteriaupdate = sequenceExampleUpdate.createCriteria();
+			criteriaupdate.andCorpIdEqualTo(corpId);
+			criteriaupdate.andYwlxIdEqualTo(ywlxId);			
+			agencySequenceMapper.updateByExampleSelective(agencySequence,sequenceExampleUpdate);
+			
+			return strFirst + "-" + strSecend;
+		} else if ("fk".equalsIgnoreCase(type)) {
+			int secendFK = agencySequence.getAgencySecendFk();
+			secendFK += 1;
+		/*	if (secendFK > 99) {
+				secendFK = 1;
+			}*/
+			String strSecend = String.format("%02d", secendFK);
+			agencySequence.setAgencySecendFk((byte) secendFK);
+			
+			AgencySequenceExample sequenceExampleUpdate = new AgencySequenceExample();
+			Criteria criteriaupdate = sequenceExampleUpdate.createCriteria();
+			criteriaupdate.andCorpIdEqualTo(corpId);
+			criteriaupdate.andYwlxIdEqualTo(ywlxId);			
+			agencySequenceMapper.updateByExampleSelective(agencySequence,sequenceExampleUpdate);
+			
+			//agencySequenceMapper.updateByPrimaryKeySelective(agencySequence);
+			return strFirst + "-" + strSecend;
+		} else if ("ht".equalsIgnoreCase(type)) {
+			int secendFK = agencySequence.getAgencySecendFk();
+			secendFK += 1;
+		/*	if (secendFK > 99) {
+				secendFK = 1;
+			}*/
+			String strSecend = String.format("%02d", secendFK);
+			agencySequence.setAgencySecendFk((byte) secendFK);
+			
+			AgencySequenceExample sequenceExampleUpdate = new AgencySequenceExample();
+			Criteria criteriaupdate = sequenceExampleUpdate.createCriteria();
+			criteriaupdate.andCorpIdEqualTo(corpId);
+			criteriaupdate.andYwlxIdEqualTo(ywlxId);			
+			agencySequenceMapper.updateByExampleSelective(agencySequence,sequenceExampleUpdate);
+			
+			//agencySequenceMapper.updateByPrimaryKeySelective(agencySequence);
+			return strSecend;
+		} else 	if ("tzd".equalsIgnoreCase(type)) {
+			if(agencySequence.getAgencyThird()==null){
+				agencySequence.setAgencyThird((byte) 0);
+			}
+			int third = agencySequence.getAgencyThird();
+			third += 1;
+		/*	if (secend > 99) {
+				secend = 1;
+			}*/
+			String strThird = String.format("%02d", third);
+			agencySequence.setAgencyThird((byte) third);
+			
+			AgencySequenceExample sequenceExampleUpdate = new AgencySequenceExample();
+			Criteria criteriaupdate = sequenceExampleUpdate.createCriteria();
+			criteriaupdate.andCorpIdEqualTo(corpId);
+			criteriaupdate.andYwlxIdEqualTo(ywlxId);			
+			agencySequenceMapper.updateByExampleSelective(agencySequence,sequenceExampleUpdate);
+			
+			return strFirst + "-" + strThird;
+		}
+
+		return strFirst;
+	}
+}

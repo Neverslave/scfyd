@@ -1,0 +1,450 @@
+package com.ut.scf.service.project.impl;
+
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.CarInfoMapper;
+import com.ut.scf.dao.auto.DykRepaymentInfoMapper;
+import com.ut.scf.dao.auto.FinanceInfoMapper;
+import com.ut.scf.dao.auto.GuaranteeInfoMapper;
+import com.ut.scf.dao.auto.LimitInfoMapper;
+import com.ut.scf.dao.auto.RepaymentFinanceBatchMapper;
+import com.ut.scf.dao.auto.RevenueManagementMapper;
+import com.ut.scf.dao.project.ICarInfoDao;
+import com.ut.scf.pojo.auto.CarInfo;
+import com.ut.scf.pojo.auto.CarInfoExample;
+import com.ut.scf.pojo.auto.CarInfoExample.Criteria;
+import com.ut.scf.pojo.auto.DykRepaymentInfo;
+import com.ut.scf.pojo.auto.FinanceInfo;
+import com.ut.scf.pojo.auto.GuaranteeInfo;
+import com.ut.scf.pojo.auto.LimitInfo;
+import com.ut.scf.pojo.auto.ProcessRepeatCheck;
+import com.ut.scf.pojo.auto.RepaymentFinanceBatch;
+import com.ut.scf.pojo.auto.RevenueManagement;
+import com.ut.scf.reqbean.project.offsetDepositAgreeReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.project.GetCarInfoByFinanceIdRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.IOffsetDepositService;
+import com.ut.scf.service.project.IProcessRepeatChkService;
+import com.ut.scf.service.project.IRefundDepositService;
+
+@Service("offsetDepositService")
+public class OffsetDepositServiceImpl implements IOffsetDepositService {
+	@Resource
+	private ICarInfoDao carInfoDao;
+	@Resource
+	private IActivitiService activitiService;
+	@Resource
+	private IRefundDepositService refundDepositService;
+	@Resource
+	private GuaranteeInfoMapper guaranteeInfoMapper;
+	@Resource
+	private FinanceInfoMapper financeInfoMapper;
+	@Resource
+	private RevenueManagementMapper revenueManagementMapper;
+	@Resource
+	private CarInfoMapper carInfoMapper;
+	@Resource
+	private DykRepaymentInfoMapper dykRepaymentInfoMapper;
+	@Resource
+	private RepaymentFinanceBatchMapper repaymentFinanceBatchMapper;
+	@Resource
+	private LimitInfoMapper limitInfoMapper;
+	@Resource
+	private IProcessRepeatChkService processRepeatChkService;
+	@Resource
+	private ProcessEngine processEngine;
+	@Resource
+	private RuntimeService runtimeService;
+	@Resource
+	private TaskService taskService;
+	@Resource
+	private RepositoryService repositoryService;
+
+	@Override
+	@Transactional(readOnly = true)
+	public BaseRespBean getCarInfo(Map<String, Object> paramMap) {
+		GetCarInfoByFinanceIdRespBean RespBean = new GetCarInfoByFinanceIdRespBean();
+		List<Map<String, Object>> carInfo = carInfoDao.getCarInfo(paramMap);
+		List<Map<String, Object>> notRedeemedCarList = new ArrayList<>();
+		BigDecimal hasRedeemedCarNum = BigDecimal.ZERO;
+		BigDecimal carActualPrice = BigDecimal.ZERO;
+		BigDecimal salesRate = BigDecimal.ZERO;
+		for (Map<String, Object> map : carInfo) {
+			int saleStatus = (int) map.get("saleStatus");
+			// 未赎
+			if (saleStatus == 0) {
+				notRedeemedCarList.add(map);
+			} else if (saleStatus == 1) {
+				carActualPrice = carActualPrice.add((BigDecimal) map.get("carActualPrice"));
+				hasRedeemedCarNum = hasRedeemedCarNum.add(BigDecimal.ONE);
+			}
+		}
+		// 除数为0判断
+		if (carInfo.size() != 0) {
+			salesRate = hasRedeemedCarNum.divide(new BigDecimal(carInfo.size()), 4, BigDecimal.ROUND_HALF_UP);
+		}
+		RespBean.setDataList(notRedeemedCarList);
+		RespBean.setCarActualPriceTotal(carActualPrice);
+		RespBean.setSalesRate(salesRate);
+		return RespBean;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean agreeThenMod(offsetDepositAgreeReqBean offsetDepositAgreeReqBean) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		String taskId = offsetDepositAgreeReqBean.getTaskId();
+		String procInstId = processEngine.getHistoryService().createHistoricTaskInstanceQuery().taskId(taskId)
+				.singleResult().getProcessInstanceId();
+		// 同意流程
+		JSONObject jsonObject = new JSONObject(offsetDepositAgreeReqBean);
+		activitiService.doAgree(jsonObject);
+		BaseRespBean respBean = new BaseRespBean();
+		// Double类型转换为BigDecimal
+		BigDecimal financeBalance = nullDoubleToZERO(offsetDepositAgreeReqBean.getFinanceBalance());
+		BigDecimal payOrginAmount = new BigDecimal(offsetDepositAgreeReqBean.getPayOrginAmount() == null ? 0
+				: offsetDepositAgreeReqBean.getPayOrginAmount());
+		// BigDecimal offsetGap = new
+		// BigDecimal(offsetDepositAgreeReqBean.getOffsetGap()==null?0:offsetDepositAgreeReqBean.getOffsetGap());
+		// BigDecimal GuaranteeBalance = new
+		// BigDecimal(offsetDepositAgreeReqBean.getGuaranteeBalance()==null?0:offsetDepositAgreeReqBean.getGuaranteeBalance());
+		BigDecimal notPayInterest = new BigDecimal(offsetDepositAgreeReqBean.getNotPayInterest() == null ? 0
+				: offsetDepositAgreeReqBean.getNotPayInterest());
+		BigDecimal hasPayInterest = new BigDecimal(offsetDepositAgreeReqBean.getHasPayInterest() == null ? 0
+				: offsetDepositAgreeReqBean.getHasPayInterest());
+		BigDecimal repayAmt = new BigDecimal(
+				offsetDepositAgreeReqBean.getRepayAmt() == null ? 0 : offsetDepositAgreeReqBean.getRepayAmt());
+		// 更新融资表
+		FinanceInfo financeInfo = new FinanceInfo();
+		financeInfo.setFinanceId(offsetDepositAgreeReqBean.getFinanceId());
+		financeInfo.setFinanceStatus("4");
+		financeInfo.setFinanceBalance(financeBalance.subtract(payOrginAmount));
+		int updateByPrimaryKeySelective = financeInfoMapper.updateByPrimaryKeySelective(financeInfo);
+		if (updateByPrimaryKeySelective <= 0) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		// 更新保证金表
+		GuaranteeInfo guaranteeInfo = new GuaranteeInfo();
+		// guaranteeInfo.setGuaranteeBalance(GuaranteeBalance.subtract(offsetGap));
+		guaranteeInfo.setGuaranteeBalance(new BigDecimal(0));
+		guaranteeInfo.setFinanceId(offsetDepositAgreeReqBean.getFinanceId());
+		int updateByPrimaryKeySelective2 = guaranteeInfoMapper.updateByPrimaryKeySelective(guaranteeInfo);
+		if (updateByPrimaryKeySelective2 <= 0) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		// 更新计息表
+		RevenueManagement revenueManagement = new RevenueManagement();
+		revenueManagement.setNotPayInterest(notPayInterest.subtract(notPayInterest));
+		revenueManagement.setHasPayInterest(hasPayInterest.add(notPayInterest));
+		revenueManagement.setFinanceId(offsetDepositAgreeReqBean.getFinanceId());
+		revenueManagementMapper.updateByPrimaryKeySelective(revenueManagement);
+		// 更新车辆表
+		CarInfo carInfo = new CarInfo();
+		carInfo.setSaleStatus((byte) 1);
+		CarInfoExample example = new CarInfoExample();
+		Criteria createCriteria = example.createCriteria();
+		createCriteria.andFinanceIdEqualTo(offsetDepositAgreeReqBean.getFinanceId());
+		int updateByExampleSelective = carInfoMapper.updateByExampleSelective(carInfo, example);
+		if (updateByExampleSelective <= 0) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		// 插入DYK还款表
+		String repaymentId = ScfUUID.generate();
+		try {
+			DykRepaymentInfo dykRepaymentInfo = new DykRepaymentInfo();
+			dykRepaymentInfo.setRepaymentId(repaymentId);
+			dykRepaymentInfo.setRepaymentDate(sdf.parse(offsetDepositAgreeReqBean.getRepaymentDate()));
+			dykRepaymentInfo.setRepaySumAmt(repayAmt);
+			dykRepaymentInfo.setRepayCapitalAmt(payOrginAmount);
+			dykRepaymentInfo.setRepayInterestAmt(notPayInterest);
+			dykRepaymentInfo.setActRepayAmt(repayAmt);
+			dykRepaymentInfo.setCarStolenCertificate(offsetDepositAgreeReqBean.getCarCertificate());
+			dykRepaymentInfo.setRepaymentType((byte) 2);
+			dykRepaymentInfo.setRepaymentCorpId(offsetDepositAgreeReqBean.getCorpId());
+			int insert = dykRepaymentInfoMapper.insert(dykRepaymentInfo);
+			if (insert <= 0) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		} catch (Exception e) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		// 插入还款融资批次表
+		RepaymentFinanceBatch repaymentFinanceBatch = new RepaymentFinanceBatch();
+		repaymentFinanceBatch.setFinanceId(offsetDepositAgreeReqBean.getFinanceId());
+		repaymentFinanceBatch.setRepaymentId(repaymentId);
+		// 获取车辆车架号
+		List<Map<String, Object>> tableData = (List<Map<String, Object>>) offsetDepositAgreeReqBean.getTableData();
+		for (Map<String, Object> map : tableData) {
+			String repaymentFinanceBatchId = ScfUUID.generate();
+			repaymentFinanceBatch.setRecUid(repaymentFinanceBatchId);
+			repaymentFinanceBatch.setCarFrameNum((String) map.get("carFrameNum"));
+			int insert = repaymentFinanceBatchMapper.insert(repaymentFinanceBatch);
+			if (insert <= 0) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		}
+		// 更新limit_info表
+		updateLimit(offsetDepositAgreeReqBean.getCorpId());
+
+		// 删除process_repeat_check数据
+		int result = processRepeatChkService.deleteByProcInstId(procInstId);
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+		return respBean;
+	}
+
+	private void updateLimit(String corpId) {
+		// 更新limit_info表
+		LimitInfo limitInfo = limitInfoMapper.selectByPrimaryKey(corpId);
+		BigDecimal maxCreditAmount = limitInfo.getMaxCreditAmount() == null ? BigDecimal.ZERO
+				: limitInfo.getMaxCreditAmount();
+
+		limitInfo.setUseAbleCreditAmt(maxCreditAmount);
+		limitInfo.setOccupiedAmt(BigDecimal.ZERO);
+		limitInfo.setPreOccupancyAmt(BigDecimal.ZERO);
+		int updateByPrimaryKeySelective = limitInfoMapper.updateByPrimaryKeySelective(limitInfo);
+		if (updateByPrimaryKeySelective < 1) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+	}
+
+	public BigDecimal nullDoubleToZERO(Double value) {
+		BigDecimal result = value == null ? BigDecimal.ZERO : new BigDecimal(value);
+		return result;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean startProcess(JSONObject jsonObject) {
+		// 先查表，是否已经发起过了
+		List<ProcessRepeatCheck> checks = new ArrayList<ProcessRepeatCheck>();
+		BaseRespBean respBean = new BaseRespBean();
+		String financeId = jsonObject.getString("financeId");
+		respBean = checkFinanceId(financeId, checks);
+		if (respBean.getResult() != 0) {
+			return respBean;
+		}
+		String userName = (String) jsonObject.get("userId");
+		String key = (String) jsonObject.get("activitiKey");
+		// 加上当前用户
+		ProcessInstance pi = processEngine.getRuntimeService()// 管理流程实例和执行对象，也就是表示正在执行的操作
+				.startProcessInstanceByKey(key);
+		String procInstId = pi.getProcessInstanceId();
+		Task task = taskService.createTaskQuery().processInstanceId(pi.getId()).singleResult();
+
+		// 拾取用户
+		taskService.claim(task.getId(), userName);
+		// 设置变量
+		taskService.setVariable(task.getId(), "launchUser", userName);// 发起者
+		taskService.setVariableLocal(task.getId(), "agencyJson", jsonObject.toString());
+		// 完成节点
+		taskService.complete(task.getId());
+
+		// 插入process_repeat_check数据库
+		for (ProcessRepeatCheck check : checks) {
+			check.setProcInstId(procInstId);
+			int result = processRepeatChkService.insert(check);
+			if (result < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		}
+		return respBean;
+	}
+
+	private BaseRespBean checkFinanceId(String financeId, List<ProcessRepeatCheck> checks) {
+		BaseRespBean respBean = new BaseRespBean();
+		ProcessRepeatCheck check = new ProcessRepeatCheck();
+		check.setProcessKey("OffsetDeposit");
+		check.setItemKey("FINANCE_ID");
+		check.setItemValue(financeId);
+		checks.add(check);
+		if (processRepeatChkService.isProcessExist(check)) {
+			respBean.setResult(ErrorCodeEnum.FINANCE_ID_EXIST_IN_OFFSET);
+			return respBean;
+		} else {
+			check = new ProcessRepeatCheck();
+			check.setProcessKey("refundDeposit");
+			check.setItemKey("FINANCE_ID");
+			check.setItemValue(financeId);
+			if (processRepeatChkService.isProcessExist(check)) {
+				respBean.setResult(ErrorCodeEnum.FINANCE_ID_EXIST_IN_REF);
+				return respBean;
+			} else {
+				check = new ProcessRepeatCheck();
+				check.setProcessKey("dykRepayment");
+				check.setItemKey("FINANCE_ID");
+				check.setItemValue(financeId);
+				if (processRepeatChkService.isProcessExist(check)) {
+					respBean.setResult(ErrorCodeEnum.FINANCE_ID_EXIST_IN_REPAY);
+					return respBean;
+				}
+			}
+		}
+		return respBean;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean reApply(JSONObject jsonObject) {
+		// TODO Auto-generated method stub
+		BaseRespBean respBean = new BaseRespBean();
+		// 1.获取taskId和userId
+		String taskId = (String) jsonObject.get("taskId");
+		String financeId = jsonObject.getString("financeId");
+		// 根据taskId获取procInstId
+		String procInstId = processEngine.getHistoryService().createHistoricTaskInstanceQuery().taskId(taskId)
+				.singleResult().getProcessInstanceId();
+		int deleteCnt = processRepeatChkService.deleteByProcInstId(procInstId);
+		if (deleteCnt < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+		List<ProcessRepeatCheck> checks = new ArrayList<ProcessRepeatCheck>();
+		respBean = checkFinanceId(financeId, checks);
+		if (respBean.getResult() != 0) {
+			return respBean;
+		}
+		String userId = (String) jsonObject.get("userId");
+		// 2.拾取用户
+		taskService.claim(taskId, userId);
+		// 3.设置流程变量
+		taskService.setVariableLocal(taskId, "agencyJson", jsonObject.toString());
+		// 4.完成流程
+		taskService.complete(taskId);
+		for (ProcessRepeatCheck check : checks) {
+			check.setProcInstId(procInstId);
+			int result = processRepeatChkService.insert(check);
+			if (result < 1) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		}
+		return respBean;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public BaseRespBean wechatMod(offsetDepositAgreeReqBean offsetDepositAgreeReqBean) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		String taskId = offsetDepositAgreeReqBean.getTaskId();
+		String procInstId = processEngine.getHistoryService().createHistoricTaskInstanceQuery().taskId(taskId)
+				.singleResult().getProcessInstanceId();
+		
+		BaseRespBean respBean = new BaseRespBean();
+		// Double类型转换为BigDecimal
+		BigDecimal financeBalance = nullDoubleToZERO(offsetDepositAgreeReqBean.getFinanceBalance());
+		BigDecimal payOrginAmount = new BigDecimal(offsetDepositAgreeReqBean.getPayOrginAmount() == null ? 0
+				: offsetDepositAgreeReqBean.getPayOrginAmount());
+		// BigDecimal offsetGap = new
+		// BigDecimal(offsetDepositAgreeReqBean.getOffsetGap()==null?0:offsetDepositAgreeReqBean.getOffsetGap());
+		// BigDecimal GuaranteeBalance = new
+		// BigDecimal(offsetDepositAgreeReqBean.getGuaranteeBalance()==null?0:offsetDepositAgreeReqBean.getGuaranteeBalance());
+		BigDecimal notPayInterest = new BigDecimal(offsetDepositAgreeReqBean.getNotPayInterest() == null ? 0
+				: offsetDepositAgreeReqBean.getNotPayInterest());
+		BigDecimal hasPayInterest = new BigDecimal(offsetDepositAgreeReqBean.getHasPayInterest() == null ? 0
+				: offsetDepositAgreeReqBean.getHasPayInterest());
+		BigDecimal repayAmt = new BigDecimal(
+				offsetDepositAgreeReqBean.getRepayAmt() == null ? 0 : offsetDepositAgreeReqBean.getRepayAmt());
+		// 更新融资表
+		FinanceInfo financeInfo = new FinanceInfo();
+		financeInfo.setFinanceId(offsetDepositAgreeReqBean.getFinanceId());
+		financeInfo.setFinanceStatus("4");
+		financeInfo.setFinanceBalance(financeBalance.subtract(payOrginAmount));
+		int updateByPrimaryKeySelective = financeInfoMapper.updateByPrimaryKeySelective(financeInfo);
+		if (updateByPrimaryKeySelective <= 0) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		// 更新保证金表
+		GuaranteeInfo guaranteeInfo = new GuaranteeInfo();
+		// guaranteeInfo.setGuaranteeBalance(GuaranteeBalance.subtract(offsetGap));
+		guaranteeInfo.setGuaranteeBalance(new BigDecimal(0));
+		guaranteeInfo.setFinanceId(offsetDepositAgreeReqBean.getFinanceId());
+		int updateByPrimaryKeySelective2 = guaranteeInfoMapper.updateByPrimaryKeySelective(guaranteeInfo);
+		if (updateByPrimaryKeySelective2 <= 0) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		// 更新计息表
+		RevenueManagement revenueManagement = new RevenueManagement();
+		revenueManagement.setNotPayInterest(notPayInterest.subtract(notPayInterest));
+		revenueManagement.setHasPayInterest(hasPayInterest.add(notPayInterest));
+		revenueManagement.setFinanceId(offsetDepositAgreeReqBean.getFinanceId());
+		revenueManagementMapper.updateByPrimaryKeySelective(revenueManagement);
+		// 更新车辆表
+		CarInfo carInfo = new CarInfo();
+		carInfo.setSaleStatus((byte) 1);
+		CarInfoExample example = new CarInfoExample();
+		Criteria createCriteria = example.createCriteria();
+		createCriteria.andFinanceIdEqualTo(offsetDepositAgreeReqBean.getFinanceId());
+		int updateByExampleSelective = carInfoMapper.updateByExampleSelective(carInfo, example);
+		if (updateByExampleSelective <= 0) {
+			throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
+		}
+		// 插入DYK还款表
+		String repaymentId = ScfUUID.generate();
+		try {
+			DykRepaymentInfo dykRepaymentInfo = new DykRepaymentInfo();
+			dykRepaymentInfo.setRepaymentId(repaymentId);
+			dykRepaymentInfo.setRepaymentDate(sdf.parse(offsetDepositAgreeReqBean.getRepaymentDate()));
+			dykRepaymentInfo.setRepaySumAmt(repayAmt);
+			dykRepaymentInfo.setRepayCapitalAmt(payOrginAmount);
+			dykRepaymentInfo.setRepayInterestAmt(notPayInterest);
+			dykRepaymentInfo.setActRepayAmt(repayAmt);
+			dykRepaymentInfo.setCarStolenCertificate(offsetDepositAgreeReqBean.getCarCertificate());
+			dykRepaymentInfo.setRepaymentType((byte) 2);
+			dykRepaymentInfo.setRepaymentCorpId(offsetDepositAgreeReqBean.getCorpId());
+			int insert = dykRepaymentInfoMapper.insert(dykRepaymentInfo);
+			if (insert <= 0) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		} catch (Exception e) {
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		// 插入还款融资批次表
+		RepaymentFinanceBatch repaymentFinanceBatch = new RepaymentFinanceBatch();
+		repaymentFinanceBatch.setFinanceId(offsetDepositAgreeReqBean.getFinanceId());
+		repaymentFinanceBatch.setRepaymentId(repaymentId);
+		// 获取车辆车架号
+		List<Map<String, Object>> tableData = (List<Map<String, Object>>) offsetDepositAgreeReqBean.getTableData();
+		for (Map<String, Object> map : tableData) {
+			String repaymentFinanceBatchId = ScfUUID.generate();
+			repaymentFinanceBatch.setRecUid(repaymentFinanceBatchId);
+			repaymentFinanceBatch.setCarFrameNum((String) map.get("carFrameNum"));
+			int insert = repaymentFinanceBatchMapper.insert(repaymentFinanceBatch);
+			if (insert <= 0) {
+				throw new BizException(ErrorCodeEnum.ADD_FAILED);
+			}
+		}
+		// 更新limit_info表
+		updateLimit(offsetDepositAgreeReqBean.getCorpId());
+
+		// 删除process_repeat_check数据
+		int result = processRepeatChkService.deleteByProcInstId(procInstId);
+		if (result < 1) {
+			throw new BizException(ErrorCodeEnum.DELETE_FAILED);
+		}
+		return respBean;
+	}
+
+}

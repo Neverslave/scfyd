@@ -1,0 +1,21 @@
+package com.ut.scf.service.project;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.project.CashInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface ICashManagerService {
+
+
+
+	public BaseRespBean getCashList(Map<String, Object> paramMap,PageInfoBean page);
+	
+	public BaseRespBean add(Map<String, Object> paramMap);
+
+	public BaseRespBean detail(CashInfoListReqBean reqBean);
+
+	
+
+}

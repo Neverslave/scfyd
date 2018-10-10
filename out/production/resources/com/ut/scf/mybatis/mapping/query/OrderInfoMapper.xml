@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.query.IOrderInfoDao" >
+
+
+  <select id="orderInfoList" resultType="hashmap" parameterType="hashmap" >
+   	SELECT
+	temp.*
+	from
+	(
+		SELECT
+			o.order_batch_id orderBatchId,
+			SUM(o.cr_req_amt) crReqAmt,
+			f.contract_no contractNo,
+			fi.finance_start_date financeStartDate,
+			fi.finance_end_date financeEndDate,
+			fi.pay_date payDate,
+			b.rec_order_amt recOrderAmt,
+			g.pay_able_guarantee payAbleGuarantee,
+			g.pay_act_guarantee payActGuarantee
+		from
+			order_info o
+		left JOIN order_batch_info b ON o.order_batch_id = b.order_batch_id
+		left JOIN factor_contract_info f ON f.order_batch_id = o.order_batch_id
+		left JOIN finance_info fi ON fi.finance_id = f.contract_no
+		left JOIN guarantee_info g ON f.contract_no = g.finance_id
+		where o.order_status =1  
+		<if test="orderBatchId!=null and orderBatchId!='' ">
+   		and  FIND_IN_SET(o.order_batch_id, #{orderBatchId}) > 0
+   		</if>
+		<if test="contractNo != null and contractNo != ''">
+		    and f.contract_no LIKE CONCAT(CONCAT('%', #{contractNo}),'%')
+		</if> 
+		<if test="payDate != null and payDate != ''">
+		     and DATE_FORMAT(fi.pay_date, '%Y-%m-%d') = #{payDate}
+		</if> 
+	    <if test="financeStartDate != null and financeStartDate !='' ">  
+	        and DATE_FORMAT(fi.finance_start_date, '%Y-%m-%d') >= #{financeStartDate}
+	    </if>
+	    <if test="financeEndDate != null and financeEndDate !='' ">  
+	        and DATE_FORMAT(fi.finance_end_date, '%Y-%m-%d') <![CDATA[<=]]> #{financeEndDate}
+	    </if>
+		GROUP BY
+			o.order_batch_id
+	) temp
+  </select>
+  
+</mapper>

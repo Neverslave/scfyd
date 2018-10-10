@@ -1,0 +1,61 @@
+package com.ut.scf.service.test.tradfact;
+
+import java.util.ArrayList;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.dao.auto.TfProjectFilesMapper;
+import com.ut.scf.service.project.IRepaymentPlanService;
+import com.ut.scf.service.tradfact.IRecomMeetService;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = {
+        "classpath:spring-mybatis-test.xml" })
+public class RecomMeetServiceTest {
+	private static final Logger log = LoggerFactory.getLogger(RecomMeetServiceTest.class);
+	@Autowired
+	private IRecomMeetService recomMeetService;
+	
+	@Autowired
+	private TfProjectFilesMapper projectFilesMapper;
+	
+	
+	@Autowired
+	private IRepaymentPlanService repaymentPlanService ;
+	@Test
+	public void searchMeetInfoTest(){
+/*		log.info("**********************************searchMeetInfoTest start*********************************");
+		Map<String, Object> paramMap = new HashMap<>();
+    	PageInfoBean page = new PageInfoBean();
+    	paramMap.put("projectName", "lalal");
+    	page.setPageNumber(1);
+		page.setPageSize(10);
+		BaseRespBean respBean = recomMeetService.searchMeetInfo(paramMap, page);
+    	//BaseRespBean respBean = garanteeMoneyService.getGaranteeMoneyList(paramMap, page);
+    	log.info("searchMeetInfoTest : " + respBean); 
+    	Assert.assertNotNull(respBean);
+		log.info("**********************************searchMeetInfoTest end*********************************");*/
+		ArrayList<String> Orderlist=new ArrayList<String> ();
+		Orderlist.add("123456789");
+		repaymentPlanService.repayMentInfoByOrderList(Orderlist);
+	
+	}
+	
+/*	@Test
+	public void interMeetInfoTest() {
+		log.info("**********************************searchMeetInfoTest start*********************************");
+		RecomMeetingAddReqBean reqBean = new RecomMeetingAddReqBean();
+		reqBean.setProjectId("pro0001");
+		reqBean.setUpwardsInfo("It's my upWardsInfo!");
+		BaseRespBean interMeetInfo = recomMeetService.interMeetInfo(reqBean);
+		log.info("interMeetInfo : " + interMeetInfo); 
+		log.info("**********************************searchMeetInfoTest end*********************************");
+	}*/
+	
+}

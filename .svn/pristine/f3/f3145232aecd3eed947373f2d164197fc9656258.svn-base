@@ -1,0 +1,575 @@
+$(document).ready(function() {
+    CloudUtils.getMenuNames("nav");
+    getData();
+    initTable();
+    dateload();
+});
+
+
+
+function getData() {
+	var row = store.get('businessHallDeatilRow');
+	getBusinessHallById(row.storeId);
+}
+function getBusinessHallById(storeId){
+
+
+    var options = {
+    	url: "../../businessHall/list",
+    	  data: '{"storeId": '+storeId+'}',
+        callBackFun: function(data) {
+            if (data.result == 0) {
+            	CloudUtils.setForm(data.dataList[0], "searchForm");
+            	initTable();
+           }else{
+                 bootbox.alert("导出失败");
+           }    
+            
+        }
+    };
+    CloudUtils.ajax(options);
+
+	
+}
+var orderBy ="";
+var orderByName="";
+
+
+function initTable() {
+    $('#repayListTable').bootstrapTable('destroy');
+    $("#repayListTable").bootstrapTable({
+        method: "post",
+        url: "../../sign/orderList",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 5, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [5, 10, 15, 20, 25,50,100,200,500], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求 
+ 
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+            jsonData.pageNumber = params.pageNumber;
+            jsonData.pageSize = params.pageSize;
+            jsonData.orderBy = orderBy;
+            jsonData.orderByName=orderByName;
+//            return dataTemp;
+             return JSON.stringify(jsonData);         
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'peopleType',
+            title: '业务类型',
+            align: 'center',
+            valign: 'middle',
+            width: 100,
+            formatter: function(value) {
+                if(value=='1'){
+                	return "学生";
+                }else if(value=='2'){
+                	return "家庭宽带";
+                }else if(value=='3'){
+                	return "翼支付";
+                }
+            },
+            sortable: true
+        },{
+            field: 'batchId',
+            title: '批次号',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'orderId',
+            title: '订单号',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 200
+        },{
+            field: 'name',
+            title: '姓名',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'sex',
+            title: '性别',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                if (value == "0") {
+                    return "女";
+                } else if(value=="1") {
+                    return "男";
+                }else
+                	{
+                	return "未知";
+                	}
+            },
+            sortable : true,
+            width: 200
+        },{
+            field: 'name',
+            title: '姓名',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'sex',
+            title: '性别',
+            align: 'center',
+            valign: 'middle',
+            width: 50,
+            sortable : true,
+            formatter: function(value) {
+                if (value == "0") {
+                    return "女";
+                } else if(value=="1") {
+                    return "男";
+                }else
+                	{
+                	return "未知";
+                	}
+            }
+        },{
+            field: 'idCard',
+            title: '身份证',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 200
+        },{
+            field: 'nation',
+            title: '民族',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 50
+        },{
+            field: 'mobile',
+            title: '联系方式',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 150
+        },{
+            field: 'age',
+            title: '年龄',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 50
+        },{
+            field: 'idcardBirthday',
+            title: '出生年月',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'goodsName',
+            title: '产品名称',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'ummTruename',
+            title: '面审员',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'financePeriod',
+            title: '分期期数',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'totalPrice',
+            title: '分期总费用',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },	{
+            field: 'tdScore',
+            title: '同盾分数',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'quota',
+            title: '授信额度',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'level',
+            title: '商户评级',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'needmoney',
+            title: '商家结算款',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'serviceMoney',
+            title: '超人服务费',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'ensureMoney',
+            title: '保证金',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+            field: 'loanMoney',
+            title: '实际支付付费',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 100
+        },{
+        	   field: 'storeId',
+               title: '门店id',
+               align: 'center',
+               valign: 'middle',
+               sortable : true,
+               formatter: function(value, row, index) {
+               	if(value!=null&&value!=""){
+               	      var m = '<a class = "storeDetail" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)">'+value+'</a>';
+
+                         return m;
+               	}else{
+               		return '';
+               	}
+             
+               },
+               events: 'operateEvents',
+               width: 100
+        },{
+
+            field: 'contract',
+            title: '合同url',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row, index) {
+            	if(value!=null&&value!=""){
+            	      var m = '<a  target="_blank" style="color:#278bdd;padding:0px 5px;" title="详情" href="'+value+'">查看</a>';
+
+                      return m;
+            	}else{
+            		return '';
+            	}
+          
+            },
+            width: 100
+        },{
+            field: 'state',
+            title: '订单状态',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            width: 150,
+            formatter: function(value) {
+                if (value == "1") {
+                    return "通过";
+                } else if(value=="0") {
+                    return "拒绝";
+                }
+            }
+        },{
+            field: 'file',
+            title: '相关图片',
+            align: 'center',
+            valign: 'middle',
+            width: 100,
+            events: 'operateEvents',
+        
+            formatter: function() {
+                return "<a class='stu_file' href='javascript:void(0)'>查看</a>";
+            }
+        },{
+            field: 'corpRepayPlan',
+            title: '客户还款计划',
+            align: 'center',
+            valign: 'middle',
+            width: 150,
+            events: 'operateEvents',
+            formatter: function() {
+                return "<a class='corpRepayPlan' href='javascript:void(0)'>查看</a>";
+            }
+        }, {
+            field: 'operation',
+            title: '资方还款计划',
+            align: 'center',
+            valign: 'middle',
+            width: 100,
+            formatter: function(value, row, index) {
+                var m = '<a class = "fa fa-list-ul detailOrder" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+
+                return m;
+            },
+            events: 'operateEvents'
+        }],
+        onSort:function(name, order){
+        	orderBy = order;
+        	orderByName=name;
+        },
+    });
+}
+
+var orderByRepayment ="";
+var orderByRepaymentName="";
+function initRepayPlanListTable(orderBatchId,orderId) {
+    $('#repayPlanListTable').bootstrapTable('destroy');
+    $("#repayPlanListTable").bootstrapTable({
+        method: "post",
+        url: "../../sign/repayListPage",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 18, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [12,18, 24, 50,100,200,500], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var jsonData = {
+                pageNumber: params.pageNumber,
+                pageSize: params.pageSize,
+                batchId: orderBatchId,
+                orderId:orderId,
+                orderBy:orderByRepayment,
+                orderByName:orderByRepaymentName,
+
+            };
+            return JSON.stringify(jsonData);
+            // return JSON.stringify({});
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'repayment_id',
+            title: '还款计划ID',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        }, {
+            field: 'order_id',
+            title: '订单编号',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        }, {
+            field: 'order_batch_id',
+            title: '批次编号',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        }, {
+            field: 'period',
+            title: '第几期',
+            align: 'center',
+            valign: 'middle'  ,
+            sortable : true     
+        },{
+            field: 'current_repay_date',
+            title: '应付日期',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        },{
+            field: 'interest',
+            title: '资方利息',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'lc_money',
+            title: '超人服务费',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'current_money',
+            title: '资方本金',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'ensure_money',
+            title: '保证金',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'payed_time',
+            title: '实付时间',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        },{
+            field: 'repayment_money',
+            title: '用户应还金额',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'state',
+            title: '超人回款状态',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter:function(value){
+            	if(value=='0'||value==""||value==null){
+            		return value;
+            	}else if (value=='1'){
+            		return "未还款";
+            	}else if (value=='2'){
+            		return "还款中";
+            	}else if (value=='3'){
+            		return "已还款";
+            	}else if (value=='4'){
+            		return "待渠道代偿";
+            	}else if (value=='5'){
+            		return "取消中";
+            	}else if (value=='7'){
+            		return "已代偿";
+                 }else{
+            		return value;
+            	}
+            		
+            	
+            }
+        }    
+        ],
+        onSort:function(name, order){
+        	orderByRepayment = order;
+        	orderByRepaymentName=name;
+        },
+    });
+}
+
+window.operateEvents = {
+    'click .detail': function(e, value, row, index) {
+        $('#financeInfo').modal('show');
+        // CloudUtils.setForm(row, 'detailForm');
+        initRepayListTable(row.batch_id);
+        // $('#repayListTable').bootstrapTable('append', row);
+    },
+    'click .stu_file': function(e, value, row, index) {
+    	
+    	
+        var data = { orderId: row.orderId};
+        data = JSON.stringify(data);
+        var options = {
+            url: '../../sign/stuFileInfo',
+            data: data,
+            callBackFun: function(data) {
+                CloudUtils.getTab("../../project/ssmManager/orderManager/stuInfo.html", "agencyDetailModal");
+                $("#imgsDetail").html("");
+            
+                var dataList = data.dataList;
+                for (var i = 0; i < dataList.length; i++) {
+                    var temp = dataList[i];
+                     var img = ReferrerKiller.imageHtml(temp.stuFile.toString().replace(/,m_lfit,w_50,/,",m_lfit,w_200,"));
+                    $("#imgsDetail").append(img);
+
+                }
+                CloudUtils.setForm(row, 'detailFormStuInfo');
+                $("#stuImgDetail").modal("show");
+            }
+        };
+        CloudUtils.ajax(options);
+   
+    },
+    'click .corpRepayPlan': function(e, value, row, index) {
+    	
+  	  CloudUtils.getTab("../../project/ssmManager/orderManager/corpReplaymentPlanDetail.html", "corpRepayPlanDetailModal");
+  	  
+  	  initCorpRepayPlanListTable(row.orderId,"../../sign/corpRepayList");
+  	  $("#corpRepayInfoDetail").modal("show");
+  },
+    'click .detailOrder': function(e, value, row, index) {
+    	CloudUtils.getTab("../../project/ssmManager/orderManager/blReplaymentPlanDetail.html", "blRepayPlanDetailModal");
+   	  
+        initBlRepayPlanListTable(row.peopleType,row.orderId,"../../sign/repayListOrder");
+  	  $("#blRepayInfoDetail").modal("show");
+    },
+    'click .storeDetail': function(e, value, row, index) {
+    	  store.set('businessHallDeatilRow', row); //把数据存储在缓存中
+  	    $('#mainFrame', top.document).attr('src', 'project/ssmManager/BusinessHallDetail.html');
+      }
+};

@@ -1,0 +1,304 @@
+$(document).ready(function() {
+	CloudUtils.getMenuNames("nav");
+    initTable();
+    dateload();
+});
+
+function searchFun() {
+    initTable();
+}
+
+function initTable() {
+    $('#proStaticListTable').bootstrapTable('destroy');
+    $("#proStaticListTable").bootstrapTable({
+        method: "post",
+        url: "../SSMSummaryInfo/wingRepaymentStaticList",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 5, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [5, 10, 15, 20, 25], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+            jsonData.pageNumber = params.pageNumber;
+            jsonData.pageSize = params.pageSize;
+            return JSON.stringify(jsonData);
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'peopleType',
+            title: '业务类型',
+            align: 'center',
+            valign: 'middle',
+            width:'100'
+        }, {
+            field: 'orderDate',
+            title: '贷款发放时间',
+            align: 'center',
+            valign: 'middle',
+            width:'100'
+        },  {
+            field: 'reportMonth',
+            title: '报告月份',
+            align: 'center',
+            valign: 'middle',
+            width:'100'
+        },{
+            field: 'orderSumMoney',
+            title: '贷款发放金额',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        },{
+            field: 'orderSumCount',
+            title: '贷款发放笔数',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,0);
+            }
+        }, {
+            field: 'hasNotPayAmt',
+            title: '月末未偿本金余额 ',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        }, {
+            field: 'restCount',
+            title: '剩余笔数',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,0);
+            }
+        }, {
+            field: 'normalLoanBalance',
+            title: '正常贷款余额',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        },  {
+            field: 'm1OverdueLoans',
+            title: '1-30天滞纳贷款总额',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        },{
+            field: 'm1OverdueCounts',
+            title: '1-30天滞纳贷款笔数',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,0);
+            }
+        }, {
+            field: 'm2OverdueLoans',
+            title: '31-60天滞纳贷款总额',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        }, {
+            field: 'm2OverdueCounts',
+            title: '31-60天滞纳贷款笔数',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,0);
+            }
+        }, {
+            field: 'm3OverdueLoans',
+            title: '61-90天滞纳贷款总额',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        }, {
+            field: 'm3OverdueCounts',
+            title: '61-90天滞纳贷款笔数',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,0);
+            }
+        }, {
+            field: 'm4OverdueLoans',
+            title: '91-120天滞纳贷款总额',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        }, {
+            field: 'm4OverdueCounts',
+            title: '91-120天滞纳贷款笔数',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,0);
+            }
+        }, {
+            field: 'm5OverdueLoans',
+            title: '120天以上滞纳贷款总额',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        }, {
+            field: 'm5OverdueCounts',
+            title: '120天以上滞纳贷款笔数',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,0);
+            }
+        }, {
+            field: 'monthlyPrincipalReceiva',
+            title: '月内本金回收款（按合同规定）',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        }, {
+            field: 'earlyCompensation',
+            title: '月内部分早偿的金额 ',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        }, {
+            field: 'clearedAmount',
+            title: '月内全部早偿的金额',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        }, {
+            field: 'yuqiRepayAmount',
+            title: '滞纳本金偿还金额（不包括注销贷款偿还金额）',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        }, {
+            field: 'totalMonthlyRecovery',
+            title: '当月回收款总额',
+            align: 'center',
+            valign: 'middle',
+            width:'100',
+            formatter:function(value){
+            	return $.number(value,2);
+            }
+        }]
+    });
+}
+
+
+function refreshWingDaynamic(){
+	   var dataTemp = CloudUtils.convertStringJson('searchForm');
+	    var jsonData = eval("(" + dataTemp + ")");
+    var options = {
+
+            url: '../SSMSummaryInfo/createWingRepaymentStatic',
+            data: JSON.stringify(jsonData),
+            callBackFun: function(data) {
+            	if(data.result==0){
+            		bootbox.alert("操作成功！");
+            		initTable();
+            	}else{
+            		bootbox.alert("操作失败！");
+            	}
+            	
+            },
+            errorCallback: function(data) {
+                bootbox.alert("error");
+            }
+        };
+        CloudUtils.ajax(options);
+}
+
+function exportExcel(){
+	$('#proStaticListTable').tableExport({
+		type:'excel',
+		escape:'false'
+	})
+}
+
+function dateload() {
+    $('#dateBegin').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyymm',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+    $('#dateEnd').datetimepicker({
+        language: 'zh-CN',
+        autoclose: 1,
+        todayBtn: true, // 显示今天时间
+        initialDate: new Date(), //初始化当前日期
+        pickerPosition: "bottom-left",
+        minuteStep: 5,
+        format: 'yyyymm',
+        minView: 'month'　　　　 // 日期时间选择器所能够提供的最精确的时间选择视图。
+    });
+}

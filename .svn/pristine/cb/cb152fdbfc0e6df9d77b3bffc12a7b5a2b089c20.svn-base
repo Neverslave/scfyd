@@ -1,0 +1,227 @@
+package com.ut.scf.service.statistics.impl;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.core.dict.ErrorCodeEnum;
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.exception.BizException;
+import com.ut.scf.dao.statistics.IAccountsReceivableDao;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.PageRespBean;
+import com.ut.scf.service.project.impl.PayCommitmentServiceImpl;
+import com.ut.scf.service.statistics.IAccountsReceivableService;
+
+@Service("accountsReceivableService")
+public class AccountsReceivableServiceImpl implements IAccountsReceivableService{
+	private static final Logger log = LoggerFactory.getLogger(AccountsReceivableServiceImpl.class);
+	@Resource
+	private IAccountsReceivableDao accountsReceivableDao;
+	
+	@Override
+	public BaseRespBean AccountsReceivableList(Map<String, Object> paramMap,
+			PageInfoBean page) {
+		List<Map<String, Object>> list = accountsReceivableDao.getARList(paramMap, page);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setPages(page.getTotalPage());
+		respBean.setRecords(page.getTotalRecord());
+		respBean.setDataList(list);
+		return respBean;
+	}
+
+	@Override
+	public BaseRespBean AccountsReceivableList(Map<String, Object> paramMap) {
+		List<Map<String, Object>> list = accountsReceivableDao.getARList(paramMap);
+		PageRespBean respBean = new PageRespBean();
+		respBean.setDataList(list);
+		return respBean;
+	}
+	@Override
+	public BaseRespBean AccountsFinancePayAndRepayList(Map<String, Object> paramMap) {
+		List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+		Map<String, Object> hashMap=new HashMap<String, Object> ();
+		paramMap.put("cprMonth", 1);
+		paramMap.put("ywlxId", "1");
+		PageRespBean respBean = new PageRespBean();
+		try {
+			for(int i=1;i<13;i++)
+			{
+				
+				String iStr=String.valueOf(i);
+				if(iStr.length() == 1){
+					iStr="0"+iStr;
+				}
+				
+				hashMap=new HashMap<String, Object> ();
+				hashMap.put("cprYear", paramMap.get("cprYear").toString()+"年");
+				hashMap.put("cprMonth",iStr+"月");
+				
+				paramMap.replace("cprMonth", iStr);
+				paramMap.replace("ywlxId", "1");
+				
+				//零售
+				//取得当前月份的合作的经销商数量零售
+				Map<String, Object> corpCountInMonth=accountsReceivableDao.getCorpCountInMonth(paramMap);
+				hashMap.put("corpCountLs", (corpCountInMonth==null||corpCountInMonth.size()<1)?"0":
+							(corpCountInMonth.get("corpCount")==null?"0":corpCountInMonth.get("corpCount")));
+				//取得车辆数
+				Map<String, Object> corpCarCountPayAmitInMonth=accountsReceivableDao.getCorpCarCountPayAmitInMonth(paramMap);
+				hashMap.put("carCountLs", (corpCarCountPayAmitInMonth==null||corpCarCountPayAmitInMonth.size()<1)?"0":
+							(corpCarCountPayAmitInMonth.get("carCount")==null?"0":corpCarCountPayAmitInMonth.get("carCount")));
+				
+				//取得付款金额
+				Object sumPayAmitLs= (corpCarCountPayAmitInMonth==null||corpCarCountPayAmitInMonth.size()<1)?"0":
+					(corpCarCountPayAmitInMonth.get("sumPayAmit")==null?"0":corpCarCountPayAmitInMonth.get("sumPayAmit"));
+				hashMap.put("sumPayAmitLs", getBigDecimal(sumPayAmitLs));
+		
+				
+				//取得保证金剩余金额
+				Map<String, Object> guaranteeRestInMonth=accountsReceivableDao.getGuaranteeRestInMonth(paramMap);
+				
+				Object payGuaranteeLs= (guaranteeRestInMonth==null||guaranteeRestInMonth.size()<1)?"0":
+					(guaranteeRestInMonth.get("payGuarantee")==null?"0":guaranteeRestInMonth.get("payGuarantee"));
+				
+				hashMap.put("payGuaranteeLs", getBigDecimal(payGuaranteeLs));
+				
+				
+				
+				//取得回款金额
+				Map<String, Object> repayAmitSumInMonth=accountsReceivableDao.getRepayAmitSumInMonth(paramMap);
+				
+				Object repayAmitSumLs=(repayAmitSumInMonth==null||repayAmitSumInMonth.size()<1)?"0":
+					(repayAmitSumInMonth.get("sumPayAmit")==null?"0":repayAmitSumInMonth.get("sumPayAmit"));
+				
+				
+				hashMap.put("payRepayLs", getBigDecimal(repayAmitSumLs).add(getBigDecimal(payGuaranteeLs)));
+				
+				if(getBigDecimal(sumPayAmitLs).equals(BigDecimal.ZERO))
+				{
+					hashMap.put("rePayPercentLs", "");
+				}
+				else
+				{
+				
+					BigDecimal percent= getBigDecimal(getBigDecimal(repayAmitSumLs).add(getBigDecimal(payGuaranteeLs))).divide(getBigDecimal(sumPayAmitLs),2,BigDecimal.ROUND_HALF_UP);
+					if(percent.compareTo(getBigDecimal(1))>=0)
+					{
+						hashMap.put("rePayPercentLs", "100%");
+					}
+					else
+					{
+						hashMap.put("rePayPercentLs", percent.multiply(getBigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toString()+"%");
+					}
+				}
+				//取得回款比例
+			
+				
+				//取得未收车辆台数
+				Map<String, Object> lsWeiShouCarCount=accountsReceivableDao.getLsWeiShouCarCount(paramMap);
+				
+				hashMap.put("lsWeiShouCarCount", (lsWeiShouCarCount==null||lsWeiShouCarCount.size()<1)?"0":
+					(lsWeiShouCarCount.get("weishouCarCount")==null?"0":lsWeiShouCarCount.get("weishouCarCount")));
+				
+				//大宗
+				paramMap.replace("ywlxId", "2");
+				
+				//取得当前月份的合作的经销商数量零售
+				Map<String, Object> corpCountInMonthDz=accountsReceivableDao.getCorpCountInMonth(paramMap);
+				hashMap.put("corpCountDz", (corpCountInMonthDz==null||corpCountInMonthDz.size()<1)?"0":
+							(corpCountInMonthDz.get("corpCount")==null?"0":corpCountInMonthDz.get("corpCount")));
+				//取得车辆数
+				Map<String, Object> corpCarCountPayAmitInMonthDz=accountsReceivableDao.getCorpCarCountPayAmitInMonth(paramMap);
+				hashMap.put("carCountDz", (corpCarCountPayAmitInMonthDz==null||corpCarCountPayAmitInMonthDz.size()<1)?"0":
+							(corpCarCountPayAmitInMonthDz.get("carCount")==null?"0":corpCarCountPayAmitInMonthDz.get("carCount")));
+				
+				//取得付款金额
+				Object sumPayAmitDz= (corpCarCountPayAmitInMonthDz==null||corpCarCountPayAmitInMonthDz.size()<1)?"0":
+					(corpCarCountPayAmitInMonthDz.get("sumPayAmit")==null?"0":corpCarCountPayAmitInMonthDz.get("sumPayAmit"));
+				hashMap.put("sumPayAmitDz", getBigDecimal(sumPayAmitDz));
+		
+				
+				//取得保证金剩余金额
+				Map<String, Object> guaranteeRestInMonthDz=accountsReceivableDao.getGuaranteeRestInMonth(paramMap);
+				
+				Object payGuaranteeDz= (guaranteeRestInMonthDz==null||guaranteeRestInMonthDz.size()<1)?"0":
+					(guaranteeRestInMonthDz.get("payGuarantee")==null?"0":guaranteeRestInMonthDz.get("payGuarantee"));
+				
+				hashMap.put("payGuaranteeDz", getBigDecimal(payGuaranteeDz));
+				
+				
+				
+				//取得回款金额
+				Map<String, Object> repayAmitSumInMonthDz=accountsReceivableDao.getRepayAmitSumInMonth(paramMap);
+				
+				Object repayAmitSumDz=(repayAmitSumInMonthDz==null||repayAmitSumInMonthDz.size()<1)?"0":
+					(repayAmitSumInMonthDz.get("sumPayAmit")==null?"0":repayAmitSumInMonthDz.get("sumPayAmit"));
+				
+				
+				hashMap.put("payRepayDz", getBigDecimal(repayAmitSumDz).add(getBigDecimal(payGuaranteeDz)));
+				
+				//取得回款比例
+				if(getBigDecimal(sumPayAmitDz).equals(BigDecimal.ZERO))
+				{
+					hashMap.put("rePayPercentDz", "");
+				}
+				else
+				{
+					BigDecimal percentDz= getBigDecimal(getBigDecimal(repayAmitSumDz).add(getBigDecimal(payGuaranteeDz))).divide(getBigDecimal(sumPayAmitDz),2,BigDecimal.ROUND_HALF_UP);
+					
+					if(percentDz.compareTo(getBigDecimal(1))>=0)
+					{
+						hashMap.put("rePayPercentDz", "100%");
+					}
+					else
+					{
+						hashMap.put("rePayPercentDz", percentDz.multiply(getBigDecimal(100)).setScale(0, BigDecimal.ROUND_HALF_UP).toString()+"%");
+					}
+				}
+				//取得未收车辆台数
+				Map<String, Object> dzWeiShouCarCount=accountsReceivableDao.getLsWeiShouCarCount(paramMap);
+				
+				hashMap.put("dzWeiShouCarCount", (dzWeiShouCarCount==null||dzWeiShouCarCount.size()<1)?"0":
+					(dzWeiShouCarCount.get("weishouCarCount")==null?"0":dzWeiShouCarCount.get("weishouCarCount")));
+				
+			
+				list.add(hashMap);
+			}
+		} catch (Exception e) {
+			
+			respBean.setResultNote(e.getMessage());
+			log.error(e.getMessage());
+			e.printStackTrace();
+			throw new BizException(ErrorCodeEnum.ADD_FAILED);
+		}
+		
+
+		respBean.setDataList(list);
+		return respBean;
+	}
+	
+	public static BigDecimal getBigDecimal(Object value) {
+        BigDecimal ret = null;
+        if (value != null) {
+            if (value instanceof BigDecimal) {
+                ret = (BigDecimal) value;
+            } else if (value instanceof String) {
+                ret = new BigDecimal((String) value);
+            } else if (value instanceof BigInteger) {
+                ret = new BigDecimal((BigInteger) value);
+            } else if (value instanceof Number) {
+                ret = new BigDecimal(((Number) value).doubleValue());
+            } else {
+                throw new ClassCastException("Not possible to coerce [" + value + "] from class " + value.getClass() + " into a BigDecimal.");
+            }
+        }
+        return ret;
+    }
+}

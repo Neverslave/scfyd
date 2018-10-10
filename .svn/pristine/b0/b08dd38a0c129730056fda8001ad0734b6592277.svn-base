@@ -1,0 +1,132 @@
+$(document).ready(function() {
+
+	console.log("01");
+    getTaskData();
+    console.log("02");
+    numFormat();
+    console.log("03");
+
+});
+
+
+function getTaskData() {
+	 var row = store.get('agencyRow');
+	 console.log("04");
+    taskId = row.taskId;
+    console.log("05");
+    var options = {
+      url: '../../activiti/findDataByTaskId',
+        data: '{"taskId":"' + taskId + '"}',
+        callBackFun: function(data) {
+            if (data.result == 0) {
+           
+                var jsonData = eval("(" + data.str + ")");
+            
+                CloudUtils.setForm(jsonData, 'detailFormDetail');
+
+                initOrderListTable(jsonData.orderIdList);
+
+            } else {
+                return false;
+            }
+        },
+        errorCallback: function(data) {
+            bootbox.alert(data.resultNote);
+            return false;
+        }
+    };
+    CloudUtils.ajax(options);
+}
+
+
+function getBatchInfoById(batchId) {
+    var data = {};
+    data.batchId = batchId;
+
+    var options = {
+        url: '../../order/batchInfo',
+        data: JSON.stringify(data),
+        callBackFun: function(data) {
+            CloudUtils.setForm(data, 'detailForm');
+        }
+    };
+    CloudUtils.ajax(options);
+}
+
+function initOrderListTable(orderIdList) {
+	
+	orderList();
+	getOrderList(orderIdList);
+}
+
+function getOrderList(orderIdList){
+	var data ={
+		orderIdList: orderIdList
+	};
+	var options = {
+            url: '../../order/orderListUnusual',
+            data: JSON.stringify(data),
+            callBackFun: function(data) {
+            	$('#orderListDetail').bootstrapTable('append',data.dataList);
+            }
+	
+        };
+        CloudUtils.ajax(options);
+}
+
+function orderList(){
+
+    $('#orderListDetail').bootstrapTable('destroy');
+    $("#orderListDetail").bootstrapTable({
+        method: "post",
+//        url: "../../order/orderList",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 5, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [5, 10, 15, 20, 25], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "client", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+       
+        responseHandler: function responseHandler(res) {},
+        columns: [orderList]
+    });
+
+}
+
+
+
+window.operateEvents = {
+    'click .stu_file': function(e, value, row, index) {
+    	
+    	
+        var data = { orderId: row.orderId};
+        data = JSON.stringify(data);
+        var options = {
+            url: '../../sign/stuFileInfo',
+            data: data,
+            callBackFun: function(data) {
+                CloudUtils.getTab("../../project/ssmManager/orderManager/stuInfo.html", "agencyDetailModal");
+                $("#imgsDetail").html("");
+            
+                var dataList = data.dataList;
+                for (var i = 0; i < dataList.length; i++) {
+                    var temp = dataList[i];
+                     var img = ReferrerKiller.imageHtml(temp.stuFile.toString().replace(/,m_lfit,w_50,/,",m_lfit,w_200,"));
+                    $("#imgsDetail").append(img);
+
+                }
+                CloudUtils.setForm(row, 'detailFormStuInfo');
+                $("#stuImgDetail").modal("show");
+            }
+        };
+        CloudUtils.ajax(options);
+   
+    }
+
+};

@@ -1,0 +1,31 @@
+package com.ut.scf.web.controller.wechat.statistics;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.statistics.ProjectOverviewListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.statistics.IProjectOverviewService;
+
+@Controller
+@RequestMapping("wechat/proViewQuery")
+public class WeChatProViewController {
+
+	@Resource
+	private IProjectOverviewService projectOverviewService  ; 
+	
+	@RequestMapping(value = "/list")
+	@ResponseBody
+	public BaseRespBean proViewList(@RequestBody ProjectOverviewListReqBean reqBean) throws Exception {
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return projectOverviewService.ProjectOverviewList(paramMap);
+	}
+}

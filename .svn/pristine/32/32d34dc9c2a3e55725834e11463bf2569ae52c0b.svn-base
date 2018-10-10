@@ -1,0 +1,19 @@
+package com.ut.scf.service.project;
+
+import java.util.Map;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.pojo.auto.GuaranteeInfo;
+import com.ut.scf.reqbean.project.RefundDepositAgreeReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IRefundDepositService {
+	public BaseRespBean getRefundDepositInfo(Map<String, Object> paramMap,PageInfoBean page);
+	public BaseRespBean updateRefundDepositInfo(GuaranteeInfo guaranteeInfo);
+	public BaseRespBean agreeThenMod(RefundDepositAgreeReqBean refundDepositAgreeReqBean);
+	public BaseRespBean startProcess(JSONObject jsonObject);
+	public BaseRespBean reApply(JSONObject jsonObject);
+	BaseRespBean modRef(RefundDepositAgreeReqBean refundDepositAgreeReqBean);
+}

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" style="background-color: #ffffff;">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="ThemeBucket">
+  <link rel="shortcut icon" href="#" type="image/png">
+  <title>放款管理</title>
+  <link href="../../../css/style.css" rel="stylesheet">
+  <link href="../../../css/style-responsive.css" rel="stylesheet">
+  <link href="../../../css/bootstrap-table.css" rel="stylesheet">
+  <link href="../../../css/bootstrap.css" rel="stylesheet">
+  <link href="../../../css/validator/bootstrapValidator.css" rel="stylesheet">
+  <link href="../../../css/sysfun.css" rel="stylesheet">
+  <link href="../../../106/css/selectordie_theme_03.css" rel="stylesheet">
+  <script src="../../../js/jquery-3.0.0.min.js" type="text/javascript"></script>
+  <script src="../../../106/js/selectordie.min.js" type="text/javascript"></script>
+  <script src="../../../js/bootstrap.min.js"></script>
+  <script src="../../../js/CloudUtils.js"></script>
+  <script src="../../../js/password.js"></script>
+  <script src="../../../js/store.js" type="text/javascript"></script>
+  <script src="../../../js/bootstrap-treeview.js" type="text/javascript"></script>
+  <script type="text/javascript" src="../../../js/jquery.validate.min.js"></script>
+  <script src="../../../js/validation-init.js"></script>
+  <script type="text/javascript" src="../../../js/advanced-datatable/js/jquery.dataTables.js"></script>
+  <script type="text/javascript" src="../../../js/bootstrap-table.js"></script>
+  <script type="text/javascript" src="../../../js/bootstrap-validator/bootstrapValidator.js"></script>
+  <script type="text/javascript" src="../../../js/bootstrap-validator/zh_CN.js"></script>
+  <script type="text/javascript" src="../../../js/bootbox-4.4.0/bootbox.js"></script>
+  <script type="text/javascript" src="../../../js/jquery.number.js"></script>
+  <script type="text/javascript"
+	src="../../../js/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>
+<script type="text/javascript"
+	src="../../../js/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+  <!--dynamic table initialization -->
+  <script type="text/javascript" src="../../../js/project/ssmManager/LoanInfoManager/LoanInfoDetailAdd.js"></script>
+</head>
+
+<body class="iframeBody" style="background-color: #ffffff;">
+<section>
+    <div class="main-content-child" >
+        <div class="nav" id="nav"></div>
+        <div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+	        <div class="whiteBgDiv row">
+	  
+	        <div class="row	rowpad">
+	             <form class="form-horizontal" role="form" id="searchForm">
+		     		<div class="form-group">
+		     		
+		     		<label class="col-sm-2 control-label" for="batchId">批次编号</label>
+					<div class="col-sm-3">
+						<input name="paybatchId" class="form-control" id="paybatchId" readonly="readonly" type="text">
+					</div>
+					<label class="col-sm-2 control-label" for="peopleType">订单类型</label>
+					<div class="col-sm-3">
+						<input type="text" name="peopleType" class="form-control" id="peopleType" readonly="readonly">
+					</div>
+		            </div>
+		            <div class="form-group">
+		     		
+		     		<label class="col-sm-2 control-label" for="contractNo">合同编号</label>
+					<div class="col-sm-3">
+						<input name="contractNo" class="form-control" id="contractNo" readonly="readonly" type="text">
+					</div>
+					<label class="col-sm-2 control-label" for="totalPrice">总金额</label>
+					<div class="col-sm-3">
+						<input type="text" name="totalPrice" class="form-control" id="totalPrice" readonly="readonly">
+					</div>
+		            </div>
+		            <div class="form-group">
+		     		
+		     		<label class="col-sm-2 control-label" for="orderTotalNum">总数量</label>
+					<div class="col-sm-3">
+						<input name="orderTotalNum" class="form-control" id="orderTotalNum" readonly="readonly" type="text">
+					</div>
+					<label class="col-sm-2 control-label" for="recOrderNum">放款数量</label>
+					<div class="col-sm-3">
+						<input type="text" name="recOrderNum" class="form-control" id="recOrderNum" readonly="readonly">
+					</div>
+		            </div>
+		            <div class="form-group">
+		     		
+		     		<label class="col-sm-2 control-label" for="recOrderAmt">放款金额</label>
+					<div class="col-sm-3">
+						<input name="recOrderAmt" class="form-control" id="recOrderAmt" readonly="readonly" type="text">
+					</div>
+					<label class="col-sm-2 control-label" for="sumPayAmt">已放款总额</label>
+					<div class="col-sm-3">
+						<input type="text" name="sumPayAmt" class="form-control" id="sumPayAmt" readonly="readonly">
+					</div>
+		            </div>
+		            <div class="form-group">
+		     		
+		     		<label class="col-sm-2 control-label" for="payAbleGuarantee">应缴保证金</label>
+					<div class="col-sm-3">
+						<input name="payAbleGuarantee" class="form-control" id="payAbleGuarantee" readonly="readonly" type="text">
+					</div>
+					<label class="col-sm-2 control-label" for="guaranteeBalance">保证金余额</label>
+					<div class="col-sm-3">
+						<input type="text" name="guaranteeBalance" class="form-control" id="guaranteeBalance" readonly="readonly">
+					</div>
+		            </div>
+		          </form>
+		        </div>
+	        
+		    	
+	        </div>
+
+	        <button id="btn_add" type="button" style="width:80px; margin-bottom: 10px;" class="btn btn-default add" onclick="add()">
+        		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加 
+        	</button>
+        	<input type="text" name="paybatchId" class="form-control" id="paybatchId" readonly style="display:none">
+	        <table id="addLoanListTable" class="table" cellspacing="0" width="100%">
+			</table>
+			<div>
+		    	<div class="col-sm-1 col-sm-offset-9" style="margin-left:80%">
+		    		<button type="button" class="btn btn-default cancel"
+						data-dismiss="modal" onclick="javascript:history.go(-1)">取消
+					</button>
+				</div>
+				<div class="col-sm-1">
+					<button type="submit" id="btn_apply" class="btn btn-default save"
+						 onclick="apply()">保存
+					</button>
+		    	</div>
+		    </div>
+	       </div>
+        <form class="form-horizontal" role="form" id="addForm"  data-toggle="validator">
+	        <div class="modal fade" id="addModal" aria-hidden="true" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="addModalLabel">
+		    <div class="modal-dialog" role="document">
+		    <input type="hidden" id="isEdit" name="isEdit">
+		    <input type="hidden" id="index" name="index">
+		      <div class="modal-content">
+		        <div class="modal-header">
+		          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span> </button> 
+		          <h4 class="modal-title" id="addModalLabel">放款</h4>
+		        </div>
+		        <div class="modal-body">
+		          <div class="form-group">
+		            <label class="col-sm-4 control-label" for="batchId"><span class="required">*</span>订单批次</label>
+		            <div class="col-sm-6">
+		            	<input type="text" name="batchId" class="form-control" id="batchId" readonly>
+		            	<input type="text" class="form-control" id="tableId"  name="tableId" style="display:none"/>
+		            </div>
+		          </div>
+		          <div class="form-group">
+		            <label class="col-sm-4 control-label"  for="payDate"><span class="required">*</span>付款日期</label>
+		           <div class="col-sm-6 date form_datetime">
+						<input name="payDate" class="form-control addInput"
+							readonly id="payDate" type="text"> <span
+							class="glyphicon glyphicon-calendar addIcon"> </span>
+					</div>
+		          </div>
+			
+		          
+		          <div class="form-group">
+		            <label class="col-sm-4 control-label"  for="payWay"><span class="required">*</span>流水号</label>
+		          	<div class="col-sm-6">
+		            <input type="text" name="payWay" class="form-control" id="payWay">
+		          	</div>
+		          </div>
+		          	<div class="form-group">
+		            <label class="col-sm-4 control-label"  for="payAmt"><span class="required">*</span>金额</label>
+		            <div class="col-sm-6">
+		            	<input type="text" name="payAmt" class="form-control" id="payAmt">
+		         	</div>
+		          </div>
+		          <div class="form-group">
+		            <label class="col-sm-4 control-label"  for="note"><span class="required">*</span>备注</label>
+		          	<div class="col-sm-6">
+		            	<input type="text" name="note" class="form-control" id="note">
+		          	</div>
+		          </div>
+		        </div>
+		       <div class="modal-footer">
+				  <div class="form-group">
+					<div class="col-sm-2 col-sm-offset-8">
+						<button type="button" class="btn btn-default cancel"
+							data-dismiss="modal">取消
+						</button>
+					</div>
+					<div class="col-sm-2">
+						<button type="button" id="btn_save" class="btn btn-default save" onclick="addGuarantee()">保存
+						</button>
+					</div>
+				</div>
+				</div>
+	     	 </div>
+		    </div>
+		  </div>
+	  </form>
+    </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,63 @@
+package com.ut.scf.web.controller.wechat.statistics;
+
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.statistics.SSMProjectOverviewListReqBean;
+import com.ut.scf.reqbean.statistics.SalesInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.statistics.ISSMProjectOverviewService;
+
+@Controller
+@RequestMapping("wechat/ssmProViewQuery")
+public class WeChatSSMproViewController {
+
+	@Resource
+	private ISSMProjectOverviewService iSSMProjectOverviewService   ; 
+	
+	@RequestMapping(value = "/throwInfoList")
+	@ResponseBody
+	public BaseRespBean throwInfoList(@RequestBody SSMProjectOverviewListReqBean reqBean) throws Exception {
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return iSSMProjectOverviewService.throwInfoList(paramMap);
+	}
+	
+	@RequestMapping(value = "/oweInfoList")
+	@ResponseBody
+	public BaseRespBean OweInfoList(@RequestBody SSMProjectOverviewListReqBean reqBean) throws Exception {
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return iSSMProjectOverviewService.oweInfoList(paramMap);
+	}
+	
+	@RequestMapping(value = "/echartsOrder")
+	@ResponseBody
+	public BaseRespBean echartsOrderInfos(@RequestBody SalesInfoListReqBean reqBean) throws Exception {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return iSSMProjectOverviewService.echartsOrderInfos(paramMap);
+	}
+
+	@RequestMapping(value = "/echartsAmt")
+	@ResponseBody
+	public BaseRespBean echartsAmtInfos(@RequestBody SalesInfoListReqBean reqBean) throws Exception {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return iSSMProjectOverviewService.echartsAmtInfos(paramMap);
+	}
+
+	@RequestMapping(value = "/echartsOverdue")
+	@ResponseBody
+	public BaseRespBean echartsOverdueInfos(@RequestBody SalesInfoListReqBean reqBean) throws Exception {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return iSSMProjectOverviewService.echartsOverdueInfos(paramMap);
+	}
+	
+}

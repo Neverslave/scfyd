@@ -1,0 +1,11 @@
+package com.ut.scf.service.tradfact;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IProjectReviewService {
+
+	public BaseRespBean projectReviewList(Map<String, Object> paramMap, PageInfoBean page);
+}

@@ -1,0 +1,36 @@
+package com.ut.scf.web.controller.wechat;
+
+import com.ut.scf.core.dict.ScfConsts;
+import com.ut.scf.reqbean.project.ContractFlowReqBean;
+import com.ut.scf.reqbean.project.offsetDepositAgreeReqBean;
+import com.ut.scf.reqbean.project.offsetDepositReapplyReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.project.IOffsetDepositService;
+import com.ut.scf.web.controller.ActivitiController;
+import com.ut.scf.web.controller.BaseJsonController;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.http.converter.json.MappingJacksonValue;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+@Controller
+@RequestMapping("/wechat/offsetBpm")
+public class OffsetDepositWeChatController extends ActivitiController<offsetDepositAgreeReqBean> {
+
+	@Resource(name = "offsetDepositBpmService")
+	private IActivitiService<offsetDepositAgreeReqBean> activitiService;
+    
+	@Override
+	protected IActivitiService<offsetDepositAgreeReqBean> getBpmProcessService() {
+		return activitiService;
+	}
+
+    
+
+
+}

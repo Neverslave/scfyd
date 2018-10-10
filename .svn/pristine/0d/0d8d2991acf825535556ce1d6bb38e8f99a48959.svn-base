@@ -1,0 +1,136 @@
+package com.ut.scf.service.test.project;
+
+import java.util.Date;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.project.ContractFileReqBean;
+import com.ut.scf.reqbean.project.ContractReqBean;
+import com.ut.scf.reqbean.project.ContractUpdateReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IContractManagerService;
+import com.ut.scf.web.controller.project.FinanceInfoController;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:spring-mybatis-test.xml" })
+public class ContractManagerServiceTest {
+	private static final Logger log = LoggerFactory
+			.getLogger(FinanceInfoController.class);
+	
+	@Resource
+	private IContractManagerService contractManagerService;
+	
+	@Test
+	public void factorContractList(){
+		log.info("=============================factorContractList start=============================");
+		
+		ContractReqBean reqBean = new ContractReqBean();
+		BaseRespBean respBean = contractManagerService
+				.factorContractList(reqBean);
+		log.info("respBean:"+respBean);
+		
+		log.info("=============================factorContractList end=============================");
+	}
+	
+	@Test
+	public void factorContractFileList(){
+		log.info("=============================factorContractFileList start=============================");
+		ContractFileReqBean reqBean = new ContractFileReqBean();
+		reqBean.setContractNo("YDBL2016YW0019");
+		BaseRespBean respBean = contractManagerService
+				.factorContractFileList(reqBean);
+		log.info("respBean:"+respBean);
+		log.info("=============================factorContractFileList end=============================");
+	}
+	
+	@Test
+	public void modFactorContract(){
+		log.info("=============================modFactorContract start=============================");
+		ContractUpdateReqBean reqBean = new ContractUpdateReqBean();
+		reqBean.setContractNo("YDBL2017YW0017-07");
+		reqBean.setContractValDate("2017-06-30");
+		reqBean.setContractDueDate("2018-06-30");
+		reqBean.setFileNum("1");
+		reqBean.setSignDate("2017-01-01");
+		reqBean.setFileInfo("[{'fileName':'你好.docx','fileSize':'11',"
+				+ "'fileUrl':'/scfyd/uploadFile/negativepic/2c9984915cce9eec0e7cce9f22070021.docx',"
+				+ "'fileType':'docx'}]");
+		BaseRespBean respBean = contractManagerService.modFactorContract(reqBean);
+		log.info("respBean:"+respBean);
+		log.info("=============================modFactorContract end=============================");
+	}
+	@Test
+	public void checkFactorContactDYK(){
+		log.info("=============================checkFactorContactDYK start=============================");
+		ContractReqBean reqBean = new ContractReqBean();
+		reqBean.setAgencyCorpId("2c9984ba5c7c6fe471307c7495f4000c");
+		BaseRespBean respBean = contractManagerService
+				.checkFactorContactDYK(reqBean);
+		log.info("respBean:"+respBean.getResult());
+		log.info("=============================checkFactorContactDYK start=============================");
+	}
+	
+	@Test
+	public void checkFactorContact(){
+		log.info("=============================checkFactorContact start=============================");
+		ContractReqBean reqBean = new ContractReqBean();
+		reqBean.setProductType((byte)1);
+		BaseRespBean respBean = contractManagerService
+				.checkFactorContact(reqBean);
+		log.info("respBean:"+respBean.getResult());
+		log.info("=============================checkFactorContact start=============================");
+	}
+	
+	@Test
+	public void checkProcess(){
+		log.info("=============================checkProcess start=============================");
+		try {
+			BaseRespBean respBean = new BaseRespBean();
+			respBean = contractManagerService.checkProcess("corpId00001");
+			log.info("respBean:"+respBean.getResult());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================checkProcess end=============================");
+	}
+	
+	@Test
+	public void addFactorContract(){
+		log.info("=============================addFactorContract start=============================");
+		try {
+			ContractReqBean reqBean = new ContractReqBean();
+			reqBean.setContractValDate(new Date());
+			reqBean.setContractDueDate(new Date());
+			reqBean.setFileNum("1");
+			reqBean.setSignDate(new Date());
+			reqBean.setFileInfo("[{'fileName':'哈喽.docx','fileSize':'11',"
+					+ "'fileUrl':'/scfyd/uploadFile/negativepic/2c9984915cce9eec0e7cce9f22070021.docx',"
+					+ "'fileType':'docx'}]");
+			reqBean.setPmFileInfo("[{'fileName':'哈喽.docx','fileSize':'11',"
+					+ "'fileUrl':'/scfyd/uploadFile/negativepic/2c9984915cce9eec0e7cce9f22070021.docx',"
+					+ "'fileType':'docx'}]");
+			reqBean.setProductType((byte)0);
+			reqBean.setContractType((byte)0);
+			reqBean.setAgencyCorpId("2c99848b5ca4152c3a57a417e1e70002");
+			reqBean.setCorpName("中建八局1");
+			Map<String, Object> map = BeanUtil.beanToMap(reqBean);
+			BaseRespBean respBean = contractManagerService.addFactorContract(map);
+			log.info("respBean:"+respBean.getResult());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		log.info("=============================addFactorContract end=============================");
+	}
+
+}

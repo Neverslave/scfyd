@@ -1,0 +1,101 @@
+package com.ut.scf.service.tradfact.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.dao.auto.TfProjectAssignMapper;
+import com.ut.scf.dao.auto.TfProjectInfoMapper;
+import com.ut.scf.pojo.auto.TfProjectAssign;
+import com.ut.scf.pojo.auto.TfProjectInfo;
+
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.bpm.BpmProcessContext;
+import com.ut.scf.reqbean.tradfact.ProjectAdjustAddReqBean;
+import com.ut.scf.reqbean.tradfact.ProjectAdjustDetailReqBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.bpm.impl.BaseActivitiService;
+import com.ut.scf.service.bpm.impl.Target;
+
+@Service("projectAdjustBpmService")
+public class ProjectAdjustBpmServiceImpl extends BaseActivitiService<ProjectAdjustDetailReqBean>
+        implements IActivitiService<ProjectAdjustDetailReqBean> {
+
+    @Resource
+    private ProjectAdjustServiceImpl projectAdjustServiceImpl;
+
+    @Resource
+    private TfProjectInfoMapper tfProjectInfoMapper;
+    
+    @Resource
+    private TfProjectAssignMapper  assignMapper;
+
+    private static final String ADVANCE_APPLY_BPM = "projectAdjust";
+
+    @Override
+    public String getProcessDefinitionKey() {
+        return ADVANCE_APPLY_BPM;
+    }
+
+
+	@Override
+	public void doAgreeBefore(BpmProcessContext bpmProcessContext) {
+		Target target = new Target();
+		target.setNode("usertask3");
+		target.setVariable("reviewUser");
+		List<Target> targets = new ArrayList<Target>();
+		targets.add(target);
+		setTargetlist(targets);
+	}
+	
+    @Override
+    public void doStartAfter(BpmProcessContext processContext) {
+        ProjectAdjustDetailReqBean projectAdjustDetailReqBean = (ProjectAdjustDetailReqBean) processContext.getT();
+        TfProjectInfo tfProjectInfo = new TfProjectInfo();
+        tfProjectInfo.setProjectId(projectAdjustDetailReqBean.getProjectId());
+        tfProjectInfo.setProjectStatus("20");
+        tfProjectInfoMapper.updateByPrimaryKeySelective(tfProjectInfo);
+    }
+
+
+    @Override
+    public void doAgreeAfter(BpmProcessContext bpmProcessContext) {
+        if (bpmProcessContext.isProcessEnd()) {
+            ProjectAdjustDetailReqBean projectAdjustDetailReqBean = (ProjectAdjustDetailReqBean) bpmProcessContext.getT();
+            ProjectAdjustAddReqBean reqBean = new ProjectAdjustAddReqBean();
+            reqBean.setProjectId(projectAdjustDetailReqBean.getProjectId());
+            reqBean.setSiteInfo(projectAdjustDetailReqBean.getSiteInfo());
+            reqBean.setClientInfo(projectAdjustDetailReqBean.getClientInfo());
+            reqBean.setDiscussInfo(projectAdjustDetailReqBean.getDiscussInfo());
+            reqBean.setSiteRiskInfo(projectAdjustDetailReqBean.getSiteRiskInfo());
+            reqBean.setClientRiskInfo(projectAdjustDetailReqBean.getClientRiskInfo());
+            reqBean.setDiscussRiskInfo(projectAdjustDetailReqBean.getDiscussRiskInfo());
+            projectAdjustServiceImpl.interAdjustInfo(reqBean);
+            addProjectAssign(projectAdjustDetailReqBean.getProjectId(),projectAdjustDetailReqBean.getUserId());
+        }
+    }
+
+    @Override
+    public void deleteProcessAfter(JSONObject jsonObject) {
+        String projectId =  (String) jsonObject.get("projectId");
+        TfProjectInfo tfProjectInfo = new TfProjectInfo();
+        tfProjectInfo.setProjectId(projectId);
+        tfProjectInfo.setProjectStatus("10");
+        tfProjectInfoMapper.updateByPrimaryKeySelective(tfProjectInfo);
+    }
+    
+  //指派风险经理
+    private void addProjectAssign(String projectId,String userId){
+        TfProjectAssign projectAssign = new TfProjectAssign();
+        projectAssign.setId(ScfUUID.generate());
+        projectAssign.setProjectId(projectId);
+        projectAssign.setUserAssign(userId);
+        projectAssign.setProjectType("1");
+        assignMapper.insert(projectAssign);
+    }
+}
+

@@ -1,0 +1,21 @@
+package com.ut.scf.service.tradfact;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.pojo.auto.TfCreditContractInfo;
+import com.ut.scf.pojo.auto.TfFactoringContractInfo;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IProjectSignService {
+
+	public BaseRespBean projectSignList(Map<String, Object> paramMap, PageInfoBean page);
+
+	public TfFactoringContractInfo factoringNo(String factoringContractNo);
+
+	public TfCreditContractInfo isExist(String projectId, String creditContractNo);
+
+	public int updateProjectStatus(Map<String, Object> paramMap);
+
+	public void overdueWarningInfo(String msg);
+}

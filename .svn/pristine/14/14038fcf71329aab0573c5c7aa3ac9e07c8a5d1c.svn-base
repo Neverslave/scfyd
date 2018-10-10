@@ -1,0 +1,33 @@
+package com.ut.scf.web.controller.wechat.query;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.project.FinanceInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.query.IFinanceQueryService;
+import com.ut.scf.web.controller.BaseJsonController;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.annotation.Resource;
+import javax.validation.Valid;
+import java.io.IOException;
+import java.util.Map;
+
+@Controller
+@RequestMapping("wechat/financeQuery")
+public class WeChatFinanceController extends BaseJsonController {
+
+	@Resource
+	private IFinanceQueryService financeQueryService;
+
+	@RequestMapping(value = "/list")
+	public @ResponseBody BaseRespBean financeInfoList(@RequestBody FinanceInfoListReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return financeQueryService.getFinanceInfoList(paramMap);
+	}
+}

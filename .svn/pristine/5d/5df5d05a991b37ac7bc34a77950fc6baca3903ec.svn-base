@@ -1,0 +1,27 @@
+package com.ut.scf.web.controller.tradfact;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.reqbean.tradfact.ManagementFileAddReqBeqn;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.tradfact.ManagementFileService;
+import com.ut.scf.web.controller.BaseJsonController;
+
+@Controller
+@RequestMapping("/tradfact/management")
+public class ManagementController extends BaseJsonController{
+	@Resource private ManagementFileService managementFileService;
+	
+	@RequestMapping(value = "/update")
+	@ResponseBody
+	public BaseRespBean searchMeetInfo(@RequestBody ManagementFileAddReqBeqn reqBean) {
+		BaseRespBean respBean = new BaseRespBean();
+		respBean = managementFileService.updateManagement(reqBean);
+		return respBean;
+	}
+}

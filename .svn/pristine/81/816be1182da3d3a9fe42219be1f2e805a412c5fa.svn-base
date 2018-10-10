@@ -1,0 +1,33 @@
+package com.ut.scf.web.controller.wechat.statistics;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.statistics.ProjectOverviewListReqBean;
+import com.ut.scf.reqbean.statistics.SSMProjectSummaryListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.statistics.IProjectOverviewService;
+import com.ut.scf.service.statistics.ISSMProjectSummaryService;
+
+@Controller
+@RequestMapping("wechat/ssmProSumQuery")
+public class WeChatSSMproSumController {
+
+	@Resource
+	private ISSMProjectSummaryService issmProjectSummaryService  ; 
+	
+	@RequestMapping(value = "/list")
+	@ResponseBody
+	public BaseRespBean ssmProList(@RequestBody SSMProjectSummaryListReqBean reqBean) throws Exception {
+		
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return issmProjectSummaryService.SummaryInfoList(paramMap);
+	}
+}

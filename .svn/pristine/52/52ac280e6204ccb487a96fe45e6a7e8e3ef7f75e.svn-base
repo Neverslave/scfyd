@@ -1,0 +1,36 @@
+package com.ut.scf.web.controller.wechat.query;
+
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.query.OrderInfoListReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.query.IOrderQueryService;
+
+@Controller
+@RequestMapping("wechat/order")
+public class WeChatOrderController {
+	@Resource
+	private IOrderQueryService orderQueryService;
+	
+	@RequestMapping(value = "/list")
+    @ResponseBody
+    public BaseRespBean orderInfoList(HttpSession httpSession, @RequestBody OrderInfoListReqBean reqBean) {
+		Map<String, Object> paramMap = BeanUtil.beanToMap(reqBean);
+		return orderQueryService.getOrderInfoList(paramMap);
+	}
+	@RequestMapping(value = "/repayInfo")
+    @ResponseBody
+    public BaseRespBean getRepayInfo(HttpSession httpSession, @RequestBody OrderInfoListReqBean reqBean){
+		return orderQueryService.getRepayInfo(reqBean);
+	}
+}

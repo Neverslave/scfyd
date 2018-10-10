@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.query.IGuaranteeInfoDao" >
+
+  <select id="getGuaranteeQueryList" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+      f.finance_id financeId,
+      f.finance_amount financeAmount,
+      f.pay_amt payAmt,
+      c.corp_name agencyName,
+      c.agency_num agencyNum,
+      c.orgn_num orgnNum,
+      g.pay_able_guarantee payAbleGuarantee,
+      g.guarantee_pay_date guaranteePayDate,
+      g.pay_act_guarantee payActGuarantee,
+      g.guarantee_balance guaranteeBalance,
+      c.corp_id corpId
+    from finance_info f
+    join guarantee_info g on f.finance_id = g.finance_id
+    join corp_info c on f.corp_id = c.corp_id
+    WHERE 1 = 1
+    <if test="agencyName != null and agencyName != ''">
+	    and c.corp_name LIKE CONCAT(CONCAT('%', #{agencyName}),'%')
+	</if> 
+    <if test="agencyNum != null and agencyNum !='' ">  
+        and c.agency_num LIKE CONCAT(CONCAT('%', #{agencyNum}),'%')
+    </if>
+    <if test="financeId != null and financeId !='' ">  
+        and f.finance_id LIKE CONCAT(CONCAT('%', #{financeId}),'%')
+    </if>
+     <if test="corpId != null and corpId !='' ">  
+  	   <choose> 
+	  	<when test="corpId =='corp00002'">
+	  		and c.corp_id not in ('corp00003')
+	  	</when>
+	  	<otherwise>  
+	  		and c.corp_id = #{corpId}
+       	</otherwise>  
+	  </choose>
+    </if>
+     <if test="sysType != null and sysType !='' ">  
+    	 and c.sys_type=#{sysType}
+    </if>
+  </select>
+  
+  <!-- 查询统计新需求 -->
+  <select id="getGuaranteeList" resultType="hashmap" parameterType="hashmap" >
+    select temp.*
+    from (SELECT
+      f.finance_id financeId,
+      c.corp_name agencyName,
+      f.finance_amount financeAmount,
+      COALESCE (f.pay_amt, 0) payAmt,
+      g.pay_able_guarantee payAbleGuarantee,
+      g.guarantee_pay_date guaranteePayDate,
+      g.pay_act_guarantee payActGuarantee,
+      g.guarantee_balance guaranteeBalance
+    from finance_info f
+    join guarantee_info g on f.finance_id = g.finance_id
+    join corp_info c on f.corp_id = c.corp_id
+    WHERE 1 = 1
+    <if test="financeId != null and financeId !='' ">  
+        and f.finance_id LIKE CONCAT(CONCAT('%', #{financeId}),'%')
+    </if>
+    <if test="agencyName != null and agencyName != ''">
+	    and c.corp_name LIKE CONCAT(CONCAT('%', #{agencyName}),'%')
+	</if> 
+    <if test="guaranteePayDate != null and guaranteePayDate !='' ">  
+        and DATE_FORMAT(g.guarantee_pay_date, '%Y-%m-%d') = #{guaranteePayDate}
+    </if>
+    <if test="corpId != null and corpId !='' ">  
+  	    and c.corp_id = #{corpId}
+    </if>
+    <if test="sysType != null and sysType !='' ">  
+    	and c.sys_type = #{sysType}
+    </if>
+   	<if test="orderBy =='desc'">
+	 ORDER BY g.guarantee_pay_date desc
+	</if>
+	<if test="orderBy =='asc'">
+	 ORDER BY g.guarantee_pay_date asc
+	</if>) temp
+  </select>
+  
+  <!-- 查询统计新需求 -->
+  <select id="getFqcrGuaranteeList" resultType="hashmap" parameterType="hashmap" >
+    select temp.*
+    from (SELECT
+			guar.batch_id batchId,
+			guar.guarantee_money_rate guaranteeMoneyRate,
+			guar.pay_able_guarantee payAbleGuarantee,
+			guar.pay_act_guarantee payActGuarantee,
+			guar.guarantee_balance guaranteeBalance,
+			batch.order_total_num orderTotalNum,
+			batch.total_price totalPrice,
+			batch.rec_order_amt recOrderAmt,
+			batch.rec_order_num recOrderNum,
+			batch.rej_order_amt rejOrderAmt,
+			batch.rej_order_num rejOrderNum,
+			batch.people_type peopleType
+			FROM
+				fqcr_guarantee_info guar
+			JOIN order_batch_info batch ON guar.batch_id = batch.batch_id
+		    WHERE 1 = 1
+		    <if test="batchId != null and batchId !='' ">  
+		        and guar.batch_id LIKE CONCAT(CONCAT('%', #{batchId}),'%')
+		    </if>
+			<if test="orderBy =='desc'">
+			 ORDER BY guar.batch_id desc
+			</if>) temp
+  </select>
+     <select id="getFqcrGuaranteeThList" resultType="hashmap" parameterType="hashmap" >
+   select  cash_id cashId, cash_date cashDate, 
+  cash_date_to cashDateTo, 
+   cash_money cashMoney, cash_note cashNote
+   from fqcr_guaranyee_cash_history
+    WHERE 1 = 1
+    <if test="cashdateFrom != null and cashdateFrom !='' ">  
+         and DATE_FORMAT(cash_date, '%Y-%m-%d') <![CDATA[>= ]]>#{cashdateFrom}
+    </if>
+    
+     <if test="cashdateTo != null and cashdateTo !='' ">  
+         and DATE_FORMAT(cash_date, '%Y-%m-%d') <![CDATA[<= ]]>#{cashdateTo}
+    </if>
+   	<if test="orderBy =='desc'">
+	 ORDER BY cash_date desc
+	</if>
+	<if test="orderBy =='asc'">
+	 ORDER BY cash_date asc
+	</if>
+  </select>
+  
+  <select id="getFqcrGuaranteeThAddList" resultType="hashmap" parameterType="hashmap" >
+ select
+	repayment_id ,
+	order_id ,
+	order_batch_id ,
+	period ,
+	current_repay_date ,
+	interest ,
+	lc_money ,
+	current_money ,
+	ensure_money ,
+	payed_time ,
+	repayment_money ,
+	paid_money,
+	state state,
+	ensure_money_state
+from
+	repayment_plan_info
+where
+	state IN (3, 4, 5)
+AND ensure_money_state IS NULL
+AND ensure_money > 0
+	<if test="cashdateTo != null and cashdateTo !='' ">  
+	         and DATE_FORMAT(current_repay_date, '%Y-%m-%d') <![CDATA[<= ]]>#{cashdateTo}
+	 </if>
+	 	<if test="orderBy =='desc'">
+	 ORDER BY ${orderByName} desc
+	</if>
+	<if test="orderBy =='asc'">
+	 ORDER BY ${orderByName} asc
+	</if>
+  </select>
+  
+  <select id="getFqcrGuaranteeThAddThList" resultType="hashmap" parameterType="hashmap" >
+		 select
+			repayment_id ,
+			order_id ,
+			order_batch_id ,
+			period ,
+			current_repay_date ,
+			interest ,
+			lc_money ,
+			current_money ,
+			ensure_money ,
+			payed_time ,
+			repayment_money ,
+			paid_money,
+			state state,
+			ensure_money_state
+		from
+			repayment_plan_info
+		where
+		
+		1=1
+
+	 	<if test="cashId != null and cashId !='' ">  
+	         and guaranyee_cash_id like #{cashId}
+	 	</if>
+		 	<if test="orderBy =='desc'">
+		 ORDER BY ${orderByName} desc
+		</if>
+		<if test="orderBy =='asc'">
+		 ORDER BY ${orderByName} asc
+		</if>
+  </select>
+  
+  
+  <select id="getSumFqcrGuaranteeThAddList" resultType="hashmap" parameterType="hashmap" >
+ select
+	count(*) countSum,
+	sum(ensure_money) ensureMoneySum
+
+	from
+		repayment_plan_info
+	where
+		state IN (3, 4, 5)
+	AND ensure_money_state IS NULL
+	AND ensure_money > 0
+	<if test="cashdateTo != null and cashdateTo !='' ">  
+	         and DATE_FORMAT(current_repay_date, '%Y-%m-%d') <![CDATA[<= ]]>#{cashdateTo}
+	 </if>
+  </select>
+</mapper>

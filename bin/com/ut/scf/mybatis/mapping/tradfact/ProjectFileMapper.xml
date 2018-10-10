@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ut.scf.dao.tradfact.IProjectFileDao">
+	<select id="selectProjectFileInfo" parameterType="hashmap"
+		resultType="hashmap">
+		select file_id fileId, file_name fileName, project_id projectId,
+		file_size fileSize, file_type fileType,
+		material_type materialType,
+		material_class materialClass,
+		file_url fileUrl from tf_project_files
+		where 1=1
+		<if test="projectId != null and projectId !='' ">
+			and project_id = #{projectId}
+		</if>
+		<if test="materialClass != null and materialClass !='' ">
+			and material_class = #{materialClass}
+		</if>
+	</select>
+
+	<select id="selectContractProjectFile" parameterType="hashmap"
+		resultType="hashmap">
+		select t.* from ((select
+		tpf.file_id fileId,
+		tpf.file_name fileName,
+		tpf.project_id projectId,
+		tpf.file_size fileSize,
+		tpf.file_type
+		fileType,
+		tpf.material_type materialType,
+		tpf.material_class
+		materialClass,
+		tpf.file_url fileUrl,
+		tcci.credit_contract_no factoringContractNo,
+		tcci.credit_contract_name contractName
+		from
+		tf_project_files tpf
+		join
+		tf_credit_contract_info tcci on tpf.project_id = tcci.project_id  WHERE tpf.material_type = '1')
+		union
+		(select
+		tpf.file_id fileId,
+		tpf.file_name fileName,
+		tpf.project_id
+		projectId,
+		tpf.file_size fileSize,
+		tpf.file_type fileType,
+		tpf.material_type materialType,
+		tpf.material_class materialClass,
+		tpf.file_url fileUrl,
+		tfci.factoring_contract_no factoringContractNo,
+		tfci.factoring_contract_name contractName
+		from
+		tf_project_files tpf
+		join
+		tf_factoring_contract_info tfci on tpf.project_id = tfci.project_id and tpf.factoring_contract_no = tfci.factoring_contract_no WHERE tpf.material_type != '1' )) t
+		WHERE materialClass = '7' 
+		<if test="projectId != null and projectId !='' ">
+			and projectId = #{projectId}
+		</if>
+	</select>
+
+	<select id="selectLoanProjectFile" parameterType="hashmap"
+		resultType="hashmap">
+		<!-- select
+		tpf.file_id fileId,
+		tpf.file_name fileName,
+		tpf.project_id
+		projectId,
+		tpf.file_size fileSize,
+		tpf.file_type fileType,
+		tpf.material_type materialType,
+		tpf.material_class materialClass,
+		tpf.file_url fileUrl,
+		tfci.factoring_contract_no contractNo,
+		tfci.factoring_contract_name contractName,
+		tfci.financing_main
+		financingMain,
+		tli.loan_no loanNo,
+		tnsi.notice_no noticeNo
+		from
+		tf_factoring_contract_info tfci
+		join tf_project_files tpf on
+		tpf.project_id = tfci.project_id
+		join tf_loan_info tli on
+		tfci.factoring_contract_no = tli.contract_no
+		join tf_notice_send_info
+		tnsi on tfci.factoring_contract_no =
+		tnsi.contract_no
+		where 1=1 -->
+		SELECT tni.id id, tni.notice_no noticeNo, 
+				tni.contract_no contractNo,tni.notice_path noticePath,
+				tfci.project_id pprojectId, tfci.factoring_contract_name contractName,
+				tli.loan_no loanNo,tfci.financing_main financingMain
+		from tf_notice_info tni
+		LEFT JOIN tf_factoring_contract_info tfci ON tni.contract_no = tfci.factoring_contract_no
+		LEFT JOIN tf_loan_info tli ON tli.contract_no = tni.contract_no
+		where 1=1
+		<if test="projectId != null and projectId !='' ">
+			and tfci.project_id = #{projectId}
+		</if>
+	</select>
+</mapper>

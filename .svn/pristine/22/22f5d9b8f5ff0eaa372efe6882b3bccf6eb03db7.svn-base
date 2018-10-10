@@ -1,0 +1,42 @@
+package com.ut.scf.web.controller.tradfact;
+
+import javax.annotation.Resource;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.core.util.BeanUtil;
+import com.ut.scf.reqbean.tradfact.RiskManagerInfoBean;
+import com.ut.scf.service.bpm.IActivitiService;
+import com.ut.scf.service.sys.IUserOperService;
+import com.ut.scf.service.tradfact.IProjectAdjustService;
+import com.ut.scf.web.controller.ActivitiController;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ut.scf.reqbean.tradfact.ProjectAddReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+import java.util.Map;
+
+@Controller
+@RequestMapping("/tradfact/project")
+public class ProjectController extends ActivitiController<ProjectAddReqBean> {
+
+
+    @Resource(name = "projectBpmService")
+    private IActivitiService activitiService;
+
+    @Resource
+    private IUserOperService userOperService;
+    
+    @Resource
+    private IProjectAdjustService projectAdjustService;
+
+    @Override
+    protected IActivitiService getBpmProcessService() {
+        return activitiService;
+    }
+
+}

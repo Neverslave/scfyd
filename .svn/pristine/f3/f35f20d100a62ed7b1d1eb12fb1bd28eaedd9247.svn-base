@@ -1,0 +1,2100 @@
+package com.ut.scf.web.scheduled;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.impl.util.json.JSONArray;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
+
+import com.alibaba.fastjson.JSON;
+import java.io.File;
+import com.ut.scf.core.util.FtpUtil;
+import com.ut.scf.core.util.IdCardUtil;
+import com.ut.scf.core.util.ScfDateUtil;
+import com.ut.scf.core.util.ScfUUID;
+import com.ut.scf.core.util.SignUtil;
+import com.ut.scf.core.util.ThreeDes;
+import com.ut.scf.dao.auto.BusinessHallMapper;
+import com.ut.scf.dao.auto.CarInfoMapper;
+import com.ut.scf.dao.auto.DayRepayRecordInfoMapper;
+import com.ut.scf.dao.auto.DykRateMapper;
+import com.ut.scf.dao.auto.FinanceInfoMapper;
+import com.ut.scf.dao.auto.FqcrGuaranteeInfoMapper;
+import com.ut.scf.dao.auto.FqcrRepayInfoMapper;
+import com.ut.scf.dao.auto.InterestManagementMapper;
+import com.ut.scf.dao.auto.OrderBatchInfoMapper;
+import com.ut.scf.dao.auto.OrderInfoMapper;
+import com.ut.scf.dao.auto.OrderInfoYiMapper;
+import com.ut.scf.dao.auto.RepaymentPlanInfoMapper;
+import com.ut.scf.dao.auto.RepaymentPlanInfoUnMapper;
+import com.ut.scf.dao.auto.RepaymentPlanUserInfoMapper;
+import com.ut.scf.dao.auto.RepaymentPlanUserUnInfoMapper;
+import com.ut.scf.dao.auto.RevenueFlowMapper;
+import com.ut.scf.dao.auto.RevenueManagementMapper;
+import com.ut.scf.dao.auto.StuFileInfoMapper;
+import com.ut.scf.dao.auto.StuInfoMapper;
+import com.ut.scf.dao.auto.TimerScheduleMapper;
+import com.ut.scf.dao.project.ICarInfoDao;
+import com.ut.scf.dao.project.IRepayPlanDao;
+import com.ut.scf.dao.project.ISignContractDao;
+import com.ut.scf.dao.query.IGuaranteeHistoryInfoDao;
+import com.ut.scf.dao.statistics.IAmitYuQiDao;
+import com.ut.scf.pojo.auto.BatchHndlInfo;
+import com.ut.scf.pojo.auto.BusinessHall;
+import com.ut.scf.pojo.auto.CarInfo;
+import com.ut.scf.pojo.auto.CarInfoExample;
+import com.ut.scf.pojo.auto.DayRepayRecordInfo;
+import com.ut.scf.pojo.auto.DykRate;
+import com.ut.scf.pojo.auto.DykRateExample;
+import com.ut.scf.pojo.auto.FinanceInfo;
+import com.ut.scf.pojo.auto.FinanceInfoExample;
+import com.ut.scf.pojo.auto.FinanceInfoExample.Criteria;
+import com.ut.scf.pojo.auto.FqcrGuaranteeInfo;
+import com.ut.scf.pojo.auto.FqcrRepayInfo;
+import com.ut.scf.pojo.auto.OrderBatchInfo;
+import com.ut.scf.pojo.auto.OrderBatchInfoExample;
+import com.ut.scf.pojo.auto.OrderInfo;
+import com.ut.scf.pojo.auto.OrderInfoExample;
+import com.ut.scf.pojo.auto.OrderInfoYi;
+import com.ut.scf.pojo.auto.RepaymentPlanInfo;
+import com.ut.scf.pojo.auto.RepaymentPlanUserInfo;
+import com.ut.scf.pojo.auto.RepaymentPlanUserInfoExample;
+import com.ut.scf.pojo.auto.RepaymentPlanUserUnInfo;
+import com.ut.scf.pojo.auto.RevenueFlow;
+import com.ut.scf.pojo.auto.RevenueManagement;
+import com.ut.scf.pojo.auto.StuFileInfo;
+import com.ut.scf.pojo.auto.StuInfo;
+import com.ut.scf.pojo.auto.StuInfoExample;
+import com.ut.scf.pojo.auto.TimerSchedule;
+import com.ut.scf.reqbean.project.OrderManagerReqBean;
+import com.ut.scf.reqbean.project.OrderYcManagerReqBean;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.service.project.IActivitiService;
+import com.ut.scf.service.project.ICommonService;
+import com.ut.scf.service.project.IOrderManagerService;
+import com.ut.scf.service.project.ISSMHttpConnService;
+import com.ut.scf.service.project.ISignContractService;
+import com.ut.scf.service.sys.IBatchService;
+
+@Component
+@Lazy(value = false)
+public class InterfaceSyncJob {
+
+	private static final Logger log = LoggerFactory.getLogger(InterfaceSyncJob.class);
+
+	private static String DATE_FORMAT = "yyyy-MM-dd";
+	private static String DATE_FORMAT2 = "yyyyMMdd";
+	private static String TIME_FORMAT = "yyyy-MM-dd hh:mm:ss";
+	/**
+	 * 批次号类型，翼支付
+	 */
+	public static final int YIZHIFU = 1;
+	/**
+	 * 批次号类型，超人
+	 */
+	public static final int CHAOREN = 2;
+
+	private static final int String = 0;
+
+	private static final int HashMap = 0;
+
+	private static SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+	private static SimpleDateFormat dateFormat2 = new SimpleDateFormat(DATE_FORMAT2);
+	private static SimpleDateFormat timeFormat = new SimpleDateFormat(TIME_FORMAT);
+
+	// 融资到期及逾期推送对象角色ID:DYK销售经理、经销商、悦达项目经理、财务部长
+	private static List<String> TARGET_ROLE_IDS_FINANCE = Arrays.asList("ROLE000017", "ROLE000020", "ROLE000016",
+			"ROLE000011");
+
+	// 收息推送对象角色ID:经销商、悦达项目经理、悦达财务部长
+	private static List<String> TARGET_ROLE_IDS_RECEPTION = Arrays.asList("ROLE000020", "ROLE000016", "ROLE000011");
+
+	// 大学生还款计划逾期推送对象角色ID:分期超人、悦达项目经理
+	private static List<String> TARGET_ROLE_IDS_REPAYMENT = Arrays.asList("ROLE000021", "ROLE000016");
+	// 批处理失败预警 ：保理商管理员
+	private static List<String> TARGET_ROLE_IDS_BATCH = Arrays.asList("ROLE000002");
+
+	@Resource
+	private OrderBatchInfoMapper orderBatchInfoMapper;
+
+	@Resource
+	private IOrderManagerService orderInfoService;
+	@Resource
+	private OrderInfoYiMapper orderInfoYiMapper;
+	@Resource
+	private OrderInfoMapper orderInfoMapper;
+    @Resource
+	private ISignContractService iSignContractService;
+	@Resource
+	private StuInfoMapper stuInfoMapper;
+	@Resource
+	private IRepayPlanDao repayPlanDao;
+	@Resource
+	private BusinessHallMapper businessHallMapper;
+	@Resource
+	private ISignContractDao signContractDao;
+	@Resource
+	private StuFileInfoMapper stuFileInfoMapper;
+
+	@Resource
+	private RepaymentPlanInfoMapper repaymentPlanInfoMapper;
+	@Resource
+	private RepaymentPlanInfoMapper repaymentUserPlanInfoMapper;
+	@Resource
+	private RepaymentPlanUserInfoMapper repaymentPlanUserInfoMapper;
+	@Resource
+	private RepaymentPlanUserUnInfoMapper repaymentPlanUserUnInfoMapper;
+	@Resource
+	private RepaymentPlanInfoUnMapper repaymentPlanInfoUnMapper;
+	
+	@Resource
+	private IBatchService iBatchService;
+
+	@Resource
+	private IActivitiService activitiService;
+
+	@Resource
+	private FinanceInfoMapper financeInfoMapper;
+
+	@Resource
+	private DykRateMapper dykRateMapper;
+
+	@Resource
+	private RevenueManagementMapper revenueManagementMapper;
+	@Resource
+	private DayRepayRecordInfoMapper dayRepayRecordInfoMapper;
+	@Resource
+	private InterestManagementMapper interestManagementMapper;
+	
+	@Resource
+	private FqcrRepayInfoMapper fqcrRepayInfoMapper;
+    @Resource
+    private FqcrGuaranteeInfoMapper fqcrGuaranteeInfoMapper;
+	@Resource
+	private ISSMHttpConnService issmHttpConnService;
+	@Resource
+	private TimerScheduleMapper timerScheduleMapper;
+	@Resource
+	private ICommonService commonService;
+	@Resource
+	private RevenueFlowMapper revenueFlowMapper;
+	@Resource
+	private ICarInfoDao iCarInfoDao;
+	
+	@Resource
+	private CarInfoMapper carInfoMapper;
+	@Resource
+	private  IAmitYuQiDao amitYuQiDao;
+	@Resource
+	private IGuaranteeHistoryInfoDao iGuaranteeHistoryInfoDao;
+	@Autowired(required = false)
+	private HttpSession session;
+	
+	// 自动 定时任,同步订单数据
+	public void orderInfoSyncTask() throws ParseException {
+		int dataNum = 0;
+		TimerSchedule timerSchedule= timerScheduleMapper.selectByPrimaryKey("orderInfoSyncTask");
+		if(timerSchedule!=null)
+		{
+
+			Calendar ca = Calendar.getInstance(); 
+			String sysdata=ScfDateUtil.getBeforeDateStr();
+			Date lastdate = dateFormat.parse(timerSchedule.getLastRunDate()==null?timerSchedule.getBeginDate():timerSchedule.getLastRunDate());
+			while (lastdate.compareTo(dateFormat.parse(sysdata))<=0) {
+				ca.setTime(lastdate);
+				ca.add(ca.DATE, 1);
+				lastdate=ca.getTime();
+				
+				try {
+					//同步批次信息
+				
+					dataNum = orderInfoSync(dateFormat.format(lastdate),YIZHIFU);
+					dataNum += orderInfoSync(dateFormat.format(lastdate),CHAOREN);
+					System.out.println(dataNum);
+					insertBatchHndlInfo(dataNum, "1", "0", lastdate, "同步订单信息接口", "orderInfoSyncBatch");// 成功
+					
+					TimerSchedule   record=new TimerSchedule();
+					record.setFuncitonName("orderInfoSyncTask");
+					record.setLastRunDate(dateFormat.format(lastdate));
+					timerScheduleMapper.updateByPrimaryKeySelective(record);
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("订单同步定时任务异常", e);
+					insertBatchHndlInfo(dataNum, "0", "0", lastdate, "同步订单信息接口", "orderInfoSyncBatch");// 失败
+					return;
+				}				
+			}
+		
+		}
+
+
+	}
+	
+	
+	public void orderInfoYiSyncTask() throws ParseException{
+		int dataNum = 0;
+		TimerSchedule timerSchedule= timerScheduleMapper.selectByPrimaryKey("orderInfoYiSyncTask");
+		if(timerSchedule!=null)
+		{
+
+			Calendar ca = Calendar.getInstance(); 
+			String sysdata=ScfDateUtil.getBeforeDateStr();
+			Date lastdate = dateFormat.parse(timerSchedule.getLastRunDate()==null?timerSchedule.getBeginDate():timerSchedule.getLastRunDate());
+		
+				
+				try {
+					//同步批次信息
+					WebApplicationContext webApplicationContext = ContextLoader.getCurrentWebApplicationContext();
+					ServletContext servletContext = webApplicationContext.getServletContext(); 
+					String uploadFilePath = "uploadFile/orderYi/";// 文件服务器存储目录
+					String toPath = servletContext.getRealPath(uploadFilePath);
+					File file2 = new File(toPath);
+					
+					if(!file2.exists()){
+						file2.mkdirs();
+					}
+			    	//获取翼支付文件目录 
+					List<String> downloadfileList=new ArrayList<>();
+			    	List<String> fileList= FtpUtil.listSftpFile("112.74.126.48", "yipay", "fqcr-yipay", "22", "/file/ctpos/orange/upload/completed/");
+			    	while (lastdate.compareTo(dateFormat.parse(sysdata))<=0) {
+						ca.setTime(lastdate);
+						ca.add(ca.DATE, 1);
+						lastdate=ca.getTime();
+						if(fileList.contains("COMPLETED20171012CFQFQCR"+dateFormat2.format(lastdate)+".zip")){
+							downloadfileList.add("COMPLETED20171012CFQFQCR"+dateFormat2.format(lastdate)+".zip");
+						}
+						
+			    	}
+			    
+					
+					FtpUtil.downloadSftpFile("112.74.126.48", "yipay", "fqcr-yipay", "22", "/file/ctpos/orange/upload/completed/", toPath,	downloadfileList);
+			    
+			    	for (String string : downloadfileList) {
+			    	  	 List<OrderInfoYi> orderInfoYis=  ThreeDes.decryptZip("20171012CFQFQCRcr0U30vV1", toPath,string);
+			    	  	 
+			    	  	 if(orderInfoYis==null||orderInfoYis.size()==0){
+			    	  		 continue;
+			    	  	 }
+			    	  	 try {
+			    	    	orderInfoYiMapper.insertByList(orderInfoYis);
+						} catch (Exception e) {
+							// TODO: handle exception
+						}
+
+					}
+					
+					
+
+					System.out.println(dataNum);
+					insertBatchHndlInfo(dataNum, "1", "0", lastdate, "同步翼支付订单信息接口", "orderInfoYiSyncTask");// 成功
+					
+					TimerSchedule   record=new TimerSchedule();
+					record.setFuncitonName("orderInfoYiSyncTask");
+					record.setLastRunDate(dateFormat.format(lastdate));
+					timerScheduleMapper.updateByPrimaryKeySelective(record);
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("订单同步定时任务异常", e);
+					insertBatchHndlInfo(dataNum, "0", "0", lastdate, "同步订单信息接口", "orderInfoSyncBatch");// 失败
+					return;
+				}				
+			}
+		
+		
+
+
+	}
+	
+	
+	
+	// 自动 定时任,同步订单数据
+	public void replaymentPlanUserInfoSyncTask() throws ParseException {
+		TimerSchedule   record=new TimerSchedule();
+		record.setFuncitonName("orderInfoSyncTask");
+		record.setBeginDate("2018-10-09");
+		timerScheduleMapper.updateByPrimaryKeySelective(record);
+		
+		List<Map<String, Object>> list=repayPlanDao.selectAllorder();
+
+		try {
+			for (Map<String, Object> string : list) {				
+					getRepaymentUserPlan(string.get("order_id").toString(),string.get("batch_id").toString(),Integer.valueOf(string.get("people_type").toString()));
+
+			}
+
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+/*			record.setBeginDate("2018-10-10");;
+			timerScheduleMapper.updateByPrimaryKeySelective(record);*/
+
+		
+	}
+	//提前还款数据获取
+	public void earlyOrderInfoSyncTask() throws ParseException {
+	
+		//log.info("订单同步定时任务开始，同步日期{}数据", beforeDate);
+		int dataNum = 0;
+		TimerSchedule timerSchedule= timerScheduleMapper.selectByPrimaryKey("earlyOrderInfoSyncTask");
+		if(timerSchedule!=null)
+		{
+			Calendar ca = Calendar.getInstance(); 	
+			String sysdata=ScfDateUtil.getBeforeDateStr();
+			Date lastdate = dateFormat.parse(timerSchedule.getLastRunDate()==null?timerSchedule.getBeginDate():timerSchedule.getLastRunDate());
+			while (lastdate.compareTo(dateFormat.parse(sysdata))<0) {
+				ca.setTime(lastdate);
+				ca.add(ca.DATE, 1);
+				lastdate=ca.getTime();				
+				try {
+					
+					dataNum = earlyOrderInfoSync(dateFormat.format(lastdate));
+					System.out.println(dataNum);
+					insertBatchHndlInfo(dataNum, "1", "0", lastdate, "同步提前还款订单信息接口", "earlyOrderInfoSyncTask");// 成功
+					TimerSchedule   record=new TimerSchedule();
+					record.setFuncitonName("earlyOrderInfoSyncTask");
+					record.setLastRunDate(dateFormat.format(lastdate));
+					timerScheduleMapper.updateByPrimaryKeySelective(record);
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("订单同步定时任务异常", e);
+					insertBatchHndlInfo(dataNum, "0", "0", lastdate, "同步提前还款订单信息接口", "earlyOrderInfoSyncTask");// 失败
+					return;
+				}
+			}
+		}
+	
+	}
+	
+	//退单数据获取
+	public void unsubscribeOrderInfoSyncTask() throws ParseException {
+
+		//log.info("订单同步定时任务开始，同步日期{}数据", beforeDate);
+		int dataNum = 0;
+		TimerSchedule timerSchedule= timerScheduleMapper.selectByPrimaryKey("unsubscribeOrderInfoSyncTask");
+		if(timerSchedule!=null)
+		{
+			Calendar ca = Calendar.getInstance(); 
+			String sysdata=ScfDateUtil.getBeforeDateStr();
+			Date lastdate = dateFormat.parse(timerSchedule.getLastRunDate()==null?timerSchedule.getBeginDate():timerSchedule.getLastRunDate());
+			while (lastdate.compareTo(dateFormat.parse(sysdata))<0) {
+				ca.setTime(lastdate);
+				ca.add(ca.DATE, 1);
+				lastdate=ca.getTime();	
+				try {			
+					dataNum = unsubscribeOrderInfoSync(dateFormat.format(lastdate));
+					System.out.println(dataNum);
+					if(dataNum>=0)
+					{
+						insertBatchHndlInfo(dataNum, "1", "0", lastdate, "同步退单接口", "unsubscribeOrderInfoSyncBatch");// 成功
+					
+						TimerSchedule   record=new TimerSchedule();
+						record.setFuncitonName("unsubscribeOrderInfoSyncTask");
+						record.setLastRunDate(dateFormat.format(lastdate));
+						timerScheduleMapper.updateByPrimaryKeySelective(record);
+					}
+			
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("订单同步定时任务异常", e);
+					insertBatchHndlInfo(dataNum, "0", "0", lastdate, "同步退单接口", "unsubscribeOrderInfoSyncBatch");// 失败
+					return;
+				}
+			}
+		}
+	
+
+	}
+	
+	
+	
+	// 自动 定时任务同步还款信息
+	public void repaymentInfoSyncTask() throws ParseException {
+		//log.info("还款信息同步定时任务开始，同步日期{}数据", date);
+		int dataNum = 0;
+		TimerSchedule timerSchedule= timerScheduleMapper.selectByPrimaryKey("repaymentInfoSyncTask");
+		if(timerSchedule!=null)
+		{
+			Calendar ca = Calendar.getInstance(); 		
+			String sysdata=ScfDateUtil.getBeforeDateStr();
+			Date lastdate = dateFormat.parse(timerSchedule.getLastRunDate()==null?timerSchedule.getBeginDate():timerSchedule.getLastRunDate());
+					while (lastdate.compareTo(dateFormat.parse(sysdata))<=0) {
+						ca.setTime(lastdate);
+					
+						lastdate=ca.getTime();					
+				try {
+					dataNum = repaymentInfoSync(dateFormat.format(lastdate));
+					insertBatchHndlInfo(dataNum, "1", "0", lastdate, "还款信息同步", "repaymentInfoSyncBatch");// 成功
+					
+					TimerSchedule   record=new TimerSchedule();
+					record.setFuncitonName("repaymentInfoSyncTask");
+					record.setLastRunDate(dateFormat.format(lastdate));
+					timerScheduleMapper.updateByPrimaryKeySelective(record);
+					ca.add(ca.DATE, 1);
+				/*	//计算当日收款项
+					computeDayRepay(lastdate,"1");//学生、、
+					computeDayRepay(lastdate,"2");//家庭宽带
+					computeDayRepay(lastdate,"3");//翼支付
+*/					
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("还款信息同步定时任务异常", e);
+					insertBatchHndlInfo(dataNum, "0", "0", lastdate, "还款信息同步", "repaymentInfoSyncBatch");// 失败
+					return;
+				}
+			}
+		}
+
+	}
+	
+	// 批量处理 手动
+	public void orderInfoSyncBatch(String date) throws ParseException {
+		log.info("手动同步订单信息开始，同步日期{}数据", date);
+		Date date2 = dateFormat.parse(date);
+		int dataNum = 0;
+		try {
+
+			dataNum = orderInfoSync(dateFormat.format(date2),YIZHIFU);
+			dataNum += orderInfoSync(dateFormat.format(date2),CHAOREN);
+			System.out.println(dataNum);
+			insertBatchHndlInfo(dataNum, "1", "0", date2, "同步订单信息接口", "orderInfoSyncBatch");// 成功
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("手动订单同步异常", e);
+			insertBatchHndlInfo(dataNum, "0", "1", date2, "同步订单信息接口", "orderInfoSyncBatch");// 失败
+		}
+	}
+	// 批量处理 手动
+	public void RepaymentPlanSyncBatch(String batchId,byte peopleType) throws ParseException {
+
+
+		int dataNum = 0;
+		try {
+			Map<String, Object> paramMap= new HashMap<String, Object>();
+			paramMap.put("batchId", batchId);
+			List<Map<String, Object>> mapresult=signContractDao .getRecOrderAndPeopleType(paramMap);
+			getRepaymentPlan(mapresult,peopleType,batchId);
+			OrderBatchInfo batchInfo=new OrderBatchInfo();
+			batchInfo.setStatus("1");
+			batchInfo.setBatchId(batchId);		
+			orderBatchInfoMapper.updateByPrimaryKeySelective(batchInfo);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("手动还款计划同步异常", e);
+
+		}
+	}
+	
+	
+	public void RepaymentPlanSyncOrderId(String orderId,String batchId,byte peopleType) throws ParseException {
+
+
+		int dataNum = 0;
+		try {
+			SimpleDateFormat sdf =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+		
+			Map<String, Object> paramMap = new HashMap<String, Object>();
+			paramMap.put("order_id", orderId);
+			com.alibaba.fastjson.JSONObject jsonObject = SignUtil.requestInterface(paramMap, SignUtil.repaymentPlan);
+			if(jsonObject.getString("code").equals("200"))
+			{
+				String  data=SignUtil.parseData(jsonObject.getString("data")); 
+				System.out.println(data);
+				com.alibaba.fastjson.JSONArray repaymentPlayJsonArray= com.alibaba.fastjson.JSONArray.parseArray(data);
+				if(repaymentPlayJsonArray!=null&&repaymentPlayJsonArray.size()>0)
+				{
+					List<RepaymentPlanInfo> repaymentList = new ArrayList<RepaymentPlanInfo>();
+					for(int j=0 ;j<repaymentPlayJsonArray.size();j++)
+					{
+						RepaymentPlanInfo repaymentPlanInfo=new RepaymentPlanInfo();
+						com.alibaba.fastjson.JSONObject object=repaymentPlayJsonArray.getJSONObject(j);
+						repaymentPlanInfo.setRepaymentId(ScfUUID.generate());
+						repaymentPlanInfo.setOrderId(object.getString("order_id"));
+						repaymentPlanInfo.setPeriod(StringUtils.isBlank(object.getString("current_period"))?null:(byte)object.getIntValue("current_period"));
+						
+						
+						
+						String date = StringUtils.isBlank(object.getString("should_pay_time"))?null:sdf.format(new Date(new Long(object.getString("should_pay_time")+"000")) );
+						repaymentPlanInfo.setCurrentRepayDate(sdf.parse(date));
+						repaymentPlanInfo.setInterest(StringUtils.isBlank(object.getString("interest"))?null:new BigDecimal(object.getIntValue("interest")).divide(new BigDecimal(100)));
+						repaymentPlanInfo.setLcMoney(StringUtils.isBlank(object.getString("lc_money"))?null:(new BigDecimal(object.getIntValue("lc_money")).divide(new BigDecimal(100))));
+						repaymentPlanInfo.setCurrentMoney(StringUtils.isBlank(object.getString("current_money"))?null:(new BigDecimal(object.getIntValue("current_money")).divide(new BigDecimal(100))));
+						repaymentPlanInfo.setEnsureMoney(StringUtils.isBlank(object.getString("ensure_money"))?null:(new BigDecimal(object.getIntValue("ensure_money")).divide(new BigDecimal(100))));
+						String payed_time = StringUtils.isBlank(object.getString("payed_time"))?null:sdf.format(new Date(new Long(object.getString("payed_time")+"000")));
+						repaymentPlanInfo.setPayedTime(payed_time);
+						repaymentPlanInfo.setOrderBatchId(batchId);
+						repaymentPlanInfo.setRepaymentMoney(StringUtils.isBlank(object.getString("repayment_money"))?null:(new BigDecimal(object.getIntValue("repayment_money")).divide(new BigDecimal(100))));
+						repaymentPlanInfo.setPaidMoney(StringUtils.isBlank(object.getString("paid_money"))?null:(new BigDecimal(object.getIntValue("paid_money")).divide(new BigDecimal(100))));
+						repaymentPlanInfo.setState(StringUtils.isBlank(object.getString("state"))?null:object.getIntValue("state"));
+						repaymentPlanInfo.setMarketingFeeYi(StringUtils.isBlank(object.getString("marketing_fee_yi"))?null:(new BigDecimal(object.getIntValue("marketing_fee_yi")).divide(new BigDecimal(100))));
+						repaymentPlanInfo.setServiceChargeYi(StringUtils.isBlank(object.getString("service_charge_yi"))?null:(new BigDecimal(object.getIntValue("service_charge_yi")).divide(new BigDecimal(100))));
+						
+						repaymentPlanInfo.setPeopleType(peopleType);
+						
+						repaymentList.add(repaymentPlanInfo);
+					}
+					int re=repaymentPlanInfoMapper.insertListRepayment(repaymentList);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("手动还款计划同步异常", e);
+
+		}
+	}
+	
+	// 同步批次信息并插入数据库
+	@Transactional(propagation = Propagation.REQUIRED)
+	protected int orderInfoSync(String date,int type) throws Exception {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("date", date);
+		map.put("type", type);
+		String url = SignUtil.batchUrl;
+		com.alibaba.fastjson.JSONObject result = SignUtil.requestInterface(map, url);
+		//把批次信息插入数据库
+		int res = insertBatchInfo(result,type);
+		System.out.println(res);
+		return res;
+
+	}
+	// 同步提前还款信息并插入数据库
+	@Transactional(propagation = Propagation.REQUIRED)
+	protected int earlyOrderInfoSync(String date) throws Exception {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("date", date);
+		int res=0;
+		try {
+		String url = SignUtil.earlyRepaymentUrl;
+		com.alibaba.fastjson.JSONObject result = SignUtil.requestInterface(map, url);
+		System.out.println("请求返回结果 ="+result);
+		
+		if(result.getString("code").equals("200"))
+		{	
+			 res = insertOrderRepaymentInfo(result,"提前还款");
+			 
+		}else if(result.getString("code").equals("201")){
+			
+		}
+		else{
+			
+			throw new Exception(result.getString("errMsg"));
+		}
+	
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
+		return res;
+
+	}
+	
+	
+	// 同步退单信息并插入数据库
+	@Transactional(propagation = Propagation.REQUIRED)
+	protected int unsubscribeOrderInfoSync(String date) throws Exception {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("date", date);
+		int res=0;
+		try {
+		String url = SignUtil.unsubscribeUrl;
+		com.alibaba.fastjson.JSONObject result = SignUtil.requestInterface(map, url);
+
+		if(result.getString("code").equals("200"))
+		{	
+			 res = insertOrderRepaymentInfo(result,"退单");
+		}else if(result.getString("code").equals("201")){
+			
+		}
+		else{
+			
+			throw new Exception(result.getString("errMsg"));
+		}
+	
+	
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
+		return res;
+
+	}
+
+
+
+	// 批量处理 手动
+	public void repaymentInfoSyncBatch(String date) throws ParseException {
+		log.info("手动同步还款信息开始，同步日期{}数据", date);
+		Date tempDate = dateFormat.parse(date);
+		int dataNum = 0;
+		try {
+			dataNum = repaymentInfoSync(date);
+			
+			insertBatchHndlInfo(dataNum, "1", "1", tempDate, "还款信息同步", "repaymentInfoSyncBatch");// 成功
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("手动订单同步异常", e);
+			insertBatchHndlInfo(dataNum, "0", "1", tempDate, "还款信息同步", "repaymentInfoSyncBatch");// 失败
+		}
+	}
+
+	// 还款信息同步
+	@Transactional(propagation = Propagation.REQUIRED)
+	protected int repaymentInfoSync(String date) throws Exception {
+
+		int page =1;
+		int pagNum =1000;
+		int allNum = 0;
+		
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("date", date);
+		com.alibaba.fastjson.JSONObject jsonObject = SignUtil.requestInterface(paramMap, SignUtil.userReplaymantCount);
+		if(jsonObject.getString("code").equals("200"))
+		{
+			String dataString = SignUtil.parseData(jsonObject.getString("data"));
+			com.alibaba.fastjson.JSONObject dataObject= JSON.parseObject(dataString);
+			allNum=StringUtils.isBlank(dataObject.getString("num"))?0:dataObject.getIntValue("num");
+			boolean isTrue = true;
+	  		int size=0;
+			while (isTrue) {
+
+				com.alibaba.fastjson.JSONArray result = issmHttpConnService.getRepaymentInfo(date,page,pagNum);
+				size=size+updateRepayPlan(result);
+					if((page-1)*pagNum+result.size()>=allNum){
+						isTrue =false;				
+					}else if(result.size()==pagNum){
+						page++;
+					}else {
+						Thread.sleep(30000);
+					}
+			}
+		
+			 return size;
+		}
+		else{
+			
+			return 0;
+		}
+		
+		
+	}
+
+	@Transactional
+	protected int updateRepayPlan(com.alibaba.fastjson.JSONArray jsonArray) throws Exception {
+		int dataNum = 0;
+	/*	JSONObject jsonObject = new JSONObject(result);
+		JSONArray jsonArray = jsonObject.getJSONArray("data");*/
+		for (int i = 0; i < jsonArray.size(); i++) {
+			com.alibaba.fastjson.JSONObject obj = jsonArray.getJSONObject(i);
+			
+			FqcrRepayInfo fqcrRepayInfo=new FqcrRepayInfo();
+			fqcrRepayInfo.setId(ScfUUID.generate());
+			fqcrRepayInfo.setOrderId(obj.getString("order_id"));
+			fqcrRepayInfo.setPayTime(StringUtils.isBlank(obj.getString("pay_time"))?null:new Date(new Long(obj.getString("pay_time")+"000")));
+			fqcrRepayInfo.setPayPeriod(obj.getInteger("pay_period"));	
+			fqcrRepayInfo.setRepaymentMoney(StringUtils.isBlank(obj.getString("repayment_money"))?new BigDecimal(0.00):(new BigDecimal(obj.getInteger("repayment_money"))).divide(new BigDecimal(100)));
+			fqcrRepayInfo.setPayMoney(StringUtils.isBlank(obj.getString("pay_money"))?new BigDecimal(0.00):(new BigDecimal(obj.getInteger("pay_money"))).divide(new BigDecimal(100)));
+			fqcrRepayInfo.setState(StringUtils.isBlank(obj.getString("state"))?999:obj.getInteger("state"));
+			fqcrRepayInfoMapper.insertSelective(fqcrRepayInfo);
+			
+			
+			dataNum += updateRepayStatus(fqcrRepayInfo);
+
+		}
+		return dataNum;
+	}
+
+	// 推送逾期预警
+	@Transactional
+	protected void overdueWarningInfo(String msg) {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("roleList", TARGET_ROLE_IDS_REPAYMENT);
+		paramMap.put("warnType", 3);
+		paramMap.put("warnMsg", msg);
+		commonService.insertWarningInfo(paramMap);
+	}
+
+	// 修改还款计划状态
+	@Transactional
+	protected int updateRepayStatus(FqcrRepayInfo fqcrRepayInfo) throws Exception {
+		SimpleDateFormat sdf =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+		List<Integer> integers=new ArrayList<Integer>();
+		integers.add(0);
+		/*integers.add(1);*/
+		integers.add(2);
+		RepaymentPlanUserInfoExample example = new RepaymentPlanUserInfoExample();
+		
+		com.ut.scf.pojo.auto.RepaymentPlanUserInfoExample.Criteria criteria = example.createCriteria();
+		criteria.andOrderIdEqualTo(fqcrRepayInfo.getOrderId());
+		criteria.andLoanTenorEqualTo(fqcrRepayInfo.getPayPeriod());
+		
+		List<RepaymentPlanUserInfo> repaymentPlanUserInfoList= repaymentPlanUserInfoMapper.selectByExample(example);
+		if(repaymentPlanUserInfoList==null||repaymentPlanUserInfoList.size()==0){  
+
+			return 0;
+		}
+		if(fqcrRepayInfo.getPayPeriod()==88||fqcrRepayInfo.getPayPeriod()==99){
+			return 0;
+		}
+		/*if(repaymentPlanUserInfoList.get(0).getState().equals(2)&&timeFormat.parse(repaymentPlanUserInfoList.get(0).getPaidDate()).compareTo(fqcrRepayInfo.getPayTime())<0){
+			criteria.andStateIn(integers);
+			RepaymentPlanUserInfo repaymentPlanUserInfo3=new RepaymentPlanUserInfo();
+			repaymentPlanUserInfo3.setPaidDate(sdf.format(fqcrRepayInfo.getPayTime()) );
+
+			repaymentPlanUserInfo3.setPaidPrice(
+					fqcrRepayInfo.getPayMoney().compareTo(repaymentPlanUserInfoList.get(0).getRepaymentPrice().subtract(repaymentPlanUserInfoList.get(0).getPaidPrice())) > 0
+							? repaymentPlanUserInfoList.get(0).getRepaymentPrice() : repaymentPlanUserInfoList.get(0).getPaidPrice().add(fqcrRepayInfo.getPayMoney()));
+			
+			BigDecimal commission = fqcrRepayInfo.getPayMoney()
+					.compareTo(repaymentPlanUserInfoList.get(0).getRepaymentPrice()
+							.subtract(repaymentPlanUserInfoList.get(0).getPaidPrice())) > 0
+									? (fqcrRepayInfo.getPayMoney()
+											.subtract(repaymentPlanUserInfoList.get(0).getRepaymentPrice()
+													.subtract(repaymentPlanUserInfoList.get(0).getPaidPrice()))
+													.add(repaymentPlanUserInfoList.get(0).getPaidCommission())).compareTo(repaymentPlanUserInfoList.get(0).getCommission())>0?repaymentPlanUserInfoList.get(0).getCommission():(fqcrRepayInfo.getPayMoney()
+															.subtract(repaymentPlanUserInfoList.get(0).getRepaymentPrice()
+																	.subtract(repaymentPlanUserInfoList.get(0).getPaidPrice()))
+																	.add(repaymentPlanUserInfoList.get(0).getPaidCommission()))
+									: repaymentPlanUserInfoList.get(0).getPaidCommission();
+
+			repaymentPlanUserInfo3.setPaidCommission(commission);
+			BigDecimal paidDamages = fqcrRepayInfo.getPayMoney()
+					.compareTo(repaymentPlanUserInfoList.get(0).getRepaymentPrice()
+							.add(repaymentPlanUserInfoList.get(0).getCommission()).subtract(repaymentPlanUserInfoList.get(0).getPaidPrice()).subtract(repaymentPlanUserInfoList.get(0).getPaidCommission())) > 0 ? fqcrRepayInfo.getPayMoney()
+									.subtract(repaymentPlanUserInfoList.get(0).getRepaymentPrice()
+											.add(repaymentPlanUserInfoList.get(0).getCommission()).subtract(repaymentPlanUserInfoList.get(0).getPaidPrice()).subtract(repaymentPlanUserInfoList.get(0).getPaidCommission()))
+									.add(repaymentPlanUserInfoList.get(0).getPaidCommission()) : repaymentPlanUserInfoList.get(0).getPaidDamages();
+			repaymentPlanUserInfo3.setPaidDamages(paidDamages);
+			repaymentPlanUserInfo3.setState(fqcrRepayInfo.getState());
+			
+			return repaymentPlanUserInfoMapper.updateByExampleSelective(repaymentPlanUserInfo3, example);
+		}*/
+		if(true){
+			criteria.andStateIn(integers);
+			RepaymentPlanUserInfo repaymentPlanUserInfo3=new RepaymentPlanUserInfo();
+			repaymentPlanUserInfo3.setPaidDate(sdf.format(fqcrRepayInfo.getPayTime()) );
+
+			repaymentPlanUserInfo3.setPaidPrice(
+					fqcrRepayInfo.getPayMoney().compareTo(repaymentPlanUserInfoList.get(0).getRepaymentPrice()) > 0
+							? repaymentPlanUserInfoList.get(0).getRepaymentPrice() : fqcrRepayInfo.getPayMoney());
+			
+			BigDecimal commission = fqcrRepayInfo.getPayMoney()
+					.compareTo(
+							repaymentPlanUserInfoList.get(0)
+									.getRepaymentPrice()) > 0 ? ((fqcrRepayInfo.getPayMoney()
+											.subtract(repaymentPlanUserInfoList.get(0).getRepaymentPrice()))
+													.compareTo(repaymentPlanUserInfoList.get(0).getCommission()) > 0
+															? repaymentPlanUserInfoList.get(0).getCommission()
+															: fqcrRepayInfo.getPayMoney()
+																	.subtract(repaymentPlanUserInfoList.get(0)
+																			.getRepaymentPrice()))
+											: new BigDecimal(0.00);
+
+			repaymentPlanUserInfo3.setPaidCommission(commission);
+			BigDecimal paidDamages = fqcrRepayInfo.getPayMoney()
+					.compareTo(repaymentPlanUserInfoList.get(0).getRepaymentPrice()
+							.add(repaymentPlanUserInfoList.get(0).getCommission())) > 0 ? fqcrRepayInfo.getPayMoney()
+									.subtract(repaymentPlanUserInfoList.get(0).getRepaymentPrice())
+									.subtract(repaymentPlanUserInfoList.get(0).getCommission()) : new BigDecimal(0.00);
+			repaymentPlanUserInfo3.setPaidDamages(paidDamages);
+			repaymentPlanUserInfo3.setState(fqcrRepayInfo.getState());
+			
+			return repaymentPlanUserInfoMapper.updateByExampleSelective(repaymentPlanUserInfo3, example);
+		}
+
+		return 0;
+		
+		
+	}
+	
+	
+	public int computeDayRepay (Date date,String peopleType){
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+		Map<String, Object> paramMap =new HashMap<String, Object>();
+		paramMap.put("payedTime", formatter.format(date));
+		paramMap.put("peopleType", peopleType);
+		Map<String, Object> result=repayPlanDao.getComputeDayRepay(paramMap);	
+		Map<String, Object> result2=repayPlanDao.getComputeDayShouldRepay(paramMap);	
+		return insertDayRepay(result,result2,new Byte("1"),date);		
+	}
+	
+	public int insertDayRepay(Map<String, Object> result,Map<String, Object> result2,Byte peopleType,Date date){
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+		DayRepayRecordInfo dayRepayRecordInfo=new DayRepayRecordInfo();
+		dayRepayRecordInfo.setSimpleDate(formatter.format(date));
+		dayRepayRecordInfo.setRepayNum(result.get("repayCount")==null?0:Integer.valueOf(result.get("repayCount").toString()) );
+		dayRepayRecordInfo.setRepayAmt(result.get("paidMoneySum")==null?new BigDecimal(0.00): new BigDecimal(result.get("paidMoneySum").toString()));
+		dayRepayRecordInfo.setShouldRepayNum(result2.get("repayCount")==null?0:Integer.valueOf(result2.get("repayCount").toString()) );
+		dayRepayRecordInfo.setShouldRepayAmt(result2.get("paidMoneySum")==null?new BigDecimal(0.00): new BigDecimal(result2.get("paidMoneySum").toString()));
+		dayRepayRecordInfo.setBusinessType(peopleType);
+		if(dayRepayRecordInfoMapper.selectByPrimaryKey(formatter.format(date))==null)
+			return dayRepayRecordInfoMapper.insertSelective(dayRepayRecordInfo);
+		return 0;
+	}
+	/**
+	 * 查询订单，更新订单
+	 * @param result
+	 * @return
+	 * @throws Exception 
+	 */
+	public int insertOrderRepaymentInfo(com.alibaba.fastjson.JSONObject jsonObject,String type) throws Exception {
+		int orderNum=0;
+	
+		try {
+			String dataString=new String();		
+			dataString = SignUtil.parseData(jsonObject.getString("data"));	
+			com.alibaba.fastjson.JSONArray dataArray = JSON.parseArray(dataString);
+			orderNum=dataArray.size();
+			for (int i=0;i<dataArray.size();i++) {
+				String orderId = dataArray.getString(i);				
+				if(StringUtils.isEmpty(orderId))
+				{
+					continue;
+				}
+				/*orderIdList.append(orderId+",");*/
+				
+		
+				
+				//获取该条订单的还款计划，并插入数据库
+				// TODO Auto-generated method stub
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				//通过订单号，获取还款计划。			
+				Map<String, Object> paramMap = new HashMap<String, Object>();
+				paramMap.put("order_id", orderId);
+				if(orderId=="220180723174389584869"||orderId=="220180527105732157293"){
+					String a=orderId;
+				}
+				com.alibaba.fastjson.JSONObject jsonObject1 = SignUtil.requestInterface(paramMap, SignUtil.repaymentUserPlan);
+				if(jsonObject1.getString("code").equals("200"))
+				{
+					String  data=SignUtil.parseData(jsonObject1.getString("data")); 
+					System.out.println(data);
+					com.alibaba.fastjson.JSONArray repaymentPlayJsonArray= com.alibaba.fastjson.JSONArray.parseArray(data);
+					if(repaymentPlayJsonArray!=null&&repaymentPlayJsonArray.size()>0)
+					{
+						List<RepaymentPlanUserInfo> repaymentUsereList = new ArrayList<RepaymentPlanUserInfo>();
+						OrderInfo orderInfo=orderInfoMapper.selectByPrimaryKey(orderId);
+						if (orderInfo==null) {
+						continue;	
+						}
+						for(int j=0 ;j<repaymentPlayJsonArray.size();j++)
+						{
+							com.alibaba.fastjson.JSONObject object=repaymentPlayJsonArray.getJSONObject(j);
+							RepaymentPlanUserInfo repaymentPlanUserInfo=new RepaymentPlanUserInfo();
+							repaymentPlanUserInfo.setId(ScfUUID.generate());
+							repaymentPlanUserInfo.setBatchId(orderInfo.getBatchId());
+							repaymentPlanUserInfo.setOrderId(orderId);
+							repaymentPlanUserInfo.setPeopleId(orderInfo.getPeopleType());
+							repaymentPlanUserInfo.setLoanTenor(object.getInteger("loan_tenor"));
+							repaymentPlanUserInfo.setRepaymentPrice(StringUtils.isBlank(object.getString("repayment_price"))?null:(object.getBigDecimal("repayment_price")));
+							repaymentPlanUserInfo.setCommission(StringUtils.isBlank(object.getString("commission"))?null:(object.getBigDecimal("commission")));
+							repaymentPlanUserInfo.setInsurance(StringUtils.isBlank(object.getString("insurance"))?null:(object.getBigDecimal("insurance")));
+							repaymentPlanUserInfo.setRepaymentDamages(StringUtils.isBlank(object.getString("repayment_damages"))?null:(object.getBigDecimal("repayment_damages")));
+							String repayment_date =( StringUtils.isBlank(object.getString("repayment_date"))||object.getString("repayment_date").equals("0"))?null:sdf.format(new Date(new Long(object.getString("repayment_date")+"000")));
+							repaymentPlanUserInfo.setRepaymentDate(repayment_date);
+							repaymentPlanUserInfo.setPaidPrice(StringUtils.isBlank(object.getString("paid_price"))?null:(object.getBigDecimal("paid_price")));
+							repaymentPlanUserInfo.setPaidCommission(StringUtils.isBlank(object.getString("paid_commission"))?null:(object.getBigDecimal("paid_commission")));
+							repaymentPlanUserInfo.setPaidInsurance(StringUtils.isBlank(object.getString("paid_insurance"))?null:(object.getBigDecimal("paid_insurance")));
+							repaymentPlanUserInfo.setPaidDamages(StringUtils.isBlank(object.getString("paid_damages"))?null:(object.getBigDecimal("paid_damages")));
+							String paid_date = (StringUtils.isBlank(object.getString("paid_date"))||object.getString("paid_date").equals("0"))?null:sdf.format(new Date(new Long(object.getString("paid_date")+"000")));
+							repaymentPlanUserInfo.setPaidDate(paid_date);
+							repaymentPlanUserInfo.setSystemtype(object.getInteger("systemtype"));
+							repaymentPlanUserInfo.setRemark(object.getString("remark"));
+							repaymentPlanUserInfo.setState(object.getInteger("state"));
+
+							repaymentUsereList.add(repaymentPlanUserInfo);
+						}
+						if(repaymentUsereList.size()>0){
+							//删除现有的用户还款计划
+							int iii=signContractDao.deleteRepayUserPlanByOrderId(orderId);
+							int re=repaymentPlanUserInfoMapper.insertListRepayment(repaymentUsereList);	
+						}
+	
+						
+					}
+				}
+			}
+		/*	if(orderIdList.length()>0)
+			{
+				String orderIds = orderIdList+"";
+				orderIds = orderIds.substring(0, orderIds.length()-1);				
+				
+				String[] orderIdsList=orderIds.split(",");
+				List<String> values= new ArrayList<String>();
+				
+				for (String string : orderIdsList) {
+					values.add(string);
+				}
+				
+				OrderInfoExample example=new OrderInfoExample();
+				com.ut.scf.pojo.auto.OrderInfoExample.Criteria criteria=example.createCriteria();
+				criteria.andOrderIdIn(values);
+				if(orderInfoMapper.countByExample(example)>0){
+					if(type=="提前还款"){
+						startEarlayProcess(orderIds);
+					}else if (type=="退单") {
+						startUnsubscribeProcess(orderIds);
+					}
+				}
+				
+				
+			}*/
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw e;
+		}
+	
+		return orderNum;
+	}
+	
+	/**
+	 * 查询并插入批次信息  再通过批次信息请求订单信息并插入数据库
+	 * @param result
+	 * @return
+	 * @throws Exception 
+	 */
+	public int insertBatchInfo(com.alibaba.fastjson.JSONObject jsonObject , int type) throws Exception {
+		int result =0;
+		if(jsonObject.getString("code").equals("200")){
+			try {
+				String dataString = SignUtil.parseData(jsonObject.getString("data"));
+				com.alibaba.fastjson.JSONArray dataArray = JSON.parseArray(dataString);
+				HashMap<String,Integer> batchIdList=new HashMap<String,Integer>();
+			
+				for (int i=0;i<dataArray.size();i++) {
+					com.alibaba.fastjson.JSONObject object = dataArray.getJSONObject(i);
+					//得到批次id
+					String batchId = object.getString("batch_id");
+					//批次名称
+					String name = object.getString("name");
+					//总金额 单位分
+					int totalPrice =StringUtils.isBlank(object.getString("total_price"))?0: object.getInteger("total_price");
+					//1 学生 2成人
+					int peopleType = StringUtils.isBlank(object.getString("people_type"))?0: object.getInteger("people_type");
+					//如果是翼支付的单子，就直接把peopleType  改成3  为翼支付   1 学生2家庭
+					if(type == YIZHIFU){
+						peopleType = 3;
+					}
+					orderBatchInfoMapper.deleteByPrimaryKey(batchId);
+					OrderInfoExample example=new OrderInfoExample();
+					com.ut.scf.pojo.auto.OrderInfoExample.Criteria criteria = example.createCriteria();
+					criteria.andBatchIdEqualTo(batchId);
+					orderInfoMapper.deleteByExample(example);
+					OrderBatchInfo batchInfo = new OrderBatchInfo();
+					batchInfo.setBatchId(batchId);
+					batchInfo.setName(name);
+					batchInfo.setTotalPrice((new BigDecimal(totalPrice).divide(new BigDecimal(100))));
+					batchInfo.setPeopleType(peopleType+"");
+					batchInfo.setSyncDate(new Date());
+					OrderBatchInfo info = orderBatchInfoMapper.selectByPrimaryKey(batchId);
+					if (info == null) {//将批次信息插入至数据库中，如果
+						 orderBatchInfoMapper.insertSelective(batchInfo);
+					}
+					batchIdList.put(batchId, peopleType);
+				}
+				 result+=findOrderInfo(batchIdList);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw e;
+				
+			}
+		}else if(jsonObject.getString("code").equals("201")){
+			
+		}
+		else{
+			
+			throw new Exception(jsonObject.getString("errMsg"));
+		}
+		return result;
+	}
+	
+	public  void updateStatus(){
+		List<String> values=new ArrayList<String>();
+		values.add("1");
+		values.add("2");
+		values.add("3");
+		OrderBatchInfoExample example=new OrderBatchInfoExample();
+		example.setOrderByClause("batch_id");
+		com.ut.scf.pojo.auto.OrderBatchInfoExample.Criteria criteria=example.createCriteria();
+		criteria.andPeopleTypeIn(values);
+		
+	 List<OrderBatchInfo> list= orderBatchInfoMapper.selectByExample(example);
+		for (OrderBatchInfo orderBatchInfo : list) {
+			int page =1;
+			int pagNum =300;
+			boolean isTrue = true;
+			List<String> lis123t=new ArrayList<String>();
+			while(isTrue){
+				/*int pageStrat = page*pagNum;*/
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("batch_id", orderBatchInfo.getBatchId());
+				map.put("page", page);
+				map.put("page_num", pagNum);
+				com.alibaba.fastjson.JSONObject object = SignUtil.requestInterface(map, SignUtil.orderUrl);
+				if(object.getString("code").equals("200")){
+					//成功
+					String data1 =object.getString("data");
+					String dataString ="";
+					try {
+						dataString = SignUtil.parseData(data1);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					
+					}
+				
+					com.alibaba.fastjson.JSONArray dataArray = JSON.parseArray(dataString);
+				
+					try {
+						for(int i=0 ;i<dataArray.size();i++){
+							com.alibaba.fastjson.JSONObject object1 = dataArray.getJSONObject(i);
+							if (object1.getString("state").equals("已拒绝")) {
+								lis123t.add(object1.getString("order_id"));
+							}
+							if(StringUtils.isNotBlank(object1.getString("order_id_yi"))){
+								OrderInfoExample example11=new OrderInfoExample();
+								com.ut.scf.pojo.auto.OrderInfoExample.Criteria criteria11 =example11.createCriteria();
+								criteria11.andOrderIdEqualTo(object1.getString("order_id"));
+								OrderInfo record=new OrderInfo();
+								record.setOrderIdYi(object1.getString("order_id_yi"));
+								orderInfoMapper.updateByExampleSelective(record, example11);
+							}
+							
+						}
+						
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					
+						throw e;
+					}
+					
+					if(dataArray.size()<pagNum){
+						isTrue =false;
+					}else{
+						page++;
+					}
+					
+				}else if(object.getString("code").equals("201")){
+				
+					isTrue =false;
+				}else {
+				
+				}
+			}
+			if(lis123t.size()==0){
+				continue;
+			}
+			OrderInfoExample example11=new OrderInfoExample();
+			com.ut.scf.pojo.auto.OrderInfoExample.Criteria criteria11 =example11.createCriteria();
+			criteria11.andOrderIdIn(lis123t);
+			OrderInfo record=new OrderInfo();
+			record.setState((byte)0);
+			orderInfoMapper.updateByExampleSelective(record, example11);
+		}
+	}
+	
+	public int findOrderInfo(HashMap<String,Integer> batchIdList) throws Exception{
+		int result=0;
+		 for(String batchId:batchIdList.keySet()){
+			 
+			 //删除该批次的用户的还款计划
+			 signContractDao.deleteRepayUserPlanByBatchId(batchId);
+			int page =1;
+			int pagNum =400;
+			boolean isTrue = true;
+			 int orderNum=0;
+			while(isTrue){
+				/*int pageStrat = page*pagNum;*/
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("batch_id", batchId);
+				map.put("page", page);
+				map.put("page_num", pagNum);
+				com.alibaba.fastjson.JSONObject object = SignUtil.requestInterface(map, SignUtil.orderUrl);
+				
+				if(object.getString("code").equals("200")){
+					//成功
+					String data1 =object.getString("data");
+					String dataString ="";
+					try {
+						dataString = SignUtil.parseData(data1);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						throw e;
+					}
+					System.out.println(dataString);
+					com.alibaba.fastjson.JSONArray dataArray = JSON.parseArray(dataString);
+					System.out.println(dataArray);
+					try {
+						insert2Order(dataArray,batchId,batchIdList.get(batchId));
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					
+						throw e;
+					}
+					orderNum=orderNum+dataArray.size();
+					if(dataArray.size()<pagNum){
+						isTrue =false;
+					}else{
+						page++;
+					}
+					
+				}else if(object.getString("code").equals("201")){
+				
+					isTrue =false;
+				}else {
+					throw new Exception(object.getString("errMsg"));
+				}
+			}
+			//更新批次订单数量
+			OrderBatchInfo batchInfo = new OrderBatchInfo();
+			OrderInfoExample example=new OrderInfoExample();
+			com.ut.scf.pojo.auto.OrderInfoExample.Criteria criteria=example.createCriteria();
+			criteria.andBatchIdEqualTo(batchId);
+			criteria.andStateIsNull();
+			Map<String, Object> paramMap= new HashMap<String, Object>();
+			paramMap.put("batchId", batchId);
+			if(orderInfoMapper.countByExample(example)>0){
+				batchInfo.setStatus("0");
+			}else{
+				batchInfo.setStatus("1");
+			
+				Map<String, Object> resultMap=signContractDao.getRejOrderSum(paramMap);
+				batchInfo.setRejOrderAmt(resultMap.get("sumNeedMoney")==null?new BigDecimal(0.00): new BigDecimal(resultMap.get("sumNeedMoney").toString()));
+				batchInfo.setRejOrderNum(resultMap.get("sumCount")==null?0:Integer.valueOf(resultMap.get("sumCount").toString()));
+				Map<String, Object> resultMapc=signContractDao.getRecOrderSum(paramMap);
+				batchInfo.setRecOrderAmt(resultMapc.get("sumNeedMoney")==null?new BigDecimal(0.00):new BigDecimal(resultMapc.get("sumNeedMoney").toString()));
+				batchInfo.setRecOrderNum(resultMapc.get("sumNeedMoney")==null?0:Integer.valueOf(resultMapc.get("sumCount").toString()));
+			}
+			batchInfo.setBatchId(batchId);
+			batchInfo.setOrderTotalNum(orderNum);	
+			orderBatchInfoMapper.updateByPrimaryKeySelective(batchInfo);
+			
+			
+			if(batchInfo.getStatus().equals("1")){//已经审核过的，自动拉取还款计划表
+				
+				List<Map<String, Object>> mapresult=signContractDao .getRecOrderAndPeopleType(paramMap);
+				getRepaymentPlan(mapresult,(byte)batchIdList.get(batchId).intValue(),batchId);
+				
+				List<Map<String, Object>> list=repayPlanDao.selectOrderByBatchId(batchId);
+
+				
+					for (Map<String, Object> string : list) {				
+							getRepaymentUserPlan(string.get("order_id").toString(),string.get("batch_id").toString(),Integer.valueOf(string.get("people_type").toString()));
+
+					}
+					
+				if(!batchIdList.get(batchId).equals(3))
+	    		{//插入保证金
+					if(fqcrGuaranteeInfoMapper.selectByPrimaryKey(batchId)==null){
+			 			double rate = iSignContractService.getGuaranteeRate("product02");
+		    			//计算并插入保证金
+		    			FqcrGuaranteeInfo fqcrGuaranteeInfo=new FqcrGuaranteeInfo();
+		    			fqcrGuaranteeInfo.setBatchId(batchId);
+		    			fqcrGuaranteeInfo.setGuaranteeMoneyRate(new BigDecimal(rate));
+		    			fqcrGuaranteeInfo.setPayAbleGuarantee((batchInfo.getRecOrderAmt()).multiply(new BigDecimal(rate)).divide(new BigDecimal(100)));
+		    			fqcrGuaranteeInfo.setPayActGuarantee(new BigDecimal(0));
+		    			fqcrGuaranteeInfo.setGuaranteeBalance(new BigDecimal(0));
+		    			
+		    			int insertNum= fqcrGuaranteeInfoMapper.insertSelective(fqcrGuaranteeInfo);
+					}
+	   
+	    			
+	    		}
+				
+			}
+			result+=orderNum;
+		}
+		return result;
+		
+	}
+	
+	
+	
+	public void getRepaymentUserPlan(String orderId,String batchId,Integer peopleType) throws Exception{
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+/*		RepaymentPlanUserInfoExample example=new RepaymentPlanUserInfoExample();
+		com.ut.scf.pojo.auto.RepaymentPlanUserInfoExample.Criteria criteria =example.createCriteria();
+		criteria.andOrderIdEqualTo(orderId);
+		long count=repaymentPlanUserInfoMapper.countByExample(example);*/
+		//已经做了删除，所以不需要判断是否存在
+		if(true){
+			Map<String, Object> paramMap = new HashMap<String, Object>();
+			paramMap.put("order_id", orderId);
+			com.alibaba.fastjson.JSONObject jsonObject = SignUtil.requestInterface(paramMap, SignUtil.repaymentUserPlan);
+			if(jsonObject.getString("code").equals("200"))
+			{
+				String  data=SignUtil.parseData(jsonObject.getString("data")); 
+				System.out.println(data);
+				com.alibaba.fastjson.JSONArray repaymentPlayJsonArray= com.alibaba.fastjson.JSONArray.parseArray(data);
+				if(repaymentPlayJsonArray!=null&&repaymentPlayJsonArray.size()>0)
+				{
+					List<RepaymentPlanUserInfo> repaymentUsereList = new ArrayList<RepaymentPlanUserInfo>();
+					for(int j=0 ;j<repaymentPlayJsonArray.size();j++)
+					{
+						com.alibaba.fastjson.JSONObject object=repaymentPlayJsonArray.getJSONObject(j);
+						RepaymentPlanUserInfo repaymentPlanUserInfo=new RepaymentPlanUserInfo();
+						repaymentPlanUserInfo.setId(ScfUUID.generate());
+						repaymentPlanUserInfo.setBatchId(batchId);
+						repaymentPlanUserInfo.setOrderId(orderId);
+						repaymentPlanUserInfo.setPeopleId(peopleType);
+						repaymentPlanUserInfo.setLoanTenor(object.getInteger("loan_tenor"));
+						repaymentPlanUserInfo.setRepaymentPrice(StringUtils.isBlank(object.getString("repayment_price"))?null:(object.getBigDecimal("repayment_price")));
+						repaymentPlanUserInfo.setCommission(StringUtils.isBlank(object.getString("commission"))?null:(object.getBigDecimal("commission")));
+						repaymentPlanUserInfo.setInsurance(StringUtils.isBlank(object.getString("insurance"))?null:(object.getBigDecimal("insurance")));
+						repaymentPlanUserInfo.setRepaymentDamages(StringUtils.isBlank(object.getString("repayment_damages"))?null:(object.getBigDecimal("repayment_damages")));
+						String repayment_date =( StringUtils.isBlank(object.getString("repayment_date"))||object.getString("repayment_date").equals("0"))?null:sdf.format(new Date(new Long(object.getString("repayment_date")+"000")));
+						repaymentPlanUserInfo.setRepaymentDate(repayment_date);
+						repaymentPlanUserInfo.setPaidPrice(StringUtils.isBlank(object.getString("paid_price"))?null:(object.getBigDecimal("paid_price")));
+						repaymentPlanUserInfo.setPaidCommission(StringUtils.isBlank(object.getString("paid_commission"))?null:(object.getBigDecimal("paid_commission")));
+						repaymentPlanUserInfo.setPaidInsurance(StringUtils.isBlank(object.getString("paid_insurance"))?null:(object.getBigDecimal("paid_insurance")));
+						repaymentPlanUserInfo.setPaidDamages(StringUtils.isBlank(object.getString("paid_damages"))?null:(object.getBigDecimal("paid_damages")));
+						String paid_date = (StringUtils.isBlank(object.getString("paid_date"))||object.getString("paid_date").equals("0"))?null:sdf.format(new Date(new Long(object.getString("paid_date")+"000")));
+						repaymentPlanUserInfo.setPaidDate(paid_date);
+						repaymentPlanUserInfo.setSystemtype(object.getInteger("systemtype"));
+						repaymentPlanUserInfo.setRemark(object.getString("remark"));
+						repaymentPlanUserInfo.setState(object.getInteger("state"));
+
+						repaymentUsereList.add(repaymentPlanUserInfo);
+					}
+					int re=repaymentPlanUserInfoMapper.insertListRepayment(repaymentUsereList);
+					
+				}
+			}
+		}
+	}
+	
+	
+	public void getRepaymentPlan(List<Map<String, Object>> statusList,byte peopleType,String batchId) throws Exception {
+		// TODO Auto-generated method stub
+		//删除该批次的的还款计划
+		
+		signContractDao. deleteRepayPlanByBatchId(batchId);
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		if(statusList.size()>0){
+			for(int i=0;i<statusList.size();i++){
+				Map<java.lang.String, Object> map = statusList.get(i);
+				String orderId = (java.lang.String) map.get("orderId"); 
+				//判定还款计划表中是否存在这个订单号，如果有则视为已经存在还款计划表
+				/*List<RepaymentPlanInfo> repayments = repaymentPlanInfoMapper.selectByOrderId(orderId);*/
+				if (true) {
+					if (orderId != null || orderId != "") {
+						//通过订单号，获取还款计划。
+						Map<String, Object> paramMap = new HashMap<String, Object>();
+						paramMap.put("order_id", orderId);
+						com.alibaba.fastjson.JSONObject jsonObject = SignUtil.requestInterface(paramMap, SignUtil.repaymentPlan);
+						if(jsonObject.getString("code").equals("200"))
+						{
+							String  data=SignUtil.parseData(jsonObject.getString("data")); 
+							System.out.println(data);
+							com.alibaba.fastjson.JSONArray repaymentPlayJsonArray= com.alibaba.fastjson.JSONArray.parseArray(data);
+							if(repaymentPlayJsonArray!=null&&repaymentPlayJsonArray.size()>0)
+							{
+								List<RepaymentPlanInfo> repaymentList = new ArrayList<RepaymentPlanInfo>();
+								for(int j=0 ;j<repaymentPlayJsonArray.size();j++)
+								{
+									RepaymentPlanInfo repaymentPlanInfo=new RepaymentPlanInfo();
+									com.alibaba.fastjson.JSONObject object=repaymentPlayJsonArray.getJSONObject(j);
+									repaymentPlanInfo.setRepaymentId(ScfUUID.generate());
+									repaymentPlanInfo.setOrderId(object.getString("order_id"));
+									repaymentPlanInfo.setPeriod(StringUtils.isBlank(object.getString("current_period"))?null:(byte)object.getIntValue("current_period"));
+									
+									
+									
+									String date = (StringUtils.isBlank(object.getString("should_pay_time"))||object.getString("should_pay_time").equals("0"))?null:sdf.format(new Date(new Long(object.getString("should_pay_time")+"000")) );
+									repaymentPlanInfo.setCurrentRepayDate(sdf.parse(date));
+									repaymentPlanInfo.setInterest(StringUtils.isBlank(object.getString("interest"))?null:new BigDecimal(object.getIntValue("interest")).divide(new BigDecimal(100)));
+									repaymentPlanInfo.setLcMoney(StringUtils.isBlank(object.getString("lc_money"))?null:(new BigDecimal(object.getIntValue("lc_money")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setCurrentMoney(StringUtils.isBlank(object.getString("current_money"))?null:(new BigDecimal(object.getIntValue("current_money")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setEnsureMoney(StringUtils.isBlank(object.getString("ensure_money"))?null:(new BigDecimal(object.getIntValue("ensure_money")).divide(new BigDecimal(100))));
+									String payed_time = (StringUtils.isBlank(object.getString("payed_time"))||object.getString("payed_time").equals("0"))?null:sdf.format(new Date(new Long(object.getString("payed_time")+"000")));
+									repaymentPlanInfo.setPayedTime(payed_time);
+									repaymentPlanInfo.setOrderBatchId(batchId);
+									repaymentPlanInfo.setRepaymentMoney(StringUtils.isBlank(object.getString("repayment_money"))?null:(new BigDecimal(object.getIntValue("repayment_money")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setPaidMoney(StringUtils.isBlank(object.getString("paid_money"))?null:(new BigDecimal(object.getIntValue("paid_money")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setState(StringUtils.isBlank(object.getString("state"))?null:object.getIntValue("state"));
+									repaymentPlanInfo.setMarketingFeeYi(StringUtils.isBlank(object.getString("marketing_fee_yi"))?null:(new BigDecimal(object.getIntValue("marketing_fee_yi")).divide(new BigDecimal(100))));
+									repaymentPlanInfo.setServiceChargeYi(StringUtils.isBlank(object.getString("service_charge_yi"))?null:(new BigDecimal(object.getIntValue("service_charge_yi")).divide(new BigDecimal(100))));
+									
+									repaymentPlanInfo.setPeopleType(peopleType);
+									
+									repaymentList.add(repaymentPlanInfo);
+								}
+								int re=repaymentPlanInfoMapper.insertListRepayment(repaymentList);
+								
+								System.out.println(re);
+							}
+						}
+					}
+				}
+				
+			}
+		}
+	}
+	public int insert2Order(com.alibaba.fastjson.JSONArray dataArray,String batchId,Integer peopleType) throws Exception {
+		int result =0;
+		for(int i=0 ;i<dataArray.size();i++){
+			com.alibaba.fastjson.JSONObject object = dataArray.getJSONObject(i);
+			//订单id
+			String orderId = object.getString("order_id");
+			//营业厅id
+			int storeId = StringUtils.isBlank(object.getString("store_id"))?0:object.getIntValue("store_id");
+			//学生身份证号码
+			String idCard = object.getString("id_card");
+			OrderInfo orderInfo = orderInfoService.selectByPrimaryKey(orderId);
+		/*	StuInfo stuInfo = stuInfoMapper.selectByIdCard(idCard==null?"":idCard);*/
+			StuInfoExample example=new StuInfoExample();
+			com.ut.scf.pojo.auto.StuInfoExample.Criteria criteria=example.createCriteria();
+			criteria.andIdCardEqualTo(idCard==null?"":idCard);
+			criteria.andNameEqualTo(object.getString("name"));
+			List<StuInfo> stuInfo= stuInfoMapper.selectByExample(example);
+			
+			BusinessHall businessHall = businessHallMapper.selectByPrimaryKey(storeId);
+			
+			String stuId="";
+			if(stuInfo != null&&stuInfo.size()>0){
+				stuId = stuInfo.get(0).getStuId();
+			}else {
+				StuInfo student = new StuInfo();
+				stuId=ScfUUID.generate();
+				student.setStuId(stuId);
+				student.setName(object.getString("name"));
+				//性别 ‘0’:”女”,’1’: “男”,’2’:”未知”,
+				student.setSex(object.getString("sex"));
+				student.setIdCard(idCard);
+				student.setNation(object.getString("nation"));
+				student.setMobile(object.getString("mobile"));
+				student.setIdcardBirthday(object.getString("idcard_birthday"));
+				student.settUnivsName(object.getString("t_univs_name"));
+				student.settUnivsGrade(object.getString("t_univs_grade"));
+				student.settUnivsFinishtime(object.getString("t_univs_finishtime"));
+				student.setAge(StringUtils.isBlank(object.getString("age"))?null:(byte)object.getIntValue("age"));
+				student.settUnivsRoom(object.getString("t_univs_room"));
+				stuInfoMapper.insertSelective(student);
+				
+			}
+			if(businessHall == null){
+				BusinessHall businessHall2 = new BusinessHall();
+				businessHall2.setStoreId(StringUtils.isBlank(object.getString("store_id"))?0:object.getIntValue("store_id"));
+				businessHall2.setFullname(object.getString("fullname"));
+				businessHall2.setSellerType(object.getString("seller_type"));
+				businessHall2.setAddress(object.getString("address"));
+				businessHall2.setContact(object.getString("contact"));
+				businessHall2.setContactMobile(object.getString("contact_mobile"));
+				businessHall2.setStoreCity(object.getString("store_city"));
+				businessHall2.setBank(object.getString("bank"));
+				businessHall2.setAccount(object.getString("account"));
+				businessHall2.setCard(object.getString("card"));
+				businessHallMapper.insertSelective(businessHall2);
+			}
+			if(orderInfo == null){
+				SimpleDateFormat sdf =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+				OrderInfo orderInfo2 = new OrderInfo();
+				orderInfo2.setOrderId(object.getString("order_id"));
+				orderInfo2.setOrderIdYi(object.getString("order_id_yi"));
+				com.alibaba.fastjson.JSONArray arrays = object.getJSONArray("pics");
+				orderInfo2.setGoodsName(object.getString("goods_name"));
+				orderInfo2.setUmmTruename(object.getString("umm_truename"));
+				orderInfo2.setTotalPrice(StringUtils.isBlank(object.getString("total_price"))?null:(new BigDecimal(object.getIntValue("total_price")).divide(new BigDecimal(100))));
+				orderInfo2.setPaytime(StringUtils.isBlank(object.getString("paytime"))?null:new Date(new Long(object.getString("paytime")+"000")));
+				orderInfo2.setFinancePeriod(StringUtils.isBlank(object.getString("finance_period"))?null:(byte)object.getIntValue("finance_period"));
+				orderInfo2.setPaidPeriod(StringUtils.isBlank(object.getString("paid_period"))?null:object.getIntValue("paid_period"));
+				orderInfo2.setTongdunRes(object.getString("tongdun_res"));
+				orderInfo2.setNeedmoney(StringUtils.isBlank(object.getString("needmoney"))?null:(new BigDecimal(object.getIntValue("needmoney"))).divide(new BigDecimal(100)));
+				orderInfo2.setServiceMoney(StringUtils.isBlank(object.getString("service_money"))?null:object.getLongValue("service_money")/100);
+				orderInfo2.setEnsureMoney(StringUtils.isBlank(object.getString("ensure_money"))?null:(new BigDecimal(object.getIntValue("ensure_money")).divide(new BigDecimal(100))));
+				orderInfo2.setLoanMoney(StringUtils.isBlank(object.getString("loan_money"))?null:(new BigDecimal(object.getIntValue("loan_money")).divide(new BigDecimal(100))));
+				orderInfo2.setStoreId(storeId+"");
+				orderInfo2.setContract(object.getString("contract"));
+				orderInfo2.setPeopleType(peopleType);
+				orderInfo2.setTdScore(object.getString("td_score"));
+				orderInfo2.setQuota(object.getString("quota"));
+				orderInfo2.setLevel(object.getString("level"));
+				
+				
+				
+			
+				if (object.getString("state").trim().equals("已确认")) {
+					orderInfo2.setState((byte)1);
+				}
+				else if (object.getString("state").trim().equals("已拒绝")) {
+					orderInfo2.setState((byte)0);
+				}else if (object.getString("state").trim().equals("待确认")) {
+					
+				}else if (StringUtils.isNotBlank(object.getString("state").trim())) {
+					orderInfo2.setState((byte)0);
+				}				
+				orderInfo2.setStuId(stuId);
+				orderInfo2.setBatchId(batchId);
+				result += orderInfoMapper.insertSelective(orderInfo2);
+				
+				for (int j = 0; j <arrays.size() ; j++) {
+					String stuFile = arrays.getString(j);
+					String recUid = ScfUUID.generate();
+					StuFileInfo fileInfo = new StuFileInfo();
+					fileInfo.setRecUid(recUid);
+					fileInfo.setStuFile(stuFile);
+					fileInfo.setOrderId(orderId);
+					stuFileInfoMapper.insertSelective(fileInfo);
+				}
+				
+				/*getRepaymentUserPlan(orderInfo2.getOrderId(),orderInfo2.getBatchId(),orderInfo2.getPeopleType());*/
+				
+			}
+		}
+		
+		return result;
+	}
+
+	@Transactional
+	protected int insertOrderInfo(String orderInfoStr) throws Exception {
+		String stuId = "";// 学生信息id
+		int result=0;
+		JSONObject jsonObject = new JSONObject(orderInfoStr);
+		//得到批次id
+		String batchId = jsonObject.getString("batch_id");
+		//批次名称
+		String name = jsonObject.getString("name");
+		//总金额 单位分
+		int totalPrice = jsonObject.getInt("total_price");
+		//1 学生 2成人
+		int peopleType = jsonObject.getInt("people_type");
+		
+		JSONArray jsonArray = jsonObject.getJSONArray("order_list");
+		Map<String, List<OrderInfo>> orderBatchinfoMap = new LinkedHashMap<>();
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject obj = jsonArray.getJSONObject(i);
+			StuInfo stuInfo = selectStuInfoByIdCard(obj.getString("id_card"));
+			if (stuInfo == null) {
+				stuId = ScfUUID.generate();// 学生信息id
+				// 大学生信息表
+				insertStuInfo(obj, stuId);
+				// 大学生附件表 身份证正面
+				inserStuFileInfo(stuId, obj.getString("pics"));
+//				// 身份证反面
+//				inserStuFileInfo(stuId, obj.getString("idcard_back"));
+//				// 身份证手持
+//				inserStuFileInfo(stuId, obj.getString("idcard_zm"));
+				// 额外图片
+//				JSONArray picExtendArray = obj.getJSONArray("pic_extend");
+//				if (picExtendArray.length() > 0) {
+//					for (int j = 0; j < picExtendArray.length(); j++) {
+//						inserStuFileInfo(stuId, picExtendArray.getString(j));
+//					}
+//				}
+			} else {
+				stuId = stuInfo.getStuId();
+			}
+			OrderInfo orderInfo = setOrderInfo(obj, stuId);// 获得订单信息
+			orderInfo.setBatchId(batchId);
+			result += orderInfoMapper.insertSelective(orderInfo);
+			// 添加订单到批次集合
+//			String batchId = orderInfo.getBatchId();
+//			if (orderBatchinfoMap.containsKey(batchId)) {
+//				orderBatchinfoMap.get(batchId).add(orderInfo);
+//			} else {
+//				List<OrderInfo> orderInfos = new ArrayList<>();
+//				orderInfos.add(orderInfo);
+//				orderBatchinfoMap.put(batchId, orderInfos);
+//			}
+		}
+		// 插入订单 批次 信息
+//		return insertOrderInfo(orderBatchinfoMap);
+		OrderBatchInfo batchInfo = new OrderBatchInfo();
+		batchInfo.setBatchId(batchId);
+		batchInfo.setName(name);
+		batchInfo.setTotalPrice(new BigDecimal(totalPrice));
+		batchInfo.setPeopleType(peopleType+"");
+		orderBatchInfoMapper.insertSelective(batchInfo);
+		return result;
+	}
+
+	// 插入订单 批次 信息
+	@Transactional
+	protected int insertOrderInfo(Map<String, List<OrderInfo>> orderBatchinfoMap) throws Exception {
+		int result = 0;
+		for (Map.Entry<String, List<OrderInfo>> entry : orderBatchinfoMap.entrySet()) {
+			int recOrderNum = 0; // 接收订单数量
+			int rejOrderNum = 0; // 拒绝订单数量
+			BigDecimal orderTotalAmt = BigDecimal.ZERO; // 订单总金额
+			BigDecimal recOrderAmt = BigDecimal.ZERO; // 接收订单金额
+			BigDecimal rejOrderAmt = BigDecimal.ZERO; // 拒绝订单金额
+			BigDecimal crReqTotalAmt = BigDecimal.ZERO; // 超人所需费用总额
+
+			List<OrderInfo> values = entry.getValue();
+			OrderBatchInfo batchInfo = new OrderBatchInfo();
+			batchInfo.setBatchId(entry.getKey()); // 订单批次号
+			batchInfo.setOrderTotalNum(values.size()); // 订单总数
+
+			for (OrderInfo order : values) {
+				orderTotalAmt = orderTotalAmt.add(order.getProductAmt());
+				crReqTotalAmt = crReqTotalAmt.add(order.getCrReqAmt());
+				if (order.getState() == 1) { // 接受
+					recOrderNum++;
+					recOrderAmt = recOrderAmt.add(order.getProductAmt());
+				} else { // 拒绝
+					rejOrderNum++;
+					rejOrderAmt = rejOrderAmt.add(order.getProductAmt());
+				}
+				result += orderInfoMapper.insert(order);
+			}
+
+			batchInfo.setTotalPrice(orderTotalAmt);
+			batchInfo.setRecOrderNum(recOrderNum);
+			batchInfo.setRecOrderAmt(recOrderAmt);
+			batchInfo.setRejOrderNum(rejOrderNum);
+			batchInfo.setRejOrderAmt(rejOrderAmt);
+			batchInfo.setCrReqTotalAmt(crReqTotalAmt);
+			batchInfo.setSyncDate(new Date());
+			orderBatchInfoMapper.insert(batchInfo);
+			// 发起订单同步流程 一个批次一个
+//			startProcess(entry.getKey());
+		}
+		return result;
+	}
+
+	// 发起流程
+	private BaseRespBean startProcess(String batchId) throws Exception {
+		// 发起流程
+		BaseRespBean respBean = new BaseRespBean();
+		OrderManagerReqBean reqBean = new OrderManagerReqBean();
+		// 获取当前用户
+		reqBean.setBatchId(batchId);
+		reqBean.setUserId("sys");
+		reqBean.setActivitiKey("orderManagerProcess");
+		JSONObject contactInfo = new JSONObject(reqBean);
+		log.debug("contactInfo: {}", contactInfo);
+		activitiService.startProcess(contactInfo);
+		return respBean;
+	}
+	// 发起流程
+	private BaseRespBean startEarlayProcess(String orderIdList) throws Exception {
+		// 发起流程
+		BaseRespBean respBean = new BaseRespBean();
+		OrderYcManagerReqBean reqBean = new OrderYcManagerReqBean();
+		// 获取当前用户
+		reqBean.setOrderIdList(orderIdList);
+		reqBean.setUserId("sys");
+		reqBean.setSysGetDate(dateFormat.format(new Date()));
+		reqBean.setActivitiKey("orderEarlyClearProcess");
+		reqBean.setType("提前还款");
+		reqBean.setOrderNum(java.lang.String.valueOf(orderIdList.split(",").length));
+		JSONObject contactInfo = new JSONObject(reqBean);
+		log.debug("contactInfo: {}", contactInfo);
+		activitiService.startProcess(contactInfo);
+		return respBean;
+	}
+	// 发起流程
+	private BaseRespBean startUnsubscribeProcess(String orderIdList) throws Exception {
+		// 发起流程
+		BaseRespBean respBean = new BaseRespBean();
+		OrderYcManagerReqBean reqBean = new OrderYcManagerReqBean();
+		// 获取当前用户
+		reqBean.setOrderIdList(orderIdList);
+		reqBean.setUserId("sys");
+		reqBean.setActivitiKey("orderChargeBackProcess");
+		reqBean.setType("退单");
+		reqBean.setOrderNum(java.lang.String.valueOf(orderIdList.split(",").length));
+		JSONObject contactInfo = new JSONObject(reqBean);
+		log.debug("contactInfo: {}", contactInfo);
+		activitiService.startProcess(contactInfo);
+		return respBean;
+	}
+	// 获得订单信息
+	private OrderInfo setOrderInfo(JSONObject obj, String stuId) throws Exception {
+		// 订单信息
+		OrderInfo orderInfo = new OrderInfo();
+		// 预筛选条件：少数名族+成人订单+大三以上的学生的订单除外
+		String nation = obj.getString("nation");// 名族
+		String grade = obj.getString("t_univs_grade");// 年级
+//		if (!"汉".equals(nation) || Integer.parseInt(grade) >= 3) {
+//			orderInfo.setState((byte) 0);// 拒绝
+//		} else {
+//			orderInfo.setState((byte) 1);// 同意
+//		}
+//		orderInfo.setBatchId(obj.getString("batch_id")); // 资金方系统中每批次转给资金方的id，（每批次含多个订单）
+		orderInfo.setOrderId(obj.getString("order_id")); // 订单ID号唯一
+		orderInfo.setStuId(stuId);// 学生ID（关联学生信息表）
+//		orderInfo.setProductId(obj.getString("goods_id")); // 产品ID
+		orderInfo.setGoodsName(obj.getString("goods_name")); // 产品名称
+		orderInfo.setProductAmt(new BigDecimal(obj.getString("total_price"))); // 产品金额
+		orderInfo.setPaidPeriod(obj.getInt("finance_period")); // 分期期数期数
+		orderInfo.setTotalPrice(new BigDecimal(obj.getString("total_price"))); // 分期总金额
+		if ("".equals(obj.getString("needmoney"))) {
+			orderInfo.setCrReqAmt(BigDecimal.ZERO); // 超人所需费用
+		} else {
+			orderInfo.setCrReqAmt(new BigDecimal(obj.getString("needmoney")));
+		}
+
+//		orderInfo.setStartPayAmt(new BigDecimal(obj.getString("PayM"))); // 首期还款金额
+//		orderInfo.setPayM(new BigDecimal(obj.getString("PayM"))); // 每期还款金额
+		orderInfo.setPaytime(dateFormat.parse(obj.getString("paytime"))); // 首期还款日期
+		orderInfo.setStoreId(obj.getString("store_id")); // 商家ID
+		orderInfo.setUmmTruename(obj.getString("umm_truename"));//面审员
+		orderInfo.setPaidPeriod(obj.getInt("paid_period"));//已还期数	
+		orderInfo.setTongdunRes(obj.getString("tongdun_res"));//同盾分数
+		orderInfo.setServiceMoney(obj.getLong("service_money"));//	超人服务费 = 总财务利润-资方利息（订单类型对应利率，根据期数和irr函数计算资方总共收取的利息） 单位分
+		orderInfo.setEnsureMoney(new BigDecimal(obj.getInt("ensure_money")));//保证金 单位分
+		orderInfo.setLoanMoney(new BigDecimal(obj.getInt("loan_money")));//实际支付付费 单位分
+		orderInfo.setContract(obj.getString("contract"));//后台url
+		return orderInfo;
+	}
+
+	// 大学生信息
+	@Transactional
+	protected void insertStuInfo(JSONObject obj, String stuId) {
+		Map<String, String> map = IdCardUtil.idcardInfoExtractor(obj.getString("id_card"));// 解析身份证号码
+		// 大学生信息表
+		StuInfo stuInfo = new StuInfo();
+
+		stuInfo.setStuId(stuId);
+		stuInfo.setName(obj.getString("name"));
+		stuInfo.setSex(obj.getString("sex"));
+		stuInfo.setAge(new Byte(map.get("age")));
+		stuInfo.setIdcardBirthday(map.get("idcard_birthday"));
+		stuInfo.setIdCard(obj.getString("id_card"));
+		stuInfo.setNation(obj.getString("nation"));
+		stuInfo.setMobile(obj.getString("mobile"));
+		stuInfo.settUnivsName(obj.getString("t_univs_name"));
+		stuInfo.settUnivsGrade(obj.getString("t_univs_grade"));
+		stuInfo.settUnivsRoom(obj.getString("t_univs_room"));
+		stuInfo.settUnivsFinishtime(obj.getString("t_univs_finishtime"));
+		stuInfoMapper.insert(stuInfo);
+	}
+
+	// 根据身份证查询学生信息
+	private StuInfo selectStuInfoByIdCard(String idCard) {
+
+		StuInfoExample example = new StuInfoExample();
+		com.ut.scf.pojo.auto.StuInfoExample.Criteria criteria = example.createCriteria();
+		criteria.andIdCardEqualTo(idCard);
+		List<StuInfo> stuInfos = stuInfoMapper.selectByExample(example);
+		if (stuInfos != null && stuInfos.size() > 0) {
+			return stuInfos.get(0);
+		}
+		return null;
+	}
+
+	// 大学生附件
+	@Transactional
+	protected void inserStuFileInfo(String stuId, String file) {
+		if (StringUtils.isNotEmpty(file)) {
+			StuFileInfo stuFileInfo = new StuFileInfo();
+			stuFileInfo.setRecUid(ScfUUID.generate());
+			stuFileInfo.setStuId(stuId);
+			stuFileInfo.setStuFile(file);
+			stuFileInfoMapper.insert(stuFileInfo);
+		}
+
+	}
+
+	// 记录批处理
+	private void insertBatchHndlInfo(int dataNum, String result, String type, Date date, String name,
+			String methodName) {
+		// 处理失败时推送预警
+		if ("0".equals(result)) {
+			batchHndlWarningInfo(name + "的任务执行失败");
+		}
+		BatchHndlInfo batchHndlInfo = new BatchHndlInfo();
+		batchHndlInfo.setBatchName(name);
+		batchHndlInfo.setClassName("interfaceSyncJob");// bean 名称
+		batchHndlInfo.setDataNum(dataNum);// 数据量
+		batchHndlInfo.setBatchType(type);
+		batchHndlInfo.setResult(result);
+		batchHndlInfo.setExecuteTime(date);
+		batchHndlInfo.setMethodName(methodName);// 当前方法名
+		iBatchService.insertBathInfo(batchHndlInfo);
+	}
+
+	// 推送批处理失败预警
+	@Transactional
+	protected void batchHndlWarningInfo(String msg) {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("roleList", TARGET_ROLE_IDS_BATCH);
+		paramMap.put("warnType", 6);
+		paramMap.put("warnMsg", msg);
+		commonService.insertWarningInfo(paramMap);
+	}
+	// 推送批处理失败预警
+	@Transactional
+	protected void earlyBatchHndlWarningInfo(String msg) {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("roleList", TARGET_ROLE_IDS_REPAYMENT);
+		paramMap.put("warnType", 6);
+		paramMap.put("warnMsg", msg);
+		commonService.insertWarningInfo(paramMap);
+	}
+	// 计息处理
+	// 自动 定时任务
+	public void calInterestTask() {
+		Date date = new Date();
+		log.info("计息处理任务开始，日期{}", date);
+		int dataNum = 0;
+		try {
+			calInterest();
+			insertBatchHndlInfo(dataNum, "1", "0", date, "计息处理接口", "calInterestBatch");// 成功
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("计息处理定时任务异常", e);
+			insertBatchHndlInfo(dataNum, "0", "0", date, "计息处理接口", "calInterestBatch");// 失败
+		}
+
+	}
+
+	// 批量处理 手动
+	public void calInterestBatch(String date) throws ParseException {
+		Date date2 = dateFormat.parse(date);
+		log.info("手动计息处理开始，日期{}", date);
+		int dataNum = 0;
+		try {
+			calInterest();
+			insertBatchHndlInfo(dataNum, "1", "1", date2, "计息处理接口", "calInterestBatch");// 成功
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("手动计息处理异常", e);
+			insertBatchHndlInfo(dataNum, "0", "1", date2, "计息处理接口", "calInterestBatch");// 失败
+		}
+	}
+
+	// 获取利率
+	public List<DykRate>  getRate(String productId) {
+
+		//BigDecimal dykRate = BigDecimal.ZERO;
+		DykRateExample dykRateExample = new DykRateExample();
+		dykRateExample.setOrderByClause("days_end ASC");
+		com.ut.scf.pojo.auto.DykRateExample.Criteria criteria = dykRateExample.createCriteria();
+		criteria.andProductIdEqualTo(productId);
+		List<DykRate> dykRates = dykRateMapper.selectByExample(dykRateExample);
+		/*if (!CollectionUtils.isEmpty(dykRates)) {
+			for (int i = 0; i < dykRates.size(); i++) {
+				int index = i + 1;
+				DykRate rate = dykRates.get(i);
+				if (days > rate.getDaysEnd()) {
+					if (index < dykRates.size()) {
+						//dykRate = dykRates.get(i).getDykRate();
+						hashMap.put(rate.getDaysEnd()==null?"0":rate.getDaysEnd().toString(),
+								rate.getDykRate()==null? BigDecimal.ZERO:rate.getDykRate());
+						
+					} else {
+						dykRate = dykRates.get(i).getDykRate();
+						//dykRate = BigDecimal.ZERO;
+						break;
+					}
+				} else {
+					hashMap.put(rate.getDaysEnd()==null?"0":rate.getDaysEnd().toString(),
+							rate.getDykRate()==null? BigDecimal.ZERO:rate.getDykRate());
+					
+					break;
+				}
+			}
+
+		}*/
+		return dykRates;
+	}
+
+	private boolean isInterestDate(String productId) {
+		return commonService.isInterestDate(new Date(), productId);
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void calInterest() throws Exception {
+		FinanceInfoExample example = new FinanceInfoExample();
+		Criteria criteria = example.createCriteria();
+		criteria.andFinanceStatusIn(Arrays.asList("2", "3", "5")); // 融资状态:2:已放款;3:已部分还款;5:逾期'
+		List<FinanceInfo> list = financeInfoMapper.selectByExample(example);
+		if (!CollectionUtils.isEmpty(list)) {
+			int diffDays = 0;
+			int receptionDays = 0;
+			for (FinanceInfo financeInfo : list) {
+				if (financeInfo.getFinanceEndDate() == null) {
+					continue;
+				}
+				// BigDecimal dykRate = null;
+				String financeId = financeInfo.getFinanceId();
+				String agencyCorpId = financeInfo.getCorpId();
+				String productId = financeInfo.getProductId();
+
+				diffDays = diffDays(new Date(), financeInfo.getFinanceEndDate());
+				//receptionDays = diffDays(new Date(), financeInfo.getFinanceStartDate());
+				if (diffDays >= -3 && diffDays <= 0) {// 免息，提前3天以及当天推预警
+					// 参数设定
+					Map<String, Object> paramMap = new HashMap<String, Object>();
+					paramMap.put("roleList", TARGET_ROLE_IDS_FINANCE);
+					paramMap.put("agencyCorpId", agencyCorpId);
+					paramMap.put("warnType", 0);
+					if (diffDays == 0) {
+						paramMap.put("warnMsg", "融资编号为" + financeId + "的融资今天到期");
+					} else {
+						paramMap.put("warnMsg", "融资编号为" + financeId + "的融资即将到期");
+					}
+					commonService.insertWarningInfo(paramMap);
+				} else if (diffDays > 0) {
+
+					// 参数设定
+					//2018.06.26 判断是否逾期需要通过算上保证金
+					//判断是否逾期
+					//取得付款金额
+				/*	String carSumPriceAll =iCarInfoDao.getCarSumPriceAll(financeId);
+					BigDecimal carSumPriceAllDecimal=(carSumPriceAll==null||carSumPriceAll.isEmpty())?(new BigDecimal(0)):(new BigDecimal(carSumPriceAll));
+					*/
+					//取得保证金金额
+					String sumGuaraPriceString=iGuaranteeHistoryInfoDao.selectSumPayGuarantee(financeInfo.getFinanceId());
+					BigDecimal sumGuaraPriceDecimal=(sumGuaraPriceString==null||sumGuaraPriceString.isEmpty())?(new BigDecimal(0)):(new BigDecimal(sumGuaraPriceString));
+			
+					//取得未付款金额
+					String carSumPriceSale =iCarInfoDao.getCarSumPrice(financeId);
+					BigDecimal carSumPriceSaleDecimal=(carSumPriceSale==null||carSumPriceSale.isEmpty())?(new BigDecimal(0)):(new BigDecimal(carSumPriceSale));
+					Map<String, Object> paramMap = new HashMap<String, Object>();
+					if(carSumPriceSaleDecimal.compareTo(sumGuaraPriceDecimal)>0)
+					{
+						
+						paramMap.put("roleList", TARGET_ROLE_IDS_FINANCE);
+						paramMap.put("agencyCorpId", agencyCorpId);
+						paramMap.put("warnType", 2);
+						paramMap.put("warnMsg", "融资编号为" + financeId + "的融资已逾期" + diffDays + "天"+"逾期金额为"+carSumPriceSaleDecimal.subtract(sumGuaraPriceDecimal)+"元");
+						commonService.insertWarningInfo(paramMap);
+						
+						SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+						amitYuQiDao.insertYuQiHistory(financeId, formatter.format(new Date()), carSumPriceSaleDecimal.subtract(sumGuaraPriceDecimal), diffDays);
+						updateFinance(financeInfo);
+						interest(financeInfo);
+					}
+					
+				
+
+				/*	if (isInterestDate(productId)) {// 收息提醒
+						paramMap = new HashMap<String, Object>();
+						paramMap.put("roleList", TARGET_ROLE_IDS_RECEPTION);
+						paramMap.put("warnType", 1);
+						paramMap.put("warnMsg", "融资编号为" + financeId + "的融资今天要收息了");
+						commonService.insertWarningInfo(paramMap);
+					}*/
+
+					// 更新融资状态为逾期
+					
+				}
+				
+			}
+
+		}
+	}
+
+	private void interest(FinanceInfo financeInfo) throws Exception {
+		int days= diffDays(new Date(), financeInfo.getFinanceEndDate());
+		List<DykRate> dykRateList = getRate(financeInfo.getProductId());
+		RevenueManagement management = revenueManagementMapper.selectByPrimaryKey(financeInfo.getFinanceId());
+		BigDecimal thisInterest = BigDecimal.ZERO;
+		BigDecimal interestSum = BigDecimal.ZERO;
+		BigDecimal notPayInterest = BigDecimal.ZERO;
+		if (management == null) {
+			// 本次利息金额：付款余额*利率*（当前业务日期 - 上一计息日）/360
+			//thisInterest = financeInfo.getFinanceBalance().multiply(dykRate).multiply(new BigDecimal(days));
+			
+	
+			
+			if ((!CollectionUtils.isEmpty(dykRateList))&&days>0) {
+				
+				CarInfo carRecord=new CarInfo();
+				carRecord.setRevenueDay(java.lang.String.valueOf(days));
+				CarInfoExample example=new CarInfoExample();
+				com.ut.scf.pojo.auto.CarInfoExample.Criteria criteria= example.createCriteria();
+				criteria.andSaleStatusEqualTo((byte) 0);
+				criteria.andFinanceIdEqualTo(financeInfo.getFinanceId());
+				//更新每个车辆的延期天数
+				carInfoMapper.updateByExampleSelective(carRecord, example); 
+				
+				//获取策剩余车辆总额
+				String sumPriceString=iCarInfoDao.getCarSumPrice(financeInfo.getFinanceId());
+				BigDecimal sumPriceDecimal=(sumPriceString==null||sumPriceString.isEmpty())?(new BigDecimal(0)):(new BigDecimal(sumPriceString));
+		
+				
+				//获取保证金金额
+				
+				String sumGuaraPriceString=iGuaranteeHistoryInfoDao.selectSumPayGuarantee(financeInfo.getFinanceId());
+				BigDecimal sumGuaraPriceDecimal=(sumGuaraPriceString==null||sumGuaraPriceString.isEmpty())?(new BigDecimal(0)):(new BigDecimal(sumGuaraPriceString));
+		
+				int indexday=0;
+				for (int i = 0; i < dykRateList.size(); i++) {
+					DykRate rate = dykRateList.get(i);
+					if(rate.getDaysEnd()<days)
+					{
+						//天数大于该利率天数区间时，由直接算该天数区间的利润
+						thisInterest = thisInterest .add((sumPriceDecimal.subtract(sumGuaraPriceDecimal)).multiply
+								(rate.getDykRate()==null?BigDecimal.ZERO:rate.getDykRate()).multiply
+								(new BigDecimal(rate.getDaysEnd()-indexday))) ;
+						indexday=rate.getDaysEnd();
+						
+						if(i==dykRateList.size()-1)
+						{
+							//如果该利率是最后一个区间时，则算该利率的天数到上一个区间，利率不变
+							thisInterest = thisInterest .add((sumPriceDecimal.subtract(sumGuaraPriceDecimal)).multiply
+									(rate.getDykRate()==null?BigDecimal.ZERO:rate.getDykRate()).multiply
+									(new BigDecimal(days-indexday))) ;	
+						}
+					}
+					else
+					{
+						thisInterest = thisInterest .add((sumPriceDecimal.subtract(sumGuaraPriceDecimal)).multiply
+								(rate.getDykRate()==null?BigDecimal.ZERO:rate.getDykRate()).multiply
+								(new BigDecimal(days-indexday))) ;	
+						break;
+					}	
+				}
+				
+				
+			}
+	
+			thisInterest = thisInterest.divide(new BigDecimal(36000), 2, RoundingMode.HALF_UP);
+			
+		
+
+			management = new RevenueManagement();
+			management.setFinanceId(financeInfo.getFinanceId());
+			management.setThisInterest(thisInterest);
+			management.setInterestSum(thisInterest);
+			management.setHasPayInterest(BigDecimal.ZERO);
+			management.setNotPayInterest(thisInterest);
+			management.setLastCalDate(new Date());
+			management.setCreateTime(new Date());
+			revenueManagementMapper.insertSelective(management);
+		} else {
+			days = diffDays(new Date(), management.getLastCalDate());
+			int diffdays=diffDays( management.getLastCalDate(),financeInfo.getFinanceEndDate());
+			int diffrzdays=diffDays( new Date(),financeInfo.getFinanceEndDate());
+			//获取策剩余车辆总额
+			String sumPriceString=iCarInfoDao.getCarSumPrice(financeInfo.getFinanceId());
+			BigDecimal sumPriceDecimal=(sumPriceString==null||sumPriceString.isEmpty())?(new BigDecimal(0)):(new BigDecimal(sumPriceString));
+	
+			
+			//获取保证金金额
+			
+			String sumGuaraPriceString=iGuaranteeHistoryInfoDao.selectSumPayGuarantee(financeInfo.getFinanceId());
+			BigDecimal sumGuaraPriceDecimal=(sumGuaraPriceString==null||sumGuaraPriceString.isEmpty())?(new BigDecimal(0)):(new BigDecimal(sumGuaraPriceString));
+	
+			
+			if (!CollectionUtils.isEmpty(dykRateList)&&diffrzdays>0&&diffdays>0) {
+				int indexday=diffdays;
+				for (int i = 0; i < dykRateList.size(); i++) {
+					
+					DykRate rate = dykRateList.get(i);
+					if(diffdays>rate.getDaysEnd() )
+					{//如果上一次的统计的时间与融资到期日的时间差大于该税率区间最终天数，则取下个税率区间
+						if(i==dykRateList.size()-1)
+						{
+							//如果是最后一个区间，则取这个区间的税率
+							thisInterest = thisInterest .add((sumPriceDecimal.subtract(sumGuaraPriceDecimal)).multiply
+									(rate.getDykRate()==null?BigDecimal.ZERO:rate.getDykRate()).multiply
+									(new BigDecimal(days))) ;
+						}
+						continue;
+						
+					}
+					else
+					{//如果上一次的统计的时间与融资到期日的时间差小于该税率区间最终天数
+						if(rate.getDaysEnd()<diffrzdays)
+						{
+							//天数大于该利率天数区间时，由直接算该天数区间的利润
+							thisInterest = thisInterest .add((sumPriceDecimal.subtract(sumGuaraPriceDecimal)).multiply
+									(rate.getDykRate()==null?BigDecimal.ZERO:rate.getDykRate()).multiply
+									(new BigDecimal(rate.getDaysEnd()-indexday))) ;
+							
+							indexday=rate.getDaysEnd();
+							
+							if(i==dykRateList.size()-1)
+							{
+								//如果该利率是最后一个区间时，则算该利率的天数到上一个区间，利率不变
+								thisInterest = thisInterest .add((sumPriceDecimal.subtract(sumGuaraPriceDecimal)).multiply
+										(rate.getDykRate()==null?BigDecimal.ZERO:rate.getDykRate()).multiply
+										(new BigDecimal(diffrzdays-indexday))) ;	
+							}
+						}
+						else
+						{
+							thisInterest = thisInterest .add((sumPriceDecimal.subtract(sumGuaraPriceDecimal)).multiply
+									(rate.getDykRate()==null?BigDecimal.ZERO:rate.getDykRate()).multiply
+									(new BigDecimal(diffrzdays-indexday))) ;	
+							break;
+						}	
+					}
+					
+				}
+			}
+			
+			
+			
+			//thisInterest = financeInfo.getFinanceBalance().multiply(dykRate).multiply(new BigDecimal(days));
+			thisInterest = thisInterest.divide(new BigDecimal(36000), 2, RoundingMode.HALF_UP);
+
+			interestSum = management.getInterestSum();
+			notPayInterest = management.getNotPayInterest();
+			interestSum = interestSum.add(thisInterest);
+			notPayInterest = notPayInterest.add(thisInterest);
+			management.setThisInterest(thisInterest);
+			management.setInterestSum(interestSum);
+			management.setNotPayInterest(notPayInterest);
+			management.setLastCalDate(new Date());
+			revenueManagementMapper.updateByPrimaryKeySelective(management);
+		}
+		if (thisInterest.compareTo(BigDecimal.ZERO) != 0) {
+			insertRevenueFlow(financeInfo.getFinanceId(), thisInterest);// 插入计息流水
+		}
+
+	}
+
+	private void insertRevenueFlow(String financeId, BigDecimal revenueThis) {
+		RevenueFlow revenueFlow = new RevenueFlow();
+		revenueFlow.setFinanceId(financeId);
+		revenueFlow.setId(ScfUUID.generate());
+		revenueFlow.setRevenueThis(revenueThis);
+		revenueFlow.setCreateTime(new Date());
+		revenueFlowMapper.insert(revenueFlow);
+	}
+
+	private int diffDays(Date bDate, Date eDate) throws ParseException {
+		bDate = dateFormat.parse(dateFormat.format(bDate));
+		eDate = dateFormat.parse(dateFormat.format(eDate));
+		return (int) ((bDate.getTime() - eDate.getTime()) / (24 * 3600 * 1000));
+	}
+
+	private void updateFinance(FinanceInfo financeInfo) {
+		financeInfo.setFinanceStatus("5");// 逾期
+		financeInfoMapper.updateByPrimaryKey(financeInfo);
+	}
+}

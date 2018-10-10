@@ -1,0 +1,14 @@
+package com.ut.scf.service.tradfact;
+
+import java.util.Map;
+
+import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.reqbean.tradfact.RepayRecordBean;
+import com.ut.scf.respbean.BaseRespBean;
+
+public interface IRepayRecordService {
+
+    BaseRespBean addRepayInfo(RepayRecordBean repayRecodBean);
+
+    BaseRespBean getLoanInfoList(Map<String, Object> paramMap, PageInfoBean page);
+}

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.pub.ILoanInfoDao">
+	<select id="getLoanInfoList" resultType="hashmap" parameterType="hashmap">
+		select
+			fi.pay_id loanId,
+			fi.pay_date loanDate,
+			fi.pay_amt loanAmt,
+			fi.finance_start_date financeStartDay,
+			fi.finance_end_date financeDueDay,
+			fci.contract_no contractNo,
+			fci.order_batch_id orderBatchId,
+			obi.rec_order_amt orderAcceptMoney,
+			obi.cr_req_total_amt orderAllMoney,
+			gi.guarantee_money_rate guaranteeMoneyRate,
+			gi.pay_able_guarantee guaranteeMoney,
+			gi.pay_act_guarantee guaranteeMoneyActual,
+			fi.note note
+		from factor_contract_info fci
+		join finance_info fi on fci.contract_no = fi.finance_id
+		join order_batch_info obi on fci.order_batch_id = obi.order_batch_id
+		join guarantee_info gi on fi.finance_id = gi.finance_id
+		<where>
+			1 = 1
+			<if test="contractNo!=null and contractNo!='' ">
+				and fci.contract_no LIKE CONCAT(CONCAT('%', #{contractNo}),'%')
+			</if>
+			<if test="orderBatchId!=null and orderBatchId!='' ">
+				and fci.order_batch_id LIKE CONCAT(CONCAT('%', #{orderBatchId}),'%')
+			</if>
+			<if test="loanDate!=null and loanDate!='' ">
+				and DATE_FORMAT(fi.pay_date, '%Y-%m-%d') = #{loanDate}
+			</if>
+		</where>
+	</select>
+	<select id="getLoanInfoListNew" resultType="hashmap" parameterType="hashmap">
+		select temp.* from
+		(select
+			best.contract_no contractNo,
+			batch.batch_id batchId,
+			batch.total_price totalPrice,
+			batch.order_total_num orderTotalNum,
+			batch.people_type peopleType,
+			batch.rec_order_amt recOrderAmt,
+			batch.rec_order_num recOrderNum,
+			batch.rej_order_amt rejOrderAmt,
+			batch.rej_order_num rejOrderNum,
+			batch.sync_date  syncDate,
+			guar.guarantee_money_rate guaranteeMoneyRate,
+			guar.pay_able_guarantee  payAbleGuarantee,
+			guar.guarantee_balance guaranteeBalance,
+		SUM(pay.pay_amt) sumPayAmt
+		from
+		best_sign_status best	
+		join order_batch_info batch ON best.batch_id = batch.batch_id
+		left join fqcr_guarantee_info guar ON guar.batch_id=best.batch_id
+		left join fqcr_pay_history pay on pay.batch_id=best.batch_id
+		
+		<where>
+			1 = 1
+			<if test="contractNo!=null and contractNo!='' ">
+				and best.contract_no LIKE CONCAT(CONCAT('%', #{contractNo}),'%')
+			</if>
+			<if test="batchId!=null and batchId!='' ">
+				and best.batch_id LIKE CONCAT(CONCAT('%', #{batchId}),'%')
+			</if>
+			<if test="peopleType!=null and peopleType!='' ">
+				and batch.people_type LIKE #{peopleType}
+			</if>
+			<if test="status!=null and status!='' ">
+				and best.status LIKE CONCAT(CONCAT('%', #{status}),'%')
+			</if>
+			<if test="syncDate!=null and syncDate!='' ">
+				and DATE_FORMAT(batch.sync_date, '%Y-%m-%d') = #{syncDate}
+			</if>
+		</where>
+		group by  best.batch_id)temp
+	</select>
+	<select id="getContractInfoList" resultType="hashmap" parameterType="hashmap">
+		select temp.* from
+		(select
+			fc.contract_no contractNo,
+			ob.order_batch_id orderBatchId,
+			ob.rec_order_amt recOrderAmt,
+			ob.cr_req_total_amt crReqTotalAmt,
+			MAX(rp.current_repay_date) currentRepayDate
+		from
+			factor_contract_info fc
+			join order_batch_info ob on ob.order_batch_id = fc.order_batch_id
+			join repayment_plan_info rp on rp.order_batch_id = fc.order_batch_id
+		<where>
+			1 = 1
+			<if test="contractNo!=null and contractNo!='' ">
+				and fc.contract_no LIKE CONCAT(CONCAT('%', #{contractNo}),'%')
+			</if>
+			and fc.contract_no not in (
+				select fi.finance_id from finance_info fi
+			)
+		</where>
+		group by
+			fc.contract_no,
+			ob.order_batch_id,
+			ob.rec_order_amt,
+			ob.cr_req_total_amt) temp
+	</select>
+
+</mapper>

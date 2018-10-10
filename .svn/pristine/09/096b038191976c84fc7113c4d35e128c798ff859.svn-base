@@ -1,0 +1,49 @@
+package com.ut.scf.service.project.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.ut.scf.dao.auto.DykAreaMapper;
+import com.ut.scf.dao.auto.DykRepresentMapper;
+import com.ut.scf.pojo.auto.DykArea;
+import com.ut.scf.pojo.auto.DykRepresent;
+import com.ut.scf.pojo.auto.DykRepresentExample;
+import com.ut.scf.pojo.auto.DykRepresentExample.Criteria;
+import com.ut.scf.respbean.BaseRespBean;
+import com.ut.scf.respbean.ListRespBean;
+import com.ut.scf.service.project.IDykRepresentInfoService;
+
+@Service("dykRepresentInfoService")
+public class DykRepresentInfoServiceImpl implements IDykRepresentInfoService {
+	@Resource
+	private DykAreaMapper dykAreaMapper;
+
+	@Resource
+	private DykRepresentMapper dykRepresentMapper;
+
+	@Override
+	public BaseRespBean findAreaInfo() {
+		ListRespBean listRespBean = new ListRespBean();
+		List<DykArea> areas = dykAreaMapper.selectByExample(null);
+		listRespBean.setDataList(areas);
+		return listRespBean;
+	}
+
+	@Override
+	public BaseRespBean findRepresentInfo(DykArea area) {
+		ListRespBean listRespBean = new ListRespBean();
+		DykRepresentExample example = new DykRepresentExample();
+		Criteria criteria = example.createCriteria();
+		String areaid = area.getAreaId();
+		if (areaid != null && !"".equals(areaid)) {
+			criteria.andAreaIdEqualTo(areaid);
+		}
+		List<DykRepresent> areas = dykRepresentMapper.selectByExample(example);
+		listRespBean.setDataList(areas);
+		return listRespBean;
+	}
+
+}

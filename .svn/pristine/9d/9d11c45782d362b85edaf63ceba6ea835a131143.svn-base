@@ -1,0 +1,396 @@
+$(document).ready(function() {
+    CloudUtils.getMenuNames("nav");
+    initTable();
+    dateload();
+});
+
+function searchFun() {
+    initTable();
+
+}
+
+var orderBy ="";
+var orderByName="";
+
+
+function initTable() {
+    $('#yuQiListTable').bootstrapTable('destroy');
+    $("#yuQiListTable").bootstrapTable({
+        method: "post",
+        url: "../YUQI/yuQiRepaySum",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 5, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [5, 10, 15, 20, 25,50,100,200], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求 
+ 
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var dataTemp = CloudUtils.convertStringJson('searchForm');
+            var jsonData = eval("(" + dataTemp + ")");
+            jsonData.pageNumber = params.pageNumber;
+            jsonData.pageSize = params.pageSize;
+            jsonData.orderBy = orderBy;
+            jsonData.orderByName=orderByName;
+             return JSON.stringify(jsonData);         
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'orderId',
+            title: '订单号',
+            align: 'center',
+            valign: 'middle',
+            sortable : true         
+        },{
+            field: 'peopleType',
+            title: '业务类型',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value) {
+                if(value=='1'){
+                	return "学生";
+                }else if(value=='2'){
+                	return "家庭宽带";
+                }else if(value=='3'){
+                	return "翼支付";
+                }
+            },
+            sortable: true
+        },{
+            field: 'orderRepayCount',
+            title: '逾期期数',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+       
+        },
+        {
+            field: 'outerDay',
+            title: '逾期天数',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+       
+        },{
+            field: 'sumYuQiMoney',
+            title: '逾期总金额',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        
+        },{
+            field: 'M1',
+            title: '逾期1-30天(M1)',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row, index) {
+            	if(row.outerDay>=1&&row.outerDay<=30){
+            		return row.outerDay+"天";
+            	}else{
+            		return "";
+            	}
+            }
+           
+        },{
+            field: 'M2',
+            title: '逾期31-60天(M2)',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row, index) {
+            	if(row.outerDay>=31&&row.outerDay<=60){
+            		return row.outerDay+"天";
+            	}else{
+            		return "";
+            	}
+            }
+           
+        },{
+            field: 'M3',
+            title: '逾期61-90天(M3)',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row, index) {
+	            if(row.outerDay>=61&&row.outerDay<=90){
+	        		return row.outerDay+"天";
+	        	}else{
+	        		return "";
+	        	}
+            }
+        },{
+            field: 'M4',
+            title: '逾期90天以上(M4)',
+            align: 'center',
+            valign: 'middle',
+            formatter: function(value, row, index) {
+	            if(row.outerDay>=91){
+	        		return row.outerDay+"天";
+	        	}else{
+	        		return "";
+	        	}
+            }
+        }, {
+            field: 'operation',
+            title: '还款计划',
+            align: 'center',
+            valign: 'middle',
+            width: 100,
+            formatter: function(value, row, index) {
+                var m = '<a class = "fa fa-list-ul detailOrder" style="color:#278bdd;padding:0px 5px;" title="详情" href="javascript:void(0)"></a>';
+
+                return m;
+            },
+            events: 'operateEvents'
+        }],
+        onSort:function(name, order){
+        	orderBy = order;
+        	orderByName=name;
+        },
+    });
+}
+
+var orderByRepayment ="";
+var orderByRepaymentName="";
+function initRepayPlanListTable(orderBatchId,orderId) {
+    $('#repayPlanListTable').bootstrapTable('destroy');
+    $("#repayPlanListTable").bootstrapTable({
+        method: "post",
+        url: "../sign/repayListPage",
+        striped: false, //表格显示条纹  
+        pagination: true, //启动分页  
+        pageSize: 18, //每页显示的记录数  
+        pageNumber: 1, //当前第几页  
+        pageList: [12,18, 24, 50,100,200,500], //记录数可选列表  
+        search: false, //是否启用查询  
+        showColumns: false, //显示下拉框勾选要显示的列  
+        showRefresh: false, //显示刷新按钮  
+        sidePagination: "server", //表示服务端请求  
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
+        //设置为limit可以获取limit, offset, search, sort, order  
+        queryParamsType: "undefined",
+        queryParams: function queryParams(params) {
+            var jsonData = {
+                pageNumber: params.pageNumber,
+                pageSize: params.pageSize,
+                batchId: orderBatchId,
+                orderId:orderId,
+                orderBy:orderByRepayment,
+                orderByName:orderByRepaymentName,
+
+            };
+            return JSON.stringify(jsonData);
+            // return JSON.stringify({});
+        },
+        responseHandler: function responseHandler(res) {
+            if (res.result == 0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'repayment_id',
+            title: '还款计划ID',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        }, {
+            field: 'order_id',
+            title: '订单编号',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        }, {
+            field: 'order_batch_id',
+            title: '批次编号',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        }, {
+            field: 'period',
+            title: '第几期',
+            align: 'center',
+            valign: 'middle'  ,
+            sortable : true     
+        },{
+            field: 'current_repay_date',
+            title: '应付日期',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        },{
+            field: 'interest',
+            title: '资方利息',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'lc_money',
+            title: '超人服务费',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'current_money',
+            title: '资方本金',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'ensure_money',
+            title: '保证金',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'payed_time',
+            title: '实付时间',
+            align: 'center',
+            valign: 'middle',
+            sortable : true
+        },{
+            field: 'repayment_money',
+            title: '用户应还金额',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'paid_money',
+            title: '用户实还金额',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter: function(value, row) {
+                return $.number(value, 2);
+            }
+        },{
+            field: 'state',
+            title: '超人回款状态',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter:function(value){
+            	if(value=='0'||value==""||value==null){
+            		return value;
+            	}else if (value=='1'){
+            		return "未还款";
+            	}else if (value=='2'){
+            		return "还款中";
+            	}else if (value=='3'){
+            		return "已还款";
+            	}else if (value=='4'){
+            		return "待渠道代偿";
+            	}else if (value=='5'){
+            		return "取消中";
+            	}else if (value=='7'){
+            		return "已代偿";
+                 }else{
+            		return value;
+            	}
+            		
+            	
+            }
+        },{
+            field: 'student_repay_status',
+            title: '客户回款状态',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter:function(value){
+            	if(value=='0'||value==""||value==null){
+            		return "未还款";
+            	}else if (value=='1'){
+            		return "还款完成";
+            	}else if (value=='2'){
+            		return "还款不足";
+            	}else if (value=='3'){
+            		return "超额还款";
+            	}else if (value=='5'){
+            		return "已取消";
+            	}else if (value=='6'){
+            		return "取消中";
+            	}else if (value=='7'){
+            		return "退订中";
+            	}else if (value=='8'){
+            		return "提前结清中";
+            	}else{
+            		return value;
+            	}
+            		
+            	
+            }
+        },{
+            field: 'ensure_money_state',
+            title: '保证金是否退还',
+            align: 'center',
+            valign: 'middle',
+            sortable : true,
+            formatter:function(value){
+            	if(value=='0'||value==""||value==null){
+            		return "未退还";
+            	}else if (value=='1'){
+            		return "已退还";
+            	}else{
+            		return value;
+            	}
+            }
+        }       
+        ],
+        onSort:function(name, order){
+        	orderByRepayment = order;
+        	orderByRepaymentName=name;
+        },
+    });
+}
+
+window.operateEvents = {
+
+    'click .detailOrder': function(e, value, row, index) {
+        $('#repayInfo').modal('show');
+        // CloudUtils.setForm(row, 'detailForm');
+        initRepayPlanListTable(null,row.orderId)
+        // $('#repayListTable').bootstrapTable('append', row);
+    }
+};
