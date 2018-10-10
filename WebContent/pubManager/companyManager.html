@@ -51,71 +51,75 @@
 				</div>
 				<fieldset id='field'>
 				<div class="form-group">
-				<div class="form-group col-sm-8">
+				<div class="form-group col-sm-12">
 					<div class="form-group">
 					
 				
-						<label class="col-sm-3 control-label" for="corpName">经销商名称</label>
-						<div class="col-sm-3">
+						<label class="col-sm-2 control-label" for="corpName">公司名称</label>
+						<div class="col-sm-2">
 							<input type="text" name="corpName" id="corpName" class="form-control" />
 						</div>
-						
-					</div>
-					<div class="form-group">
-						<label class="col-sm-3 control-label" for="fixedPhone">联系方式(座机):</label>
-						<div class="col-sm-3">
+						<label class="col-sm-2 control-label" for="agencyNum">公司编码</label>
+						<div class="col-sm-2">
+							<input type="text"  readonly class="form-control " name="agencyNum">
+						</div>
+
+						<label class="col-sm-2 control-label" for="fixedPhone">联系方式(座机):</label>
+						<div class="col-sm-2">
 							<input type="text" name="fixedPhone" id="fixedPhone" class="form-control"  >
 							<input type="hidden" id="sysType" name ="sysType" value="4">
 							<input type="hidden" id="corpId" name="corpId" />
 							<input type="hidden" id="agencyNum" name="agencyNum" />
-<!-- 							<input type="hidden" name="maxCreditAmount" class="form-control" id="maxCreditAmount"> -->
 						</div>
-						<label class="col-sm-3 control-label" for="email">邮箱</label>
-						<div class="col-sm-3">
+					</div>
+
+
+					<div class="form-group">
+
+						<label class="col-sm-2 control-label" for="email">邮箱</label>
+						<div class="col-sm-2">
 							<input type="text" name="email" id="email" class="form-control" >
 						</div>
-						
-					</div>
-					<div class="form-group">
-						<label class="col-sm-3 control-label" for="companyUrl">网址:</label>
-						<div class="col-sm-3">
+
+						<label class="col-sm-2 control-label" for="companyUrl">注册地址:</label>
+						<div class="col-sm-2">
 							<input type="text" name="companyUrl" id="companyUrl" class="form-control"  >
 						</div>
-						<label class="col-sm-3 control-label" for="officeAddress">联系地址:</label>
-						<div class="col-sm-3">
+						<label class="col-sm-2 control-label" for="officeAddress">联系地址:</label>
+						<div class="col-sm-2">
 							<input type="text" name="officeAddress" id="officeAddress" class="form-control" >
 						</div>
-					
+
 					</div>
-					<div class="form-group">
-						<label class="col-sm-3 control-label" for="businessRegistrationNumber">工商注册号:</label>
-						<div class="col-sm-3">
+					</div>
+						<label class="col-sm-2 control-label" for="businessRegistrationNumber">工商注册号:</label>
+						<div class="col-sm-2">
 							<input type="text" name="businessRegistrationNumber"  id="businessRegistrationNumber" class="form-control"  >
 						</div>
-						<label class="col-sm-3 control-label" for="orgnNum">组织机构代码:</label>
-						<div class="col-sm-3">
+						<label class="col-sm-2 control-label" for="orgnNum">组织机构代码:</label>
+						<div class="col-sm-2">
 							<input type="text" name="orgnNum" id="orgnNum" class="form-control" >
 						</div>
 					
 					</div>
 					<div class="form-group">
 					
-						<label class="col-sm-3 control-label" for="regAddress">注册地址:</label>
-						<div class="col-sm-3">
+						<label class="col-sm-2 control-label" for="regAddress">注册地址:</label>
+						<div class="col-sm-2">
 							<input type="text" name="regAddress" class="form-control"  >
 						</div>
-							<label class="col-sm-3 control-label" for="busiScope">经营范围:</label>
-						<div class="col-sm-3">
+							<label class="col-sm-2 control-label" for="busiScope">经营范围:</label>
+						<div class="col-sm-2>
 							<input type="text" name="busiScope" class="form-control"   >
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-sm-3 control-label" for="uniformCreditCode">统一信用代码:</label>
-						<div class="col-sm-3">
+						<label class="col-sm-2 control-label" for="uniformCreditCode">统一信用代码:</label>
+						<div class="col-sm-2">
 							<input type="text" name="uniformCreditCode" class="form-control">
 						</div>
-						<label class="col-sm-3 control-label" for="corpType"><span class="required">*</span>公司类型</label>
-						<div class="col-sm-3">
+						<label class="col-sm-2 control-label" for="corpType"><span class="required">*</span>公司类型</label>
+						<div class="col-sm-2">
 							<select id="corpType" name=corpType class="form-control">
 								<option value="国有企业">国有企业</option>
 							     <option value="外资企业">外资企业</option>
@@ -127,8 +131,8 @@
 					
 					</div>
 					<div class="form-group">
-						<label class="col-sm-3 control-label"  for="area"><span class="required">*</span>所属区域</label>
-			          	<div class="col-sm-3">
+						<label class="col-sm-2 control-label"  for="area"><span class="required">*</span>所属区域</label>
+			          	<div class="col-sm-2">
 			            	<select id="area" name="area" class="form-control" onchange="changeArea(this.value);">
 			            		<option value=""></option>
 			                	<option value="0">东区事业部</option>
@@ -137,102 +141,47 @@
 			                	<option value="3">北区事业部</option>
 			                </select>
 			          	</div>
-			          	<label class="col-sm-3 control-label"  for="represent"><span class="required">*</span>所属商代处</label>
-			          	<div class="col-sm-3">
+			          	<label class="col-sm-2 control-label"  for="represent"><span class="required">*</span>所属商代处</label>
+			          	<div class="col-sm-2">
 			            	<select id="represent" name="represent" class="form-control">
 			                </select>
 			          	</div>
 					</div>
 					<div class="form-group">
-						<label class="col-sm-3 control-label" for="taxpayerRegistrationNumber">纳税人识别号:</label>
-						<div class="col-sm-3">
+						<label class="col-sm-2 control-label" for="taxpayerRegistrationNumber">纳税人识别号:</label>
+						<div class="col-sm-2">
 							<input type="text" name="taxpayerRegistrationNumber" class="form-control"  >
 						</div>
-						<label class="col-sm-3 control-label" for="operatingPeriod">营业期限:</label>
-						<div class="col-sm-3">
+						<label class="col-sm-2 control-label" for="operatingPeriod">营业期限:</label>
+						<div class="col-sm-2">
 							<input type="text" name="operatingPeriod" class="form-control" >
 						</div>
 					</div>
 						<div class="form-group">
-					<label class="col-sm-3 control-label" for="dzId">大宗ID:</label>
-					<div class="col-sm-3">
+					<label class="col-sm-2 control-label" for="dzId">大宗ID:</label>
+					<div class="col-sm-2">
 						<input type="text" name="dzId" id="dzId" class="form-control">
 					</div>
-					<label class="col-sm-3 control-label" for="lsId">零售ID:</label>
-					<div class="col-sm-3">
+					<label class="col-sm-2 control-label" for="lsId">零售ID:</label>
+					<div class="col-sm-2">
 						<input type="text" name="lsId" id="lsId" class="form-control">
 					</div>
 				</div>
+
+
 						<div class="form-group">
-							<label class="col-sm-3 control-label" for="maxCreditAmount">大宗最高授信额度:</label>
-					<div class="col-sm-3">
+							<label class="col-sm-2 control-label" for="maxCreditAmount">大宗最高授信额度:</label>
+					<div class="col-sm-2">
 						<input type="text" name="maxCreditAmount" id="maxCreditAmount" class="form-control" >
 					</div>
-					<label class="col-sm-3 control-label" for="maxLscreditAmount">零售最高授信额度:</label>
-					<div class="col-sm-3">
+					<label class="col-sm-2 control-label" for="maxLscreditAmount">零售最高授信额度:</label>
+					<div class="col-sm-2">
 						<input type="text" name="maxLscreditAmount" id="maxLscreditAmount" class="form-control"  >
 					</div>
 				</div>
 				</div>
-				<div class="form-group col-sm-3">
-				<div class="form-group">
-				<div class="col-sm-4">
-							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path1"  src="../images/add-pic.png" onclick="$('#cp1').click();">
-							<input style="display: none;" id="cp1" name="file" type="file" >
-							<input type="hidden" name="companyPicturePath1" id="companyPicturePath1">
-							<div class="col-sm-3">
-							<button type="button" class="btn btn-link" id="previewLink1" onclick="showImg(1)" style="margin-left: 20px;">预览</button>
-							</div>
-						</div>
-						<div class="col-sm-4" >
-							<img style="width:90px;height:160px;margin-left:30px;cursor:pointer;" id="Path2" src="../images/add-pic.png"  onclick="$('#cp2').click();">
-							<input style="display: none;" id="cp2" name="file" type="file" >`
-							<input type="hidden" name="companyPicturePath2" id="companyPicturePath2">
-							<div class="col-sm-3">
-							<button type="button" class="btn btn-link" id="previewLink2" onclick="showImg(2)" style="margin-left: 35px;">预览</button>
-							</div>
-						</div>
-						<div class="col-sm-4">
-							<img style="width:90px;height:160px;margin-left:45px;cursor:pointer;"  id="Path3" src="../images/add-pic.png" onclick="$('#cp3').click();">
-							<input style="display: none;"  id="cp3" name="file" type="file" >
-							<input type="hidden" name="companyPicturePath3" id="companyPicturePath3">
-							<div class="col-sm-3">
-							<button type="button" class="btn btn-link" id="previewLink3" onclick="showImg(3)" style="margin-left: 45px;">预览</button>
-							</div>
-						</div>
 				</div>
-				<div class="form-group">
-				
-							<div class="col-sm-4">
-							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;" id="Path4" src="../images/add-pic.png" onclick="$('#cp4').click();">
-							<input style="display: none;" id="cp4" name="file" type="file" >
-							<input type="hidden" name="companyPicturePath4" id="companyPicturePath4">
-							<div class="col-sm-3">
-							<button type="button" class="btn btn-link" id="previewLink4" onclick="showImg(4)" style="margin-left: 20px;">预览</button>
-							</div>
-						</div>
-						<div class="col-sm-4">
-							<img style="width:90px;height:160px;margin-left:30px;cursor:pointer;" id="Path5" src="../images/add-pic.png" onclick="$('#cp5').click();">
-							<input style="display: none;" id="cp5" name="file" type="file" >
-							<input type="hidden" name="companyPicturePath5" id="companyPicturePath5">
-							<div class="col-sm-3">
-							<button type="button" class="btn btn-link" id="previewLink5" onclick="showImg(5)" style="margin-left: 35px;">预览</button>
-							</div>
-						</div>
-						<div class="col-sm-4">
-							<img style="width:90px;height:160px;margin-left:45px;cursor:pointer;" id="Path6" src="../images/add-pic.png" onclick="$('#cp6').click();">
-							<input style="display: none;" id="cp6" name="file" type="file" >
-							<input type="hidden" name="companyPicturePath6" id="companyPicturePath6">
-							<div class="col-sm-3">
-							<button type="button" class="btn btn-link" id="previewLink6" onclick="showImg(6)" style="margin-left: 45px;">预览</button>
-							</div>
-						</div>
-				</div>
-				
-						
-				</div>
-				
-				 </div>	
+
 				</fieldset>
 			</div>
 		</div>
@@ -253,11 +202,11 @@
 							<input type="text" name="legalPerson" class="form-control"  >
 						</div>
 						<label class="col-sm-1 control-label" for="legalIdNumber">身份证号:</label>
-						<div class="col-sm-3">
+						<div class="col-sm-2">
 							<input type="text" name="legalIdNumber" class="form-control" >
 						</div>
 						<label class="col-sm-1 control-label" for="legalPhoneNumber">联系方式:</label>
-						<div class="col-sm-3">
+						<div class="col-sm-2">
 							<input type="text" name="legalPhoneNumber" class="form-control" >
 						</div>
 					</div>
@@ -267,11 +216,11 @@
 							<input type="text" name="controlPerson" class="form-control"  >
 						</div>
 						<label class="col-sm-1 control-label" for="controlIdNumber">身份证号:</label>
-						<div class="col-sm-3">
+						<div class="col-sm-2">
 							<input type="text" name="controlIdNumber" class="form-control" >
 						</div>
 						<label class="col-sm-1 control-label" for="controlPhoneNumber">联系方式:</label>
-						<div class="col-sm-3">
+						<div class="col-sm-2">
 							<input type="text" name="controlPhoneNumber" class="form-control" >
 						</div>
 					</div>
@@ -281,11 +230,11 @@
 							<input type="text" name="financePerson" class="form-control"  >
 						</div>
 						<label class="col-sm-1 control-label" for="financeIdNumber">身份证号:</label>
-						<div class="col-sm-3">
+						<div class="col-sm-2">
 							<input type="text" name="financeIdNumber" class="form-control" >
 						</div>
 						<label class="col-sm-1 control-label" for="financePhoneNumber">联系方式:</label>
-						<div class="col-sm-3">
+						<div class="col-sm-2">
 							<input type="text" name="financePhoneNumber" class="form-control" >
 						</div>
 					</div>
@@ -295,11 +244,11 @@
 							<input type="text" name="messenger" class="form-control"  >
 						</div>
 						<label class="col-sm-1 control-label" for="messengerIdNumber">身份证号:</label>
-						<div class="col-sm-3">
+						<div class="col-sm-2">
 							<input type="text" name="messengerIdNumber" class="form-control" >
 						</div>
 						<label class="col-sm-1 control-label" for="messengerPhoneNumber">联系方式:</label>
-						<div class="col-sm-3">
+						<div class="col-sm-2">
 							<input type="text" name="messengerPhoneNumber" class="form-control" >
 						</div>
 					</div>
@@ -343,7 +292,7 @@
 						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="businessLicensePath2" id="businessLicensePath2" src="../images/add-pic.png" onclick="$('#bl').click();">
 						<input style="display: none;" id="bl" name="file" type="file" >
 						<input type="hidden" name="businessLicensePath" id="businessLicensePath">
-							<div class="col-sm-3">
+							<div class="col-sm-2">
 							<button type="button" class="btn btn-link" id="previewLink7" onclick="showImg(7)" style="margin-left: 30px;">预览</button>
 							</div>
 					</div>
@@ -352,7 +301,7 @@
 						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="permissionAccountPath2" id="permissionAccountPath2" src="../images/add-pic.png" onclick="$('#pa').click();">
 						<input style="display: none;" id="pa" name="file" type="file" >
 						<input type="hidden" name="permissionAccountPath" id="permissionAccountPath">
-							<div class="col-sm-3">
+							<div class="col-sm-2">
 							<button type="button" class="btn btn-link" id="previewLink8" onclick="showImg(8)" style="margin-left: 30px;">预览</button>
 							</div>
 						
@@ -362,7 +311,7 @@
 						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;"  id="legalIdNumberPath11" src="../images/add-pic.png"  onclick="$('#lin1').click();">
 						<input style="display: none;" id="lin1" name="file" type="file" >
 						<input type="hidden" name="legalIdNumberPath1" id="legalIdNumberPath1">
-							<div class="col-sm-3">
+							<div class="col-sm-2">
 							<button type="button" class="btn btn-link" id="previewLink9" onclick="showImg(9)" style="margin-left: 30px;">预览</button>
 							</div>
 					</div>
@@ -370,7 +319,7 @@
 						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;"  id="legalIdNumberPath22" src="../images/add-pic.png" onclick="$('#lin2').click();">
 						<input style="display: none;" id="lin2" name="file" type="file" >
 						<input type="hidden" name="legalIdNumberPath2" id="legalIdNumberPath2">
-							<div class="col-sm-3">
+							<div class="col-sm-2">
 							<button type="button" class="btn btn-link" id="previewLink10" onclick="showImg(10)" style="margin-left: 30px;">预览</button>
 							</div>
 					</div>
