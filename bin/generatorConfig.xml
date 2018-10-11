@@ -2,13 +2,13 @@
 <!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
 <generatorConfiguration>
   <!-- classPathEntry:数据库的JDBC驱动,换成你自己的驱动位置 -->
-  <classPathEntry location="G:\mysql-connector-java-5.1.44-bin.jar" />
+  <classPathEntry location="mysql-connector-java-5.1.38.jar" />
   <context id="context1">
-    <jdbcConnection connectionURL="jdbc:mysql://106.15.189.67:3306/scfyd2018?tinyInt1isBit=false" driverClass="com.mysql.jdbc.Driver" password="Sunyard123" userId="sunyard" />
-    <javaModelGenerator targetPackage="com.ut.scf.pojo.auto" targetProject="scfyd" />
-    <sqlMapGenerator targetPackage="com.ut.scf.mybatis.mapping.auto" targetProject="scfyd" />
-    <javaClientGenerator targetPackage="com.ut.scf.dao.auto" targetProject="scfyd" type="XMLMAPPER" />
-    <table tableName="day_repay_record_info" domainObjectName="DayRepayRecordInfo" >
+    <jdbcConnection connectionURL="jdbc:mysql://47.100.23.51:3306/sims?tinyInt1isBit=false" driverClass="com.mysql.jdbc.Driver" password="zhuwanqi19940509" userId="zhu" />
+    <javaModelGenerator targetPackage="com.ut.scf.pojo.auto" targetProject="" />
+    <sqlMapGenerator targetPackage="com.ut.scf.mybatis.mapping.auto" targetProject="" />
+    <javaClientGenerator targetPackage="com.ut.scf.dao.auto" targetProject="" type="XMLMAPPER" />
+    <table tableName="supplier_info" domainObjectName="SupplierInfo" >
     </table>
   </context>
 </generatorConfiguration>
