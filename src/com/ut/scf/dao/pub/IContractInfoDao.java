@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Update;
 
 import com.ut.scf.core.dict.PageInfoBean;
 
-
+//合同信息操作类
 public interface IContractInfoDao {
 	List<Map<String, Object>> selectContractList(Map<String, Object> paramMap,PageInfoBean page);
 	
