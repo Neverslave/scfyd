@@ -535,18 +535,18 @@ function changeSysType() {
 }
 
 /************dyk地域开始*****************/
-function loadAreas() {
-    var options = {
-        url: '../../represent/areas',
-        data: '{}',
-        callBackFun: function(data) {
-            $.each(data.dataList, function(index, units) {
-                $("#area").append("<option value=" + units.areaId + ">" + units.areaName + "</option>");
-            });
-        }
-    };
-    CloudUtils.ajax(options);
-}
+//function loadAreas() {
+//    var options = {
+//        url: '../../represent/areas',
+//        data: '{}',
+//        callBackFun: function(data) {
+//            $.each(data.dataList, function(index, units) {
+//                $("#area").append("<option value=" + units.areaId + ">" + units.areaName + "</option>");
+//            });
+//        }
+//    };
+//    CloudUtils.ajax(options);
+//}
 
 function changeArea(area) {
     var data = { areaId: area };

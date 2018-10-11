@@ -213,125 +213,125 @@ function manageNotice(){
 /**************************************echart统计视图************************************/
 
 
-function showEchart(data){
-	//销毁
-	echarts.dispose(document.getElementById('echart'));
-	 var myChart = echarts.init(document.getElementById('echart'));
-	 var financeAlreadyTotal = 0;
-	 var financeBalanceTotal = 0;
-	 var overdueFinanceAmountTotal = 0;
-	 var toBeFinanceAmountTotal = 0;
-	 $.each(data, function(index, value) {
-		 //financeAlreadyTotal += value.financeAlreadySum;
-		 financeAlreadyTotal = CloudUtils.Math(financeAlreadyTotal,value.financeAlreadySum,"add");
-		 //financeBalanceTotal += value.financeBalanceSum;
-		 financeBalanceTotal = CloudUtils.Math(financeBalanceTotal,value.financeBalanceSum,"add");
-		 //overdueFinanceAmountTotal += value.overdueFinanceAmountSum;
-		 overdueFinanceAmountTotal = CloudUtils.Math(overdueFinanceAmountTotal,value.overdueFinanceAmountSum,"add");
-		 //toBeFinanceAmountTotal += value.toBeFinanceAmountSum
-		 toBeFinanceAmountTotal = CloudUtils.Math(toBeFinanceAmountTotal,value.toBeFinanceAmountSum,"add");
-		});
-     // 指定图表的配置项和数据
- var option = {
-     tooltip: {
-     trigger: 'item',
-     formatter: "{a} <br/>{b}: {c} ({d}%)"
- },
- legend: {
-     orient: 'vertical',
-	 x: 'left',
-	 data:['总计放款金额','总计待放款金额']
-	 },
- series: [
-     {
-         name:'访问来源',
-         type:'pie',
-         selectedMode: 'single',
-         radius: [0, '30%'],
-
-         label: {
-             normal: {
-                 position: 'inner'
-             }
-         },
-         labelLine: {
-             normal: {
-                 show: false
-             }
-         },
-         data:[
-             {value:financeAlreadyTotal+financeBalanceTotal+overdueFinanceAmountTotal,
-            name:'总计放款金额',
-            	 label: {
-            	    normal: {
-            	        textStyle: {
-            	            color: 'rgba(255, 255, 255, 0.0)'
-            	        }
-            	    }
-            	}},
-             {value:toBeFinanceAmountTotal, 
-            name:'总计待放款金额',
-	            label: {
-	        	    normal: {
-	        	        textStyle: {
-	        	            color: 'rgba(255, 255, 255, 0.0)'
-	        	        }
-	        	    }
-	        	}
-            }
-         ]
-     },
-     {
-         name:'访问来源',
-         type:'pie',
-         radius: ['40%', '55%'],
-
-         data:[
-             {value:financeAlreadyTotal, name:'已还融资金额'},
-             {value:financeBalanceTotal, name:'未还融资金额'},
-             {value:overdueFinanceAmountTotal, name:'逾期融资金额'},
-             {value:toBeFinanceAmountTotal, name:'待放款金额'}
-         ]
-     }
- ]
-     };
-     // 使用刚指定的配置项和数据显示图表。
-     myChart.setOption(option);
-     window.onresize = myChart.resize;//宽度自适应
-}
-var homePageTime = new Object({
-	check : function(i){
-		if(i<10){  
-	          i="0"+i;  
-	          //return i;  
-	      }  
-	      else{  
-	          i=i;  
-	         // return i;  
-	      }  
-	return i;  
-	},
-	show : function(){
-		 var now=new Date();  
-		    var year=now.getFullYear() ;  
-		    var month= now.getMonth()+1 ;  
-		    var day=now.getDate() ;  
-		    var h=now.getHours();  
-		    var m=now.getMinutes() ;  
-		    var s=now.getSeconds() ;  
-		    m=homePageTime.check(m)  
-		    s=homePageTime.check(s)  
-		  
-		    var weekday=new Array(7)  
-		    weekday[0]="星期日"  
-		    weekday[1]="星期一"  
-		    weekday[2]="星期二"  
-		    weekday[3]="星期三"  
-		    weekday[4]="星期四"  
-		    weekday[5]="星期五"  
-		    weekday[6]="星期六"  
-		  
-		    document.getElementById("jnkc").innerHTML=""+year+"年"+month+"月"+day+"日 "+weekday[now.getDay()] +h+":"+m+":"+s;  
-		    t=setTimeout('homePageTime.show()',500) 
-	}
-})
+//function showEchart(data){
+//	//销毁
+//	echarts.dispose(document.getElementById('echart'));
+//	 var myChart = echarts.init(document.getElementById('echart'));
+//	 var financeAlreadyTotal = 0;
+//	 var financeBalanceTotal = 0;
+//	 var overdueFinanceAmountTotal = 0;
+//	 var toBeFinanceAmountTotal = 0;
+//	 $.each(data, function(index, value) {
+//		 //financeAlreadyTotal += value.financeAlreadySum;
+//		 financeAlreadyTotal = CloudUtils.Math(financeAlreadyTotal,value.financeAlreadySum,"add");
+//		 //financeBalanceTotal += value.financeBalanceSum;
+//		 financeBalanceTotal = CloudUtils.Math(financeBalanceTotal,value.financeBalanceSum,"add");
+//		 //overdueFinanceAmountTotal += value.overdueFinanceAmountSum;
+//		 overdueFinanceAmountTotal = CloudUtils.Math(overdueFinanceAmountTotal,value.overdueFinanceAmountSum,"add");
+//		 //toBeFinanceAmountTotal += value.toBeFinanceAmountSum
+//		 toBeFinanceAmountTotal = CloudUtils.Math(toBeFinanceAmountTotal,value.toBeFinanceAmountSum,"add");
+//		});
+//     // 指定图表的配置项和数据
+// var option = {
+//     tooltip: {
+//     trigger: 'item',
+//     formatter: "{a} <br/>{b}: {c} ({d}%)"
+// },
+// legend: {
+//     orient: 'vertical',
+//	 x: 'left',
+//	 data:['总计放款金额','总计待放款金额']
+//	 },
+// series: [
+//     {
+//         name:'访问来源',
+//         type:'pie',
+//         selectedMode: 'single',
+//         radius: [0, '30%'],
+//
+//         label: {
+//             normal: {
+//                 position: 'inner'
+//             }
+//         },
+//         labelLine: {
+//             normal: {
+//                 show: false
+//             }
+//         },
+//         data:[
+//             {value:financeAlreadyTotal+financeBalanceTotal+overdueFinanceAmountTotal,
+//            name:'总计放款金额',
+//            	 label: {
+//            	    normal: {
+//            	        textStyle: {
+//            	            color: 'rgba(255, 255, 255, 0.0)'
+//            	        }
+//            	    }
+//            	}},
+//             {value:toBeFinanceAmountTotal, 
+//            name:'总计待放款金额',
+//	            label: {
+//	        	    normal: {
+//	        	        textStyle: {
+//	        	            color: 'rgba(255, 255, 255, 0.0)'
+//	        	        }
+//	        	    }
+//	        	}
+//            }
+//         ]
+//     },
+//     {
+//         name:'访问来源',
+//         type:'pie',
+//         radius: ['40%', '55%'],
+//
+//         data:[
+//             {value:financeAlreadyTotal, name:'已还融资金额'},
+//             {value:financeBalanceTotal, name:'未还融资金额'},
+//             {value:overdueFinanceAmountTotal, name:'逾期融资金额'},
+//             {value:toBeFinanceAmountTotal, name:'待放款金额'}
+//         ]
+//     }
+// ]
+//     };
+//     // 使用刚指定的配置项和数据显示图表。
+//     myChart.setOption(option);
+//     window.onresize = myChart.resize;//宽度自适应
+//}
+//var homePageTime = new Object({
+//	check : function(i){
+//		if(i<10){  
+//	          i="0"+i;  
+//	          //return i;  
+//	      }  
+//	      else{  
+//	          i=i;  
+//	         // return i;  
+//	      }  
+//	return i;  
+//	},
+//	show : function(){
+//		 var now=new Date();  
+//		    var year=now.getFullYear() ;  
+//		    var month= now.getMonth()+1 ;  
+//		    var day=now.getDate() ;  
+//		    var h=now.getHours();  
+//		    var m=now.getMinutes() ;  
+//		    var s=now.getSeconds() ;  
+//		    m=homePageTime.check(m)  
+//		    s=homePageTime.check(s)  
+//		  
+//		    var weekday=new Array(7)  
+//		    weekday[0]="星期日"  
+//		    weekday[1]="星期一"  
+//		    weekday[2]="星期二"  
+//		    weekday[3]="星期三"  
+//		    weekday[4]="星期四"  
+//		    weekday[5]="星期五"  
+//		    weekday[6]="星期六"  
+//		  
+//		    document.getElementById("jnkc").innerHTML=""+year+"年"+month+"月"+day+"日 "+weekday[now.getDay()] +h+":"+m+":"+s;  
+//		    t=setTimeout('homePageTime.show()',500) 
+//	}
+//})
