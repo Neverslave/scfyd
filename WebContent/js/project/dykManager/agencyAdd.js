@@ -203,7 +203,6 @@ function initTable() {
 
 function add(){
 	formValidator();
-	$("#represent").empty();
 	$('#isEdit').val("0"); //新增0；修改1
 	$("#addForm").find('input').attr("readonly", false);
 	$("#addForm").find('select').attr("disabled", false);
@@ -226,7 +225,6 @@ function detail(row) {
 
 function modify(row, index) {
 	formValidator();
-	changeArea(row.area);
 	CloudUtils.setForm(row, "addForm");
 	$('#isEdit').val("1"); //新增0；修改1
 	$('#index').val(index);
@@ -238,24 +236,6 @@ function modify(row, index) {
 	$("#addModal").modal({backdrop: 'static', keyboard: false});
 }
 
-function changeArea(areaVal) {
-	$("#represent").empty();
-	if (areaVal == '0') {
-		$("#represent").append("<option value='0'>南京</option>")
-						.append("<option value='1'>上海</option>");
-	} else if (areaVal == '1') {
-		$("#represent").append("<option value='2'>西安</option>")
-						.append("<option value='3'>成都</option>");
-	} else if (areaVal == '2') {
-		$("#represent").append("<option value='4'>广州</option>")
-						.append("<option value='5'>武汉</option>")
-						.append("<option value='6'>郑州</option>");
-	} else if (areaVal == '3') {
-		$("#represent").append("<option value='7'>北京</option>")
-						.append("<option value='8'>沈阳</option>")
-						.append("<option value='9'>济南</option>");
-	}
-}
 
 function addAgency() {
 	
@@ -266,35 +246,11 @@ function addAgency() {
 	}
 	
 
-	if($("#maxCreditAmount").val()){
-		if(!$("#dzId").val()){
-			bootbox.alert("大宗ID不能为空");
-			return false;
-		}
-		if(!canDzSubmit){
-			bootbox.alert("大宗ID与数据库重复");
-			return false;
-		}
-	}else if($("#maxLscreditAmount").val()){
-		if(!$("#lsId").val()){
-			bootbox.alert("零售ID不能为空");
-			return false;
-		}
-		if(!canLsSubmit){
-			bootbox.alert("零售ID与数据库重复");
-			return false;
-		}
-	}else{
-		bootbox.alert("零售和大宗额度,ID至少要有一个");
-		return false;
-	}
 
 	
 	var agencyListData = $("#agencyListTable").bootstrapTable('getData');
 	var agcNum = $("#addForm #agencyNum").val();
 	var agencyName = $("#addForm #corpName").val();
-	var currentDzId = $("#addForm #dzId").val();
-	var currentLsId = $("#addForm #lsId").val();
 	var isEdit = $('#isEdit').val(); //新增0；修改1
 	var index = $("#index").val();
 	for(var i = 0; i < agencyListData.length; i++){
@@ -306,15 +262,7 @@ function addAgency() {
 			continue;
 		}
 		if(agcNum == agencyNum||agencyName == corpName){
-			bootbox.alert("经销商名称或代码重复，请修改!");
-			return false;
-		}
-		if(dzId!=""&&dzId!=null&&dzId == currentDzId){
-			bootbox.alert("大宗Id与列表重复，请修改!");
-			return false;
-		}
-		if(lsId!=""&&lsId!=null&&lsId == currentLsId){
-			bootbox.alert("零售Id与列表重复，请修改!");
+			bootbox.alert("供应商名称或代码重复，请修改!");
 			return false;
 		}
 	}
@@ -341,7 +289,7 @@ function apply() {
 	
 	var agencyListData = $("#agencyListTable").bootstrapTable('getData');
 	if (agencyListData.length == 0) {
-		bootbox.alert("经销商列表不能为空");
+		bootbox.alert("供应商列表不能为空");
 		return false;
 	}
 	var data = CloudUtils.convertStringJson('noteForm');
@@ -368,18 +316,6 @@ function apply() {
 	CloudUtils.ajax(options);
 }
 
-/**
- * 金额项目千分位符表示
- */
-function numFormat(){
-	$("input[name='maxCreditAmount']").number(true, 2);
-	$("input[name='maxLscreditAmount']").number(true, 2);
-	$("input[name='firstTwoYearsPickupNum']").number(true, 0);
-	$("input[name='firstTwoYearsRetailNum']").number(true, 0);
-	$("input[name='firstTwoYearsSaleRank']").number(true, 0);
-	$('input[name="thisYearPlanPickupNum"]').number(true, 0);
-	$('input[name="thisYearPlanSales"]').number(true, 2);
-}
 
 function isDzIdExit(){
 	var options = {

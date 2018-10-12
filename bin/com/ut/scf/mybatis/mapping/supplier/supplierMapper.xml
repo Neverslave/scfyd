@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.supplier.ISupplierDao" >
+
+<select id="supplierList" resultType="hashmap" parameterType="hashmap">
+	select si.corp_id  corpId ,
+	si.corp_name corpName ,si.agency_num agencyNum ,si.fixed_phone fixedPhone,
+	si.sys_type sysType ,si.location_province locationProvince,si.location_city locationCity,
+	si.location_area locationArea , si.location_address locationAddress,
+	si.register_province registerProvince,
+	si.register_city  registerCity, si.register_area registerArea,
+	si.register_address registerAddress,si.email email ,si.uniform_credit_code uniformCreditCode,
+	si.legal_person legalPerson ,si.cellphone cellphone ,si.id_number idNumber,
+	si.business_license_pic businessLincensePic, si.corp_consitution_doc corpConsitutionDoc,
+	si.note note 
+	from supplier_info si
+	<where>
+	ci.status =1 and ci.sys_type = 4 
+	<if test="supplierCode!=null and supplierCode !='' ">
+	and ci.angency_num LIKE CONCAT(CONCAT('%',#{supplierCode}),'%')
+	</if>
+	<if test = "suppleirName !=null and supplierName !='' " >
+	and ci.corp_name LIKE CONCAT(CONCAT('%',#{supplierName},'%'))
+	</if>
+	</where>
+</select>
+
+
+</mapper>

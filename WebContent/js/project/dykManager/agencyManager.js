@@ -29,7 +29,7 @@ function initTable() {
 	$('#agencyListTable').bootstrapTable('destroy');  
 	$("#agencyListTable").bootstrapTable({  
          method: "post", 
-         url: "../../agency/list", 
+         url: "../../supplier/list",
          striped: false,  //表格显示条纹  
          pagination: true, //启动分页  
          pageSize: 20,  //每页显示的记录数  
@@ -51,7 +51,7 @@ function initTable() {
                pageSize: params.pageSize,
                agencyCode: jsonData.txt_agencyCode,
                agencyName: jsonData.txt_agencyName,
-               maxCreditAmountStart: jsonData.maxCreditAmountStart,
+            /*   maxCreditAmountStart: jsonData.maxCreditAmountStart,
                maxCreditAmountEnd: jsonData.maxCreditAmountEnd,
                maxLscreditAmountStart: jsonData.maxLscreditAmountStart,
                maxLscreditAmountEnd: jsonData.maxLscreditAmountEnd,
@@ -60,7 +60,7 @@ function initTable() {
                useLsableAmountStrat: jsonData.useLsableAmountStrat,
                useLsableAmountEnd: jsonData.useLsableAmountEnd,
                area: jsonData.area,
-               represent: jsonData.represent,
+               represent: jsonData.represent,*/
                sysType:jsonData.sysType
                
            };    
@@ -95,49 +95,50 @@ function initTable() {
  	        events: 'operateEvents'
  	    },{
   	        field: 'corpName',
-  	        title: '经销商名称',
+  	        title: '供应商名称',
   	        align: 'center',
   	     	width: 250,
              valign: 'middle'
   	    },{
  	        field: 'corpId',
- 	        title: '经销商ID',
+ 	        title: '供应商ID',
  	        align: 'center',
             valign: 'middle',
             visible: false
  	    }, {
  	        field: 'agencyNum',
- 	        title: '经销商代码',
+ 	        title: '供应商代码',
  	        align: 'center',
  	        width: 80,
-            valign: 'middle'
- 	   }, {
- 	        field: 'dzId',
- 	        title: '大宗ID',
- 	        align: 'center',
-            valign: 'middle',
-            width: 80,
-            formatter:function(value,row,index){
-           	 if(value==null||value==""||value==0)
-           		 {
-           		 return "未申请";
-           		 }
-				 return value;
-	        }
- 	   },  {
- 	        field: 'lsId',
- 	        title: '零售ID',
- 	        align: 'center',
-            valign: 'middle',
-            width: 80,
-            formatter:function(value,row,index){
-           	 if(value==null||value==""||value==0)
-           		 {
-           		 return "未申请";
-           		 }
-				 return value;
-	        }
- 	   },  {
+            valign: 'middle'},
+ 	   // }, {
+ 	   //      field: 'dzId',
+ 	   //      title: '大宗ID',
+ 	   //      align: 'center',
+        //     valign: 'middle',
+        //     width: 80,
+        //     formatter:function(value,row,index){
+        //    	 if(value==null||value==""||value==0)
+        //    		 {
+        //    		 return "未申请";
+        //    		 }
+		// 		 return value;
+	    //     }
+ 	   // },  {
+ 	   //      field: 'lsId',
+ 	   //      title: '零售ID',
+ 	   //      align: 'center',
+        //     valign: 'middle',
+        //     width: 80,
+        //     formatter:function(value,row,index){
+        //    	 if(value==null||value==""||value==0)
+        //    		 {
+        //    		 return "未申请";
+        //    		 }
+		// 		 return value;
+	    //     }
+ 	   // },
+			 {
 	        field: 'corpType',
 	        title: '企业类型',
 	        align: 'center',
@@ -159,7 +160,7 @@ function initTable() {
             formatter: function(value,row,index){
  	            return $.number(value, 2);
  	        }
- 	    },*/{
+ 	    },*//*{
  	        field: 'useAbleCreditAmt',
  	        title: '大宗可用授信额度',
  	        align: 'center',
@@ -176,8 +177,8 @@ function initTable() {
         	width: 130,
             formatter: function(value,row,index){
  	            return $.number(value, 2);
- 	        }
- 	    }, {
+ 	        }*/
+ 	     {
  	        field: 'officeAddress',
  	        title: '公司地址',
  	        align: 'center',
@@ -195,7 +196,7 @@ function initTable() {
  	        align: 'center',
  	        width: 140,
             valign: 'middle'
- 	    }, {
+ 	    }, /*{
  	        field: 'area',
  	        title: '所属区域',
  	        align: 'center',
@@ -250,7 +251,7 @@ function initTable() {
             formatter: function(value,row,index){
  	            return $.number(value, 2);
  	        }
- 	    }, {
+ 	    },*/ {
  	        field: 'note',
  	        title: '备注',
  	        align: 'center',
