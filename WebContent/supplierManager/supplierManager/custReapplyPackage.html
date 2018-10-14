@@ -1,67 +1,32 @@
-<!DOCTYPE html>
-<html style="background-color: #ffffff;">
-<head>
-<meta charset="UTF-8" />
-<title>公司信息维护</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!--external css-->
-    <link href="../css/style.css" rel="stylesheet">
-	  <link href="../css/style-responsive.css" rel="stylesheet">
-	  <link href="../css/bootstrap-table.css" rel="stylesheet">
-	  <link href="../css/validator/bootstrapValidator.css" rel="stylesheet">
-	  <link href="../css/sysfun.css" rel="stylesheet">
-	  <link href="../106/css/selectordie_theme_03.css" rel="stylesheet">
-	  <script src="../js/jquery-3.0.0.min.js" type="text/javascript"></script>
-	  <script src="../106/js/selectordie.min.js" type="text/javascript"></script>
-	  <script src="../js/bootstrap.min.js"></script> 
-	  <script src="../js/CloudUtils.js"></script>
-	  <script src="../js/password.js"></script>
-	  <script src="../js/store.js" type="text/javascript"></script>
-	  
-	  <script src="../js/bootstrap-treeview.js" type="text/javascript"></script>
-	  <script type="text/javascript" src="../js/jquery.validate.min.js"></script>
-	  <script src="../js/validation-init.js"></script>
-	  <script type="text/javascript" src="../js/jquery.number.js"></script>
-	  <script type="text/javascript" src="../js/advanced-datatable/js/jquery.dataTables.js"></script>
-	  <script type="text/javascript" src="../js/bootstrap-table.js"></script>
-	  <script type="text/javascript" src="../js/bootstrap-validator/bootstrapValidator.js"></script>
-	  <script type="text/javascript" src="../js/bootstrap-validator/zh_CN.js"></script>
-	  <script type="text/javascript" src="../js/bootbox-4.4.0/bootbox.js"></script>
-	  <script type="text/javascript" src="../js/ajaxfileupload.js"></script>
-	  <script type="text/javascript" src="../js/fileUpload/jquery.ui.widget.js"></script>
-	  <script type="text/javascript" src="../js/fileUpload/jquery.iframe-transport.js"></script>
-	  <script type="text/javascript" src="../js/fileUpload/jquery.xdr-transport.js"></script>
-	  <script type="text/javascript" src="../js/fileUpload/jquery.fileupload.js"></script>
-      <script src="../js/pubManager/companyManager2.js"></script>
-</head>
-<body class="iframeBody" style="background-color: #ffffff;">
-	<form class="form-horizontal" role="form" id="detailForm" data-toggle="validator">
+<form class="form-horizontal" role="form" id="detailForm" data-toggle="validator">
+ 	<input type="hidden" id="agree" name="agree" /> 
+	<input type="hidden" id="isEdit" name="isEdit" /> 
+	<input type="hidden" id="isEdit2" name="isEdit2" />
+	<input type="hidden" id="orginName" name="orginName" />
+	<input type="hidden" id="num" name="num" >
 	<section>
 		<div class="main-content-child">
 		 <div class="nav" id="nav"></div>
 			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
 		 		<div class="nav">
-					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
-						<li class="tablename" style="float : left;">
-							<b id="corpNameTitle" name="corpNameTitle" readonly="true"></b>
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;text-align: center;">
+						<li class="tablename">
+							<b id="corpNameTitle" name="corpNameTitle" readonly="true" style="font-size: 20px;"></b>
 						</li>
-						<li id="editCorp" margin-right:20px;>
-							<a onclick="edit()" style="cursor:pointer;">编辑</a>
-						</li>
+					
 					</ol>
 				</div>
 				<fieldset id='field'>
 				<div class="form-group">
 				<div class="form-group col-sm-8">
 					<div class="form-group">
-						<label class="col-sm-3 control-label" for="fixedPhone">联系方式(座机):</label>
+						<label class="col-sm-3 control-label" for="fixedPhone">联系方式(座机)002:</label>
 						<div class="col-sm-3">
 							<input type="text" name="fixedPhone" id="fixedPhone" class="form-control"  >
 							<input type="hidden" id="sysType" name ="sysType" value="4">
 							<input type="hidden" id="corpId" name="corpId" />
 							<input type="hidden" id="agencyNum" name="agencyNum" />
-								<input type="hidden" name="corpName" id="corpName"/>
+							<input type="hidden" id="corpName" name="corpName" />
 <!-- 							<input type="hidden" name="maxCreditAmount" class="form-control" id="maxCreditAmount"> -->
 						</div>
 						<label class="col-sm-3 control-label" for="email">邮箱</label>
@@ -147,60 +112,60 @@
 							<input type="text" name="operatingPeriod" class="form-control" >
 						</div>
 					</div>
-		
 				
+			
 				</div>
 				<div class="form-group col-sm-3">
 				<div class="form-group">
-				<div class="col-sm-4">
-							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;" id="Path1" src="../images/add-pic.png" onclick="$('#cp1').click();">
+					<div class="col-sm-4">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path1"  src="../images/add-pic.png" onclick="$('#cp1').click();">
 							<input style="display: none;" id="cp1" name="file" type="file" >
 							<input type="hidden" name="companyPicturePath1" id="companyPicturePath1">
 							<div class="col-sm-3">
 							<button type="button" class="btn btn-link" id="previewLink1" onclick="showImg(1)" style="margin-left: 20px;">预览</button>
 							</div>
 						</div>
-						<div class="col-sm-4" >
-							<img style="width:90px;height:160px;margin-left:30px;cursor:pointer;" id="Path2" src="../images/add-pic.png" onclick="$('#cp2').click();">
-							<input style="display: none;" id="cp2" name="file" type="file" >`
+						<div class="col-sm-4">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path2"  src="../images/add-pic.png" onclick="$('#cp2').click();">
+							<input style="display: none;" id="cp2" name="file" type="file" >
 							<input type="hidden" name="companyPicturePath2" id="companyPicturePath2">
-							<div class="col-sm-3">
-							<button type="button" class="btn btn-link" id="previewLink2" onclick="showImg(2)" style="margin-left: 35px;">预览</button>
+								<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink2" onclick="showImg(2)" style="margin-left: 20px;">预览</button>
 							</div>
 						</div>
 						<div class="col-sm-4">
-							<img style="width:90px;height:160px;margin-left:45px;cursor:pointer;" id="Path3" src="../images/add-pic.png" onclick="$('#cp3').click();">
-							<input style="display: none;"  id="cp3" name="file" type="file" >
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path3"  src="../images/add-pic.png" onclick="$('#cp3').click();">
+							<input style="display: none;" id="cp3" name="file" type="file" >
 							<input type="hidden" name="companyPicturePath3" id="companyPicturePath3">
-							<div class="col-sm-3">
-							<button type="button" class="btn btn-link" id="previewLink3" onclick="showImg(3)" style="margin-left: 45px;">预览</button>
+								<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink3" onclick="showImg(3)" style="margin-left: 20px;">预览</button>
 							</div>
 						</div>
 				</div>
 				<div class="form-group">
 				
 							<div class="col-sm-4">
-							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;" id="Path4" src="../images/add-pic.png" onclick="$('#cp4').click();">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path4"  src="../images/add-pic.png" onclick="$('#cp4').click();">
 							<input style="display: none;" id="cp4" name="file" type="file" >
 							<input type="hidden" name="companyPicturePath4" id="companyPicturePath4">
-							<div class="col-sm-3">
+								<div class="col-sm-3">
 							<button type="button" class="btn btn-link" id="previewLink4" onclick="showImg(4)" style="margin-left: 20px;">预览</button>
 							</div>
 						</div>
 						<div class="col-sm-4">
-							<img style="width:90px;height:160px;margin-left:30px;cursor:pointer;" id="Path5" src="../images/add-pic.png" onclick="$('#cp5').click();">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path5"  src="../images/add-pic.png" onclick="$('#cp5').click();">
 							<input style="display: none;" id="cp5" name="file" type="file" >
 							<input type="hidden" name="companyPicturePath5" id="companyPicturePath5">
-							<div class="col-sm-3">
-							<button type="button" class="btn btn-link" id="previewLink5" onclick="showImg(5)" style="margin-left: 35px;">预览</button>
+									<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink5" onclick="showImg(5)" style="margin-left: 20px;">预览</button>
 							</div>
 						</div>
 						<div class="col-sm-4">
-							<img style="width:90px;height:160px;margin-left:45px;cursor:pointer;" id="Path6" src="../images/add-pic.png" onclick="$('#cp6').click();">
+							<img style="width:90px;height:160px;margin-left:15px;cursor:pointer;"  id="Path6"  src="../images/add-pic.png" onclick="$('#cp6').click();">
 							<input style="display: none;" id="cp6" name="file" type="file" >
 							<input type="hidden" name="companyPicturePath6" id="companyPicturePath6">
-							<div class="col-sm-3">
-							<button type="button" class="btn btn-link" id="previewLink6" onclick="showImg(6)" style="margin-left: 45px;">预览</button>
+								<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink6" onclick="showImg(6)" style="margin-left: 20px;">预览</button>
 							</div>
 						</div>
 				</div>
@@ -313,7 +278,8 @@
 						<li class="tablename">附件信息</li>
 					</ol>
 				</div>
-								<div class="form-group">
+				
+		<div class="form-group">
 					<label class="col-sm-1 control-label" for="businessLicensePath">营业执照:</label>
 					<div class="col-sm-2">
 						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="businessLicensePath2" id="businessLicensePath2" src="../images/add-pic.png" onclick="$('#bl').click();">
@@ -323,7 +289,7 @@
 							<button type="button" class="btn btn-link" id="previewLink7" onclick="showImg(7)" style="margin-left: 30px;">预览</button>
 							</div>
 					</div>
-					<label class="col-sm-1 control-label" for="permissionAccountPath">开户许可证:</label>
+					<label class="col-sm-1 control-label" for="permissionAccountPath" style="width: 120px;">开户许可证:</label>
 					<div class="col-sm-2">
 						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="permissionAccountPath2" id="permissionAccountPath2" src="../images/add-pic.png" onclick="$('#pa').click();">
 						<input style="display: none;" id="pa" name="file" type="file" >
@@ -333,9 +299,9 @@
 							</div>
 						
 					</div>
-					<label class="col-sm-1 control-label" >法人身份证正反面:</label>
+					<label class="col-sm-1 control-label" style="width: 100px;">法人身份证正反面:</label>
 					<div class="col-sm-2">
-						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" id="legalIdNumberPath11" src="../images/add-pic.png" onclick="$('#lin1').click();">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;"  id="legalIdNumberPath11" src="../images/add-pic.png"  onclick="$('#lin1').click();">
 						<input style="display: none;" id="lin1" name="file" type="file" >
 						<input type="hidden" name="legalIdNumberPath1" id="legalIdNumberPath1">
 							<div class="col-sm-3">
@@ -343,7 +309,7 @@
 							</div>
 					</div>
 					<div class="col-sm-2">
-						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" id="legalIdNumberPath22" src="../images/add-pic.png" onclick="$('#lin2').click();">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;"  id="legalIdNumberPath22" src="../images/add-pic.png" onclick="$('#lin2').click();">
 						<input style="display: none;" id="lin2" name="file" type="file" >
 						<input type="hidden" name="legalIdNumberPath2" id="legalIdNumberPath2">
 							<div class="col-sm-3">
@@ -352,8 +318,12 @@
 					</div>
 				</div>
 				
+				
 				<div id=fileUpload>
 					<input type="hidden" id="num" value="0">
+<!-- 					<a id="btn_upload" style="position:relative" class="btn btn-default add">上传 -->
+<!--                   		<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="file" name="file" type="file" > -->
+<!--                   	</a> -->
 					<button id="btn_contract" type="button" class="btn btn-default add" onclick="addFun(3)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>上传</button>
 				</div>
 				<table id="attachInfoTable" class="table table-bordered"
@@ -368,7 +338,7 @@
 			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
 		 		<div class="nav">
 					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
-						<li class="tablename">合同信息信息</li>
+						<li class="tablename">合同信息</li>
 					</ol>
 				</div>
 				<fieldset >
@@ -386,22 +356,8 @@
 	</section>
 
 </form>
-	<div class="form-group">
-	  	<div class="col-sm-1 col-sm-offset-8" style="margin-left:70%">
-	  	</div>
-		<div class="col-sm-1">
-			<button type="submit" id="saveCorpInfo" class="btn btn-default save"
-				 onclick="saveFun(0);">保存
-			</button>
-		</div>
-		<div class="col-sm-1">
-			<button class="btn btn-default cancel" id="cancel" onclick="cancel();">取消
-			</button>
-		</div>
-	</div>
-	
-	
-	    <!--  股东信息模态框 -->
+ 
+   	    <!--  股东信息模态框 -->
 	    <div class="modal fade" id="shareInfoModal" tabindex="-1" role="dialog"
 				aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
 				<div class="modal-dialog" role="document">
@@ -589,7 +545,4 @@
 					</div>
 				</div>
 			</div> 
-			
 				<div id="imgPreviewDiv"></div>
-  </body>
-</html>

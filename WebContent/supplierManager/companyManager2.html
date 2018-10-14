@@ -2,7 +2,7 @@
 <html style="background-color: #ffffff;">
 <head>
 <meta charset="UTF-8" />
-	<title>公司信息维护</title>
+<title>公司信息维护</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!--external css-->
@@ -33,8 +33,8 @@
 	  <script type="text/javascript" src="../js/fileUpload/jquery.iframe-transport.js"></script>
 	  <script type="text/javascript" src="../js/fileUpload/jquery.xdr-transport.js"></script>
 	  <script type="text/javascript" src="../js/fileUpload/jquery.fileupload.js"></script>
-		<script type="text/javascript" src="../js/address.js"></script>
-      <script src="../js/pubManager/companyManager.js"></script>
+      <script src="../js/pubManager/companyManager2.js"></script>
+	<script type="text/javascript" src="../js/address.js"></script>
 </head>
 <body class="iframeBody" style="background-color: #ffffff;">
 	<form class="form-horizontal" role="form" id="detailForm" data-toggle="validator">
@@ -43,118 +43,139 @@
 		 <div class="nav" id="nav"></div>
 			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
 		 		<div class="nav">
-					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px; text-align: center;">
-						<li class="tablename">
-							<b id="corpNameTitle" name="corpNameTitle" readonly="true" style="font-size: 20px;"></b>
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename" style="float : left;">
+							<b id="corpNameTitle" name="corpNameTitle" readonly="true"></b>
 						</li>
-
+						<li id="editCorp">
+							<a onclick="edit()" style="cursor:pointer;">编辑</a>
+						</li>
 					</ol>
 				</div>
-				<fieldset id='field23'>
+				<fieldset id='field'>
 				<div class="form-group">
-				<div class="form-group col-sm-12">
-					<div class="form-group">
-					
-				
-						<label class="col-sm-2 control-label" for="corpName">公司名称</label>
-						<div class="col-sm-2">
-							<input type="text" name="corpName" id="corpName" class="form-control" />
-						</div>
-						<label class="col-sm-2 control-label" for="agencyNum">公司编码</label>
-						<div class="col-sm-2">
-							<input type="text"  readonly class="form-control " name="agencyNum">
+					<div class="form-group col-sm-12">
+						<div class="form-group">
+							<label class="col-sm-2 control-label" for="corpName">公司名称</label>
+							<div class="col-sm-6">
+								<input type="text" name="corpName" id="corpName" class="form-control">
+							</div>
+							<label class="col-sm-2 control-label" for="fixedPhone">联系方式(座机):</label>
+							<div class="col-sm-2">
+								<input type="text" name="fixedPhone" id="fixedPhone" class="form-control"  >
+								<input type="hidden" id="sysType" name ="sysType" value="4">
+								<input type="hidden" id="corpId" name="corpId" />
+								<input type="hidden" id="agencyNum" name="agencyNum" />
+							</div>
 						</div>
 
-						<label class="col-sm-2 control-label" for="fixedPhone">联系方式(座机):</label>
-						<div class="col-sm-2">
-							<input type="text" name="fixedPhone" id="fixedPhone" class="form-control"  >
-							<input type="hidden" id="sysType" name ="sysType" value="4">
-							<input type="hidden" id="corpId" name="corpId" />
-							<input type="hidden" id="agencyNum" name="agencyNum" />
+						<!-- 公司所在地-->
+						<div class="form-group">
+							<label class="control-label col-sm-2" for="locationProvince">所在省份</label>
+							<div class="col-sm-2">
+								<select id="locationProvince" name="locationProvince" class="form-control"></select>
+							</div>
+							<label class="control-label col-sm-2" for="locationCity" class="form-control">所在市/区</label>
+							<div class="col-sm-2">
+								<select id="locationCity" name="locationCity" class="form-control"></select>
+							</div>
+							<label class="control-label col-sm-2" for="locationArea">所在区/县</label>
+							<div class="col-sm-2">
+								<select id="locationArea" name="locationArea" class="form-control"></select>
+							</div>
+
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label" for="locationAddress">详细所在地</label>
+							<div class="col-sm-10">
+								<input type="text" class=" form-control" name="locationAddress"  id="locationAddress">
+							</div>
+						</div>
+
+						<!-- 注册所在地-->
+						<div class="form-group">
+							<label class="control-label col-sm-2" for="registerProvince">注册省份</label>
+							<div class="col-sm-2">
+								<select id="registerProvince" name="registerProvince" class="form-control"></select>
+							</div>
+							<label class="control-label col-sm-2" for="registerCity" class="form-control">注册市/区</label>
+							<div class="col-sm-2">
+								<select id="registerCity" name="registerCity" class="form-control"></select>
+							</div>
+							<label class="control-label col-sm-2" for="registerArea">注册区/县</label>
+							<div class="col-sm-2">
+								<select id="registerArea" name="registerArea" class="form-control"></select>
+							</div>
+
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label" for="registerAddress">注册详细所在地</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" name="registerAddress" id="registerAddress">
+							</div>
+						</div>
+
+
+						<div class="form-group">
+							<label class="col-sm-2 control-label" for="email">邮箱</label>
+							<div class="col-sm-2">
+								<input type="text" name="email" id="email" class="form-control" >
+							</div>
+
+							<label class="col-sm-2 control-label" for="uniformCreditCode">统一社会信用代码:</label>
+							<div class="col-sm-2">
+								<input type="text" name="uniformCreditCode" class="form-control" id="uniformCreditCode">
+							</div>
+							<label class="col-sm-2 control-label" for="legalPerson">法人名称:</label>
+							<div class="col-sm-2">
+								<input type="text" name="legalPerson"  id="legalPerson" class="form-control"  >
+							</div>
+
+						</div>
+
+
+						<div class="form-group">
+
+							<label class="col-sm-2 control-label" for="cellphone">手机号码</label>
+							<div class="col-sm-2">
+								<input type="text" name="cellphone" class="form-control"  id="cellphone" >
+							</div>
+							<label class="col-sm-2 control-label" for="idNumber">身份证号码:</label>
+							<div class="col-sm-2">
+								<input type="text" class="col-sm-2 form-control" name="idNumber" id="idNumber">
+							</div>
 						</div>
 					</div>
-
-                    <!-- 公司所在地-->
-                    <div class="form-group">
-                        <label class="control-label col-sm-2" for="locationProvince">所在省份</label>
-                        <div class="col-sm-2">
-						 <select id="locationProvince" name="locationProvince" class="form-control"></select>
-                        </div>
-                        <label class="control-label col-sm-2" for="locationCity" class="form-control">所在市/区</label>
-                        <div class="col-sm-2">
-                            <select id="locationCity" name="locationCity" class="form-control"></select>
-                        </div>
-                        <label class="control-label col-sm-2" for="locationArea">所在区/县</label>
-                        <div class="col-sm-2">
-                            <select id="locationArea" name="locationArea" class="form-control"></select>
-                        </div>
-
-					</div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="locationAddress">详细所在地</label>
-                        <input type="text" class="col-sm-10" name="locationAddress" class="form-control" id="locationAddress">
-                    </div>
-
-                    <!-- 注册所在地-->
-                    <div class="form-group">
-                        <label class="control-label col-sm-2" for="registerProvince">注册省份</label>
-                        <div class="col-sm-2">
-                            <select id="registerProvince" name="registerProvince" class="form-control"></select>
-                        </div>
-                        <label class="control-label col-sm-2" for="registerCity" class="form-control">注册市/区</label>
-                        <div class="col-sm-2">
-                            <select id="registerCity" name="registerCity" class="form-control"></select>
-                        </div>
-                        <label class="control-label col-sm-2" for="registerArea">注册区/县</label>
-                        <div class="col-sm-2">
-                            <select id="registerArea" name="registerArea" class="form-control"></select>
-                        </div>
-
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="registerAddress">注册详细所在地</label>
-                        <input type="text" class="col-sm-10" name="registerAddress" id="registerAddress">
-                    </div>
-
-
-					<div class="form-group">
-					    <label class="col-sm-2 control-label" for="email">邮箱</label>
-                        <div class="col-sm-2">
-                            <input type="text" name="email" id="email" class="form-control" >
-                        </div>
-
-                        <label class="col-sm-2 control-label" for="uniformCreditCode">统一社会信用代码:</label>
-                        <div class="col-sm-2">
-                            <input type="text" name="uniformCreditCode" class="form-control" id="uniformCreditCode">
-                        </div>
-                        <label class="col-sm-2 control-label" for="legalPerson">法人名称:</label>
-                        <div class="col-sm-2">
-                            <input type="text" name="legalPerson"  id="legalPerson" class="form-control"  >
-                        </div>
-
-					</div>
-
-
-					<div class="form-group">
-
-						<label class="col-sm-2 control-label" for="cellphone">手机号码</label>
-						<div class="col-sm-2">
-							<input type="text" name="cellphone" class="form-control"  id="cellphone" >
-						</div>
-                        <label class="col-sm-2 control-label" for="idNumber">身份证号码:</label>
-						<div class="col-sm-2">
-                            <input type="text" class="col-sm-2 form-control" name="idNumber" id="idNumber">
-                        </div>
-                    </div>
 				</div>
-                </div>
-                </fieldset>
-            </div>
-
+				</fieldset>
+			</div>
 
 			</div>
-	</section>
 
+	</section>
+	<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">股东信息</li>
+					</ol>
+				</div>
+				<fieldset id='field'>
+					<div class="whiteBgDiv row">
+				 	<!-- 添加股东信息按钮 -->
+					<div> 
+				       <button id="btn_add" type="button" class="btn btn-default add" onclick="addFun(1)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加</button> 
+				     </div> 
+					<!-- 股东信息 -->
+
+					 <table id="shareHolderInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
+					</div>
+				</fieldset>
+			</div>
+		</div>
+	</section>
 	<section>
 		<div class="main-content-child">
 		 <div class="nav" id="nav"></div>
@@ -164,13 +185,13 @@
 						<li class="tablename">附件信息</li>
 					</ol>
 				</div>
-				<div class="form-group">
-					<label class="col-sm-2 control-label" for="businessLicensePath">营业执照:</label>
-					<div class="col-sm-5">
+								<div class="form-group">
+					<label class="col-sm-1 control-label" for="businessLicensePath">营业执照:</label>
+					<div class="col-sm-2">
 						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="businessLicensePath2" id="businessLicensePath2" src="../images/add-pic.png" onclick="$('#bl').click();">
 						<input style="display: none;" id="bl" name="file" type="file" >
 						<input type="hidden" name="businessLicensePath" id="businessLicensePath">
-							<div class="col-sm-4">
+							<div class="col-sm-3">
 							<button type="button" class="btn btn-link" id="previewLink7" onclick="showImg(7)" style="margin-left: 30px;">预览</button>
 							</div>
 					</div>
@@ -179,9 +200,6 @@
 				
 				<div id=fileUpload>
 					<input type="hidden" id="num" value="0">
-<!-- 					<a id="btn_upload" style="position:relative" class="btn btn-default add">上传 -->
-<!--                   		<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="file" name="file" type="file" > -->
-<!--                   	</a> -->
 					<button id="btn_contract" type="button" class="btn btn-default add" onclick="addFun(3)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>上传</button>
 				</div>
 				<table id="attachInfoTable" class="table table-bordered"
@@ -196,7 +214,7 @@
 			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
 		 		<div class="nav">
 					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
-						<li class="tablename">公司章程</li>
+						<li class="tablename">合同信息信息</li>
 					</ol>
 				</div>
 				<fieldset >
@@ -206,31 +224,15 @@
 				       <button id="addContractInfo" type="button" class="btn btn-default add" onclick="addFun(2)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加</button> 
 				     </div> 
 					<!-- 合同信息 -->
-					 <table id="contractInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table> 
-					 </div>
+
+					 <table id="contractInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
+					</div>
 				</fieldset>
 			
 			</div>
 		</div>
 	</section>
-<!-- 	<section> -->
-<!-- 		<div class="main-content-child"> -->
-<!-- 		 <div class="nav" id="nav"></div> -->
-<!-- 			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;"> -->
-<!-- 		 		<div class="nav"> -->
-<!-- 					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;"> -->
-<!-- 						<li class="tablename">合作信息</li> -->
-<!-- 					</ol> -->
-<!-- 				</div> -->
-<!-- 				<fieldset id='field'> -->
-<!-- 					<div>  -->
-<!-- 				       <button  type="button" class="btn btn-default add" onclick=""> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加</button>  -->
-<!-- 				     </div>  -->
-<!-- 					 <table  class="table table-bordered" cellspacing="0" width="100%">  </table>  -->
-<!-- 				</fieldset> -->
-<!-- 			</div> -->
-<!-- 		</div> -->
-<!-- 	</section> -->
+
 </form>
 	<div class="form-group">
 	  	<div class="col-sm-1 col-sm-offset-8" style="margin-left:70%">
@@ -247,7 +249,70 @@
 	</div>
 	
 	
-
+	    <!--  股东信息模态框 -->
+	    <div class="modal fade" id="shareInfoModal" tabindex="-1" role="dialog"
+				aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+							<h4 class="modal-title" id="addshareInfoModalLabel">添加</h4>
+						</div>
+						<div class="modal-body">
+							<fieldset id='field'>
+							 <form class="form-horizontal" role="form" id="shareInfoForm" data-toggle="validator">
+							 	<div class="form-group">
+									<label class="col-sm-4 control-label" for="shareName"><span class="required">*</span>股东名称</label>
+									<div class="col-sm-6">
+										<input type="text" name="shareName" class="form-control"
+											id="shareName" placeholder="股东名称 ">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="shareProportion"><span class="required">*</span>股东持股比例(%)</label>
+									<div class="col-sm-6">
+										<input type="text" name="shareProportion" class="form-control"
+											id="shareProportion" placeholder="股东持股比例(%)">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="registeredCapital">注册资本份额</label>
+									<div class="col-sm-6">
+										<input type="text" name="registeredCapital" class="form-control"
+											id="registeredCapital" placeholder="注册资本份额">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="registeredCapitalProportion"><span class="required">*</span>注册资本占比</label>
+									<div class="col-sm-6">
+										<input type="text" name="registeredCapitalProportion" class="form-control"
+											id="registeredCapitalProportion" placeholder="注册资本占比">
+									</div>
+								</div>
+					         </form>
+							</fieldset>
+						</div>
+						<div class="modal-footer">
+							<div class="form-group">
+							  	<div class="col-sm-2 col-sm-offset-8">
+									<button type="button" class="btn btn-default cancel"
+										data-dismiss="modal">取消
+									</button>
+							  	</div>
+								<div class="col-sm-2">
+									<button type="submit" id="btn_save" class="btn btn-default save"
+										 onclick="saveFun(1);">确定
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div> 
+	   </div> 
 	   
 	   <!--合同信息-->
 	    <div class="modal fade" id="contractInfoModal" tabindex="-1" role="dialog"
@@ -339,7 +404,7 @@
 							<h4 class="modal-title" >添加附件</h4>
 						</div>
 						<div class="modal-body">
-							<fieldset id='field1'>
+							<fieldset id='field'>
 								<form class="form-horizontal" role="form" >
 								 	<div class="form-group">
 										<label class="col-sm-2 control-label" for="uploadType"><span class="required">*</span>附件类型</label>
@@ -376,10 +441,9 @@
 				<div id="imgPreviewDiv"></div>
   </body>
 
+
 <script type="text/javascript">
     addressInit('locationProvince', 'locationCity', 'locationArea');
     addressInit('registerProvince', 'registerCity', 'registerArea');
-
-
 </script>
 </html>

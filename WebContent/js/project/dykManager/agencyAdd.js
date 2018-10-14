@@ -37,16 +37,14 @@ window.operateEvents = {
 };
 
 function initTable() { 
-	$('#agencyListTable')
-	.bootstrapTable('destroy')
-	.bootstrapTable({  
+	$('#agencyListTable').bootstrapTable('destroy').bootstrapTable({
          method: "post", 
          url: "", 
          striped: true,  //表格显示条纹  
          pagination: false, //启动分页  
          search: false,  //是否启用查询  
          showColumns: false,  //显示下拉框勾选要显示的列  
-         showRefresh: false,  //显示刷新按钮  
+         showRefresh: false,  //显示刷新按钮
          sidePagination: "server", //表示服务端请求  
          //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
          //设置为limit可以获取limit, offset, search, sort, order  
@@ -71,30 +69,15 @@ function initTable() {
          },
          columns: [{
  	        field: 'corpName',
- 	        title: '经销商名称',
+ 	        title: '供应商名称',
  	        align: 'center',
             valign: 'middle'
  	    }, {
  	        field: 'agencyNum',
- 	        title: '经销商代码',
+ 	        title: '供应商代码',
  	        align: 'center',
             valign: 'middle'
- 	    },{
- 	        field: 'maxCreditAmount',
- 	        title: '大宗最高授信额度',
- 	        align: 'center',
-            valign: 'middle',
-            formatter: function(value,row,index){
- 	            return $.number(value, 2);
- 	        }
- 	    },{
- 	        field: 'maxLscreditAmount',
- 	        title: '零售最高授信额度',
- 	        align: 'center',
-            valign: 'middle',
-            formatter: function(value,row,index){
- 	            return $.number(value, 2);
- 	        }
+
  	    }, {
  	        field: 'officeAddress',
  	        title: '公司地址',
@@ -110,75 +93,7 @@ function initTable() {
  	        title: '固定电话',
  	        align: 'center',
             valign: 'middle'
- 	    }, {
- 	        field: 'area',
- 	        title: '所属区域',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false
- 	    }, {
- 	        field: 'dzId',
- 	        title: '大宗ID',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false
- 	    }, {
- 	        field: 'lsId',
- 	        title: '零售ID',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false
- 	    }, {
- 	        field: 'represent',
- 	        title: '所属商代处',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false
- 	    }, {
- 	        field: 'firstTwoYearsPickupNum',
- 	        title: '前2年度提车数量',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'firstTwoYearsRetailNum',
- 	        title: '前2年度零售数量',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'firstTwoYearsSaleRank',
- 	        title: '前2年度销售排名',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'thisYearPlanPickupNum',
- 	        title: '本年度计划提车数量',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'thisYearPlanSales',
- 	        title: '本年度计划销售额',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 2);
- 	        }
+
  	    }, {
  	        field: 'note',
  	        title: '备注',
@@ -297,12 +212,12 @@ function apply() {
 	jsonData.agencyListInfo = JSON.stringify(agencyListData);
 	
 	var options = {
-			url : '../../agency/apply',
+			url : '../../supplierInfo/apply',
 			data : JSON.stringify(jsonData),
 			callBackFun : function(data) {
 				if(data.result==0){
 					bootbox.alert(data.resultNote, function() {
-						window.location.href = '../../project/dykManager/agencyManager.html';
+						window.location.href = '../../supplierManager/AgencyManager/agencyManager.html';
 					});
 				}else{
 					bootbox.alert(data.resultNote);
@@ -317,7 +232,7 @@ function apply() {
 }
 
 
-function isDzIdExit(){
+/*function isDzIdExit(){
 	var options = {
 			url : '../../agency/isIdExit?dzId='+$("#dzId").val(),
 			data : {},
@@ -334,9 +249,9 @@ function isDzIdExit(){
 			}
 	};
 	CloudUtils.ajax(options);
-}
+}*/
 
-function isLsIdExit(){
+/*function isLsIdExit(){
 	var options = {
 			url : '../../agency/isIdExit2?lsId='+$("#lsId").val(),
 			data : JSON.stringify(),
@@ -353,7 +268,7 @@ function isLsIdExit(){
 			}
 	};
 	CloudUtils.ajax(options);
-}
+}*/
 
 //form验证规则
 function formValidator(){

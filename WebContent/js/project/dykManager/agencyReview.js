@@ -119,14 +119,7 @@ function initTable() {
  	        title: '经销商代码',
  	        align: 'center',
             valign: 'middle'
- 	    },{
- 	        field: 'maxCreditAmount',
- 	        title: '最高授信额度',
- 	        align: 'center',
-            valign: 'middle',
-            formatter: function(value,row,index){
- 	            return $.number(value, 2);
- 	        }
+
  	    }, {
  	        field: 'officeAddress',
  	        title: '公司地址',
@@ -154,51 +147,6 @@ function initTable() {
  	        align: 'center',
             valign: 'middle',
             visible: false
- 	    }, {
- 	        field: 'firstTwoYearsPickupNum',
- 	        title: '前2年度提车数量',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'firstTwoYearsRetailNum',
- 	        title: '前2年度零售数量',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'firstTwoYearsSaleRank',
- 	        title: '前2年度销售排名',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'thisYearPlanPickupNum',
- 	        title: '本年度计划提车数量',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'thisYearPlanSales',
- 	        title: '本年度计划销售额',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 2);
- 	        }
  	    }, {
  	        field: 'note',
  	        title: '备注',
@@ -343,9 +291,9 @@ function saveFun() {
 	data.procInstId = procInstId;
 	data.agencyListInfo = JSON.stringify(agencyListData);
 	if (isReview == '0') {
-		url = "../../agency/reApply";
+		url = "../../supplierInfo/reApply";
 	} else {
-		url = "../../agency/doAgree";
+		url = "../../supplierInfo/doAgree";
 		data.agree = $("#adviceModal #agree").val();
 		data.advice = $("#adviceModal #advice").val();
 	}
@@ -417,19 +365,7 @@ function formValidator(){
 			              message: '经销商代码长度不能超过32位'
 			          },
 	              }
-	          },
-	          maxCreditAmount: {
-	              validators: {
-	                  notEmpty: {
-	                      message: '最高授信额度不能为空'
-	                  },
-	                  callback: {
-                          message: '最高授信额度要在0~1,000,000,000之间',  
-                          callback: function(value, validator) { 
-                        	  return parseFloat(value)>=0&&parseFloat(value)<=1000000000;
-                          }
-                      }
-	              }
+	          }
 	          },
 	          officeAddress: {
 	              validators: {

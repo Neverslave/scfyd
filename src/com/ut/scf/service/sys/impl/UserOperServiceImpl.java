@@ -146,7 +146,7 @@ public class UserOperServiceImpl implements IUserOperService {
 		return respBean;
 	}
 
-	// 跟新用户权限状态
+	// 更新用户权限状态
 	@Override
 	@Transactional
 	public BaseRespBean updateUserRoleStatus(String userId, String roleId) {

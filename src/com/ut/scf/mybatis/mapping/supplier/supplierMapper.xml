@@ -15,7 +15,7 @@
 	si.note note 
 	from supplier_info si
 	<where>
-	ci.status =1 and ci.sys_type = 4 
+	si.status =1 and si.sys_type = 4 
 	<if test="supplierCode!=null and supplierCode !='' ">
 	and ci.angency_num LIKE CONCAT(CONCAT('%',#{supplierCode}),'%')
 	</if>

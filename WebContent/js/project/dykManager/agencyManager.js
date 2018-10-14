@@ -13,11 +13,11 @@ $(document).ready(function() {
 window.operateEvents = {
 	'click .detail': function (e, value, row, index) {
 		store.set('custRow', row); //把数据存储在缓存中
-        $('#mainFrame', top.document).attr('src', 'pubManager/companyManager.html?isEdit='+false);
+        $('#mainFrame', top.document).attr('src', 'supplierManager/companyManager.html?isEdit='+false);
 	},
     'click .modify': function(e, value, row, index) {
         store.set('custRow', row); //把数据存储在缓存中
-        $('#mainFrame', top.document).attr('src', 'pubManager/companyManager.html?isEdit='+true);
+        $('#mainFrame', top.document).attr('src', 'supplierManager/companyManager.html?isEdit='+true);
     }
 };
 
@@ -29,7 +29,7 @@ function initTable() {
 	$('#agencyListTable').bootstrapTable('destroy');  
 	$("#agencyListTable").bootstrapTable({  
          method: "post", 
-         url: "../../supplier/list",
+         url: "../../supplierInfo/list",
          striped: false,  //表格显示条纹  
          pagination: true, //启动分页  
          pageSize: 20,  //每页显示的记录数  
@@ -270,7 +270,7 @@ function showDetailInfo(row) {
 }
 
 function accAgency() {
-	$('#mainFrame',top.document).attr('src','project/dykManager/agencyAdd.html');
+	$('#mainFrame',top.document).attr('src','supplierManager/AgencyManager/agencyAdd.html');
 }
 
 function changeArea(areaVal) {

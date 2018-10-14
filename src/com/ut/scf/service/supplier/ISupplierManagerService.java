@@ -1,9 +1,15 @@
 package com.ut.scf.service.supplier;
 
+import java.util.List;
+import java.util.Map;
+
 import org.activiti.engine.impl.util.json.JSONObject;
 
-import com.sun.javafx.collections.MappingChange.Map;
+
 import com.ut.scf.core.dict.PageInfoBean;
+import com.ut.scf.pojo.auto.SupplierInfo;
+import com.ut.scf.reqbean.project.AgencyFlowReqBean;
+import com.ut.scf.reqbean.supplier.SupplierAgreeInfoReqBean;
 import com.ut.scf.reqbean.supplier.SupplierManagerReqBean;
 import com.ut.scf.respbean.BaseRespBean;
 
@@ -20,6 +26,8 @@ public interface ISupplierManagerService {
 	public BaseRespBean addSupplier(SupplierManagerReqBean supplierManagerReqBean );
 	//更新供应商信息
 	public BaseRespBean updateSupplier(SupplierManagerReqBean supplierManagerReqBean ); 
+	//列表增加多个供应商吧信息
+	public List<SupplierInfo> addSuppliers(AgencyFlowReqBean reqBean);
 
 	
 	
@@ -50,14 +58,14 @@ public interface ISupplierManagerService {
 	 * @param supplierManagerReqBean
 	 * @return
 	 */
-	public BaseRespBean agreeThenAdd(SupplierManagerReqBean supplierManagerReqBean);
+	public BaseRespBean agreeThenAdd(SupplierAgreeInfoReqBean supplierManagerReqBean);
 	
 	/**
 	 * 流程同意并修改业务数据
 	 * @param supplierManagerReqBean
 	 * @return
 	 */
-	public BaseRespBean agreeThenMod(SupplierManagerReqBean supplierManagerReqBean);
+	public BaseRespBean agreeThenMod(SupplierAgreeInfoReqBean supplierManagerReqBean);
 	
 	
 	

@@ -2,9 +2,7 @@ package com.ut.scf.reqbean.supplier;
 
 import java.util.Date;
 
-import com.ut.scf.reqbean.BaseReqBean;
-
-public class SupplierManagerReqBean extends BaseReqBean {
+public class SupplierAgreeInfoReqBean {
 	
 	private String corpId;
 	private String corpName;
@@ -31,38 +29,12 @@ public class SupplierManagerReqBean extends BaseReqBean {
 	private String taskID;
 	private String  agree;
 	private String  userID;
-	
-	
-	public String getAgree() {
-		return agree;
-	}
-	public void setAgree(String agree) {
-		this.agree = agree;
-	}
-	public String getUserID() {
-		return userID;
-	}
-	public void setUserID(String userID) {
-		this.userID = userID;
-	}
-	public String getTaskID() {
-		return taskID;
-	}
-	public void setTaskID(String taskID) {
-		this.taskID = taskID;
-	}
-	public Date getCreateTime() {
-		return createTime;
-	}
-	public void setCreateTime(Date createTime) {
-		this.createTime = createTime;
-	}
-	public Byte getStatus() {
-		return status;
-	}
-	public void setStatus(Byte status) {
-		this.status = status;
-	}
+	private String userId;
+	private String roleId;
+	private String activitiKey;
+	private String procInstId;
+	private String countersign;
+	private String createUserId;
 	public String getCorpId() {
 		return corpId;
 	}
@@ -183,11 +155,72 @@ public class SupplierManagerReqBean extends BaseReqBean {
 	public void setCorpConsitutionDoc(String corpConsitutionDoc) {
 		this.corpConsitutionDoc = corpConsitutionDoc;
 	}
-
-	
-	
-	
-	
+	public Byte getStatus() {
+		return status;
+	}
+	public void setStatus(Byte status) {
+		this.status = status;
+	}
+	public Date getCreateTime() {
+		return createTime;
+	}
+	public void setCreateTime(Date createTime) {
+		this.createTime = createTime;
+	}
+	public String getTaskID() {
+		return taskID;
+	}
+	public void setTaskID(String taskID) {
+		this.taskID = taskID;
+	}
+	public String getAgree() {
+		return agree;
+	}
+	public void setAgree(String agree) {
+		this.agree = agree;
+	}
+	public String getUserID() {
+		return userID;
+	}
+	public void setUserID(String userID) {
+		this.userID = userID;
+	}
+	public String getUserId() {
+		return userId;
+	}
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+	public String getRoleId() {
+		return roleId;
+	}
+	public void setRoleId(String roleId) {
+		this.roleId = roleId;
+	}
+	public String getActivitiKey() {
+		return activitiKey;
+	}
+	public void setActivitiKey(String activitiKey) {
+		this.activitiKey = activitiKey;
+	}
+	public String getProcInstId() {
+		return procInstId;
+	}
+	public void setProcInstId(String procInstId) {
+		this.procInstId = procInstId;
+	}
+	public String getCountersign() {
+		return countersign;
+	}
+	public void setCountersign(String countersign) {
+		this.countersign = countersign;
+	}
+	public String getCreateUserId() {
+		return createUserId;
+	}
+	public void setCreateUserId(String createUserId) {
+		this.createUserId = createUserId;
+	}
 	
 
 }
