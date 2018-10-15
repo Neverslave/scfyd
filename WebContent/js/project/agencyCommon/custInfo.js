@@ -339,7 +339,7 @@ function saveFun(){
 	data.agree = type;
 	if(type ==1){
 		var options = {
-				url : '../../custInfo/doAgree',
+				url : '../../supplierInfo/doAgree',
 				data : JSON.stringify(data),
 				callBackFun : function(data) {
 					$("#adviceModal").modal('hide');
@@ -357,7 +357,7 @@ function saveFun(){
 		 if(data.isEdit=="1"){
 //			 修改
 			 var options = {
- 	 				url : '../../custInfo/agreeThenAdd',
+ 	 				url : '../../supplierInfo/agreeThenAdd',
  	 				data : JSON.stringify(data),
  	 				callBackFun : function(data) {
  	 					bootbox.alert(data.resultNote);
@@ -378,7 +378,7 @@ function saveFun(){
 		 }else{
 //			 添加
 			 var options = {
-						url : '../../custInfo/agreeThenMod',
+						url : '../../supplierInfo/agreeThenMod',
 						data : JSON.stringify(data),
 						callBackFun : function(data) {
 							if (data.result == 0) {

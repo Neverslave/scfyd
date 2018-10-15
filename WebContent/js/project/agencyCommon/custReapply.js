@@ -773,7 +773,7 @@ function reapply() {
         data.attachInfoList = attachData;
         data.contractInfoList = contractData;
         var options = {
-            url: '../../custInfo/reApply',
+            url: '../../supplierInfo/reApply',
             data: JSON.stringify(data),
             callBackFun: function(data) {
                 if (data.result == 0) {

@@ -1,4 +1,5 @@
 var taskId = CloudUtils.getIframeParams($(window.parent.document).find('iframe').attr('src')).taskId;
+console.log(taskId)
 var procInstId = CloudUtils.getIframeParams($(window.parent.document).find('iframe').attr('src')).procInstId;
 var taskDefKey = CloudUtils.getIframeParams($(window.parent.document).find('iframe').attr('src')).taskDefKey;
 var procdefKey = CloudUtils.getIframeParams($(window.parent.document).find('iframe').attr('src')).procdefKey;
@@ -23,11 +24,11 @@ function showTabs() {
     if (procdefKey == "custManage") {
         if (taskDefKey == "usertask1") {
             //在申请
-            CloudUtils.getTab("../../pubManager/custManager/custReapplyPackage.html", "projectInfo");
+            CloudUtils.getTab("../../supplierManager/supplierManager/custReapplyPackage.html", "projectInfo");
             jQuery.getScript("../../js/project/agencyCommon/custReapply.js");
         } else {
             //审批
-            CloudUtils.getTab("../../pubManager/custManager/custAgencyPackage.html", "projectInfo");
+            CloudUtils.getTab("../../supplierManager/supplierManager/custAgencyPackage.html", "projectInfo");
             jQuery.getScript("../../js/project/agencyCommon/custInfo.js");
         }
     } else if (procdefKey == "contractManager") {
@@ -42,11 +43,11 @@ function showTabs() {
     else if (procdefKey == "changeAgency") {
     	   if (taskDefKey == "usertask1") {
                //在申请
-               CloudUtils.getTab("../../pubManager/custManager/custReapplyPackage.html", "projectInfo");
+               CloudUtils.getTab("../../supplierManager/supplierManager/custReapplyPackage.html", "projectInfo");
                jQuery.getScript("../../js/project/agencyCommon/custReapply.js");
            } else {
                //审批
-               CloudUtils.getTab("../../pubManager/custManager/custAgencyPackage.html", "projectInfo");
+               CloudUtils.getTab("../../supplierManager/supplierManager/custAgencyPackage.html", "projectInfo");
                jQuery.getScript("../../js/project/agencyCommon/custInfo.js");
            }
     }
@@ -476,7 +477,7 @@ function choosePage(row) {
     }
     isDetail = true;
     if (row.proDefKey == "custManage") {
-        CloudUtils.getTab("../../pubManager/custManager/custHisDetail/custHisDetail.html", "taskInfo");
+        CloudUtils.getTab("../../supplierManager/supplierManager/custHisDetail/custHisDetail.html", "taskInfo");
         if (row.taskDefKey == "usertask1") {
             $(".adviceHidden").hide();
         } else {
@@ -485,7 +486,7 @@ function choosePage(row) {
         jQuery.getScript("../../js/project/agencyCommon/custHisDetail/custHisDetail.js");
     } 
     else if (row.proDefKey == "changeAgency") {
-        CloudUtils.getTab("../../pubManager/custManager/custHisDetail/custHisDetail.html", "taskInfo");
+        CloudUtils.getTab("../../supplierManager/supplierManager/custHisDetail/custHisDetail.html", "taskInfo");
         if (row.taskDefKey == "usertask1") {
             $(".adviceHidden").hide();
         } else {
