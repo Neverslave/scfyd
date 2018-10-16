@@ -181,6 +181,9 @@ public class SupplierController extends BaseJsonController {
 	public @ResponseBody BaseRespBean getSupplierInfoList(HttpSession httpSession,
 			@RequestBody SupplierList reqBean,BindingResult bindingResult) {
 		BaseRespBean respBean = new BaseRespBean();
+	//	System.out.println(reqBean.getCorpId());
+		
+
 //		分页
 		PageInfoBean page = new PageInfoBean();
 		page.setPageNumber(reqBean.getPageNumber());

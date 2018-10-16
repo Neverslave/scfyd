@@ -459,14 +459,13 @@ $(function() {
 
 
  function getFormInfo() {
-    //var row = store.get('custRow'); //从缓存中获取数据
+    var row = store.get('custRow'); //从缓存中获取数据
     var corpId = store.get('corpId'); //从缓存中获取数据
     console.log("isEdit= "+isEdit);
     console.log(row);
     console.log(corpId);
 
-    //if(row!=null && row.corpId != null){
-	 if(row.corpId!=null){
+    if(row!=null && row.corpId != null){
     	if(isEdit=="false"){
     		detailFun();
     	}

@@ -1,5 +1,5 @@
 var taskId = CloudUtils.getIframeParams($(window.parent.document).find('iframe').attr('src')).taskId;
-console.log(taskId)
+console.log("taskid: "+taskId);
 var procInstId = CloudUtils.getIframeParams($(window.parent.document).find('iframe').attr('src')).procInstId;
 var taskDefKey = CloudUtils.getIframeParams($(window.parent.document).find('iframe').attr('src')).taskDefKey;
 var procdefKey = CloudUtils.getIframeParams($(window.parent.document).find('iframe').attr('src')).procdefKey;

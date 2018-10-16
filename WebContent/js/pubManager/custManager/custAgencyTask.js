@@ -205,6 +205,7 @@ function attachInfoTable(data){
 
 function getInfo(type){
 	var data = CloudUtils.convertStringJson('detailForm');
+	data.taskId = taskId;
 	data = eval("(" + data + ")");
 	var allTableData = $('#shareHolderInfoTable').bootstrapTable('getData');
 	var attachData = $('#attachInfoTable').bootstrapTable('getData');
@@ -214,7 +215,7 @@ function getInfo(type){
 	data.taskId = taskId;
 	var jsonString = null;
 		   var options = {
-					url : '../../custInfo/doAgree',
+					url : '../../supplierInfo/doAgree',
 					data : JSON.stringify(data),
 					callBackFun : function(data) {
 						jsonString = data.str;
@@ -237,7 +238,7 @@ function getInfo(type){
 			 if(jsonData.isEdit=="2"){
 //				 修改
 				 var options = {
-	 	 				url : '../../custInfo/mod',
+	 	 				url : '../../supplierInfo/mod',
 	 	 				data : JSON.stringify(jsonData),
 	 	 				callBackFun : function(data) {
 	 	 					bootbox.alert(data.resultNote);
@@ -259,7 +260,7 @@ function getInfo(type){
 			 }else{
 //				 添加
 				 var options = {
-							url : '../../custInfo/add',
+							url : '../../supplierInfo/add',
 							data : JSON.stringify(jsonData),
 							callBackFun : function(data) {
 								if (data.result == 0) {

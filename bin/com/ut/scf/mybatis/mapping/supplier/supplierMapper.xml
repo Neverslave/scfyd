@@ -17,10 +17,13 @@
 	<where>
 	si.status =1 and si.sys_type = 4 
 	<if test="supplierCode!=null and supplierCode !='' ">
-	and ci.angency_num LIKE CONCAT(CONCAT('%',#{supplierCode}),'%')
+	and si.angency_num LIKE CONCAT(CONCAT('%',#{supplierCode}),'%')
 	</if>
 	<if test = "suppleirName !=null and supplierName !='' " >
-	and ci.corp_name LIKE CONCAT(CONCAT('%',#{supplierName},'%'))
+	and si.corp_name LIKE CONCAT(CONCAT('%',#{supplierName},'%'))
+	</if>
+	<if test = "corpId !=null and corpId !='' " >
+	and si.corp_id = corpId
 	</if>
 	</where>
 </select>
