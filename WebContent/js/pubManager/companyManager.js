@@ -84,7 +84,7 @@ $(function() {
 			 corpId:corpId
 	 };
 	 var options = {
-				url : '../custInfo/list',
+				url : '../supplierInfo/list',
 				data: JSON.stringify(data),
 				callBackFun : function(data) {
 					if (data.result == 0) {
@@ -146,7 +146,7 @@ $(function() {
  }
  //取消
  function cancel(){
-	 $('#mainFrame',top.document).attr('src','project/dykManager/agencyManager.html');
+	 $('#mainFrame',top.document).attr('src','supplierManager/AgencyManager/agencyManager.html');
  }
  function isDzIdExit(){
 		var options = {
@@ -329,13 +329,13 @@ $(function() {
      else 
     	 {
     	 var options = {
-	 				url : '../custInfo/startProcess',
+	 				url : '../supplierInfo/startProcess',
 	 				data : JSON.stringify(jsonData),
 	 				callBackFun : function(data) {
 	 			
 	 				    if (data.result == 0) {
 	 	                    bootbox.alert(data.resultNote, function() {
-	 	                        window.location.href = '../pubManager/companyManager.html';
+	 	                        window.location.href = '../supplierManager/companyManager.html';
 	 	                    });
 	 	                } else {
 	 	                    bootbox.alert(data.resultNote);
@@ -1322,7 +1322,7 @@ function showImg(val){
 	}else if(val == 10){
 		imgSrc=$("#legalIdNumberPath2").val();
 	}
-	  CloudUtils.getTab("../pubManager/imageShow.html", "imgPreviewDiv");  	
+	  CloudUtils.getTab("../supplierManager/imageShow.html", "imgPreviewDiv");
 	  $("#img").attr('src',imgSrc);
 	  $("#imgPreviewShow").modal("show");
 }
