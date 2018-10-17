@@ -5,11 +5,11 @@ $(function() {
 		isEdit=true;
 	}
 	 CloudUtils.getMenuNames("nav");
-//	 initDetailForm(store.get('corpId'));
-//	 $("#corpId").val(store.get('corpId'));
-//	 initShareHolderInfoTable(store.get('corpId'));
-//	 initcontractInfoTable(store.get('corpId'));
-//	 attachInfoTable(store.get('corpId'));
+	 initDetailForm(store.get('corpId'));
+	 $("#corpId").val(store.get('corpId'));
+	 initShareHolderInfoTable(store.get('corpId'));
+	 initcontractInfoTable(store.get('corpId'));
+	 attachInfoTable(store.get('corpId'));
 	 getFormInfo();
 	 formValidator();
 	 shareFormValidator();
@@ -459,29 +459,15 @@ $(function() {
 
 
  function getFormInfo() {
-    var row = store.get('custRow'); //从缓存中获取数据
-    var corpId = store.get('corpId'); //从缓存中获取数据
-    console.log("isEdit= "+isEdit);
-    console.log(row);
-    console.log(corpId);
 
-    if(row!=null && row.corpId != null){
-    	if(isEdit=="false"){
-    		detailFun();
-    	}
-    	initDetailForm(row.corpId);
-		initShareHolderInfoTable(row.corpId);
-		attachInfoTable(row.corpId);
-		initcontractInfoTable(row.corpId);
-		$("#editCorp").hide();
-    }else if(row == null && corpId != null){
-    	detailFun();
-    	initDetailForm(corpId);
-		initShareHolderInfoTable(corpId);
-		attachInfoTable(corpId);
-		initcontractInfoTable(corpId);
-		document.getElementById("cancel").style.display = "none";
-    }
+    var corpId = store.get('corpId'); //从缓存中获取数据
+
+     detailFun();
+     initDetailForm(corpId);
+     initShareHolderInfoTable(corpId);
+     attachInfoTable(corpId);
+     initcontractInfoTable(corpId);
+     document.getElementById("cancel").style.display = "none";
         
    
 
@@ -491,35 +477,20 @@ $(function() {
 	    $('#detailForm input').attr('readonly', true);
 	    $('#shareInfoForm input').attr('readonly', true);
 	    $("select").attr("disabled", true);
-	    document.getElementById("btn_add").style.display = "none";
-	    document.getElementById("btn_save").style.display = "none";
+
 	    document.getElementById("btn_contract").style.display = "none";
 	    document.getElementById("addContractInfo").style.display = "none";
 	    document.getElementById("saveCorpInfo").style.display = "none";
 	    
-		$('#Path1').removeAttr('onclick');//去掉标签中的onclick事件
-		$('#Path2').removeAttr('onclick');
-		$('#Path3').removeAttr('onclick');
-		$('#Path4').removeAttr('onclick');
-		$('#Path5').removeAttr('onclick');
-		$('#Path6').removeAttr('onclick');
+
 		
 		$('#businessLicensePath2').removeAttr('onclick');
 		$('#permissionAccountPath2').removeAttr('onclick');
 		$('#legalIdNumberPath11').removeAttr('onclick');
 		$('#legalIdNumberPath22').removeAttr('onclick');
-		
+		 document.getElementById("bl").style.display = "none";
 	    
-/*	    document.getElementById("cp1").style.display = "none";
-	    document.getElementById("cp2").style.display = "none";
-	    document.getElementById("cp3").style.display = "none";
-	    document.getElementById("cp4").style.display = "none";
-	    document.getElementById("cp5").style.display = "none";
-	    document.getElementById("cp6").style.display = "none";
-	    document.getElementById("bl").style.display = "none";
-	    document.getElementById("pa").style.display = "none";
-	    document.getElementById("lin1").style.display = "none";
-	    document.getElementById("lin2").style.display = "none";*/
+
 	}
  
  function edit(){

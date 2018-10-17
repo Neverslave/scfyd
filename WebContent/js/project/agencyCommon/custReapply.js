@@ -1,20 +1,22 @@
 $(function() {
     setForm();
     formValidator();
-    shareFormValidator();
-    propertychange();
+ 
+ /*   propertychange();*/
     numFormat();
-    $('#shareInfoModal').on('hidden.bs.modal', function() {
+/*    $('#shareInfoModal').on('hidden.bs.modal', function() {
         $("#shareInfoForm").bootstrapValidator('resetForm', true);
         $("#shareInfoForm")[0].reset();
     });
     $('#detailModal').on('hidden.bs.modal', function() {
         $("#detailForm").bootstrapValidator('resetForm', true);
-    });
+    });*/
     ajaxFileUpload();
+ 
 });
 
 function setForm() {
+	console.log(taskId);
 	var data = {};
 	data.taskId = taskId;
 	 var options = {
@@ -23,8 +25,8 @@ function setForm() {
 		callBackFun : function(data) {
 			if (data.result == 0) {
 				var jsonData =  eval("(" + data.str + ")");
-				loadAreas();
-			    changeArea(jsonData.area);
+				//loadAreas();
+			    /*changeArea(jsonData.area);*/
 				CloudUtils.setForm(jsonData,"detailForm");
 				if(jsonData.companyPicturePath1!=null && jsonData.companyPicturePath1!=''){
 					$("#Path1").attr("src",jsonData.companyPicturePath1);
@@ -387,11 +389,7 @@ function saveFun(type) {//0.基础数据1股东2.合同信息
 			$("#shareInfoModal").modal("hide");
 	 }
 	 if(type ===2 ){//合同
-//		 $('#contractForm').data('bootstrapValidator').validate();
-//		 if(!$('#contractForm').data('bootstrapValidator').isValid()){  
-//			    //没有通过校验 
-//			 return false;
-//		 }
+
 			  var data = CloudUtils.convertStringJson('contractForm');
 			  data = eval("(" + data + ")");
 			 
@@ -793,7 +791,7 @@ function reapply() {
     }
 }
 
-/************dyk地域开始*****************/
+/************dyk地域开始*****************//*
 function loadAreas() {
     var options = {
         url: '../../represent/areas',
@@ -805,7 +803,7 @@ function loadAreas() {
         }
     };
     CloudUtils.ajax(options);
-}
+}*/
 
 function changeArea(area) {
     var data = { areaId: area };

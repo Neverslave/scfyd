@@ -124,7 +124,7 @@ function choosePage(row) {
         return;
     }
     if (row.proDefKey == "custManage") {
-        CloudUtils.getTab("../../pubManager/custManager/custHisDetail/custHisDetail.html", "taskInfo");
+        CloudUtils.getTab("../../supplierManager/supplierManager/custHisDetail/custHisDetail.html", "taskInfo");
         if (row.taskDefKey == "usertask1") {
             $(".adviceHidden").hide();
         } else {
@@ -133,7 +133,7 @@ function choosePage(row) {
         jQuery.getScript("../../js/project/agencyCommon/custHisDetail/custHisDetail.js");
     }
     else if (row.proDefKey == "changeAgency") {
-        CloudUtils.getTab("../../pubManager/custManager/custHisDetail/custHisDetail.html", "taskInfo");
+        CloudUtils.getTab("../../supplierManager/supplierManager/custHisDetail/custHisDetail.html", "taskInfo");
         if (row.taskDefKey == "usertask1") {
             $(".adviceHidden").hide();
         } else {
@@ -206,13 +206,13 @@ function choosePage(row) {
         }
         jQuery.getScript("../../js/project/agencyCommon/repayDetail/repayDetail.js");
     } else if (row.proDefKey == "dykRepayment2") {
-        CloudUtils.getTab("../../project/dykManager/repayDetail/repayDetail.html", "taskInfo");
+        CloudUtils.getTab("../../supplierManager/project/projectDetail.html", "taskInfo");
         if (row.taskDefKey == "usertask1") {
             $(".adviceHidden").hide();
         } else {
             $(".adviceHidden").show();
         }
-        jQuery.getScript("../../js/project/agencyCommon/repayDetail/repayDetail.js");
+        jQuery.getScript("../../js/project/supplier/projectDetail.js");
     } else if (row.proDefKey == "revenue") {
         CloudUtils.getTab('../../project/dykManager/revenueReapplyJB.html', "taskInfo");
         jQuery.getScript("../../js/project/dykManager/revenueReapplyJB.js");

@@ -33,7 +33,6 @@
 	  <script type="text/javascript" src="../js/fileUpload/jquery.iframe-transport.js"></script>
 	  <script type="text/javascript" src="../js/fileUpload/jquery.xdr-transport.js"></script>
 	  <script type="text/javascript" src="../js/fileUpload/jquery.fileupload.js"></script>
-		<script type="text/javascript" src="../js/address.js"></script>
       <script src="../js/pubManager/companyManager.js"></script>
 </head>
 <body class="iframeBody" style="background-color: #ffffff;">
@@ -70,7 +69,7 @@
 							<input type="text" name="fixedPhone" id="fixedPhone" class="form-control"  >
 							<input type="hidden" id="sysType" name ="sysType" value="4">
 							<input type="hidden" id="corpId" name="corpId" />
-							<input type="hidden" id="agencyNum" name="agencyNum" />
+
 						</div>
 					</div>
 
@@ -78,42 +77,46 @@
                     <div class="form-group">
                         <label class="control-label col-sm-2" for="locationProvince">所在省份</label>
                         <div class="col-sm-2">
-						 <select id="locationProvince" name="locationProvince" class="form-control"></select>
+						 <input id="locationProvince" name="locationProvince" class="form-control"></input>
                         </div>
                         <label class="control-label col-sm-2" for="locationCity" class="form-control">所在市/区</label>
                         <div class="col-sm-2">
-                            <select id="locationCity" name="locationCity" class="form-control"></select>
+                            <input id="locationCity" name="locationCity" class="form-control"></input>
                         </div>
                         <label class="control-label col-sm-2" for="locationArea">所在区/县</label>
                         <div class="col-sm-2">
-                            <select id="locationArea" name="locationArea" class="form-control"></select>
+                            <input id="locationArea" name="locationArea" class="form-control"></input>
                         </div>
 
 					</div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="locationAddress">详细所在地</label>
-                        <input type="text" class="col-sm-10" name="locationAddress" class="form-control" id="locationAddress">
+                       			<div class="col-sm-10">
+									<input type="text" class=" form-control" name="locationAddress"  id="locationAddress">
+								</div>
                     </div>
 
                     <!-- 注册所在地-->
                     <div class="form-group">
                         <label class="control-label col-sm-2" for="registerProvince">注册省份</label>
                         <div class="col-sm-2">
-                            <select id="registerProvince" name="registerProvince" class="form-control"></select>
+                            <input id="registerProvince" name="registerProvince" class="form-control"></input>
                         </div>
                         <label class="control-label col-sm-2" for="registerCity" class="form-control">注册市/区</label>
                         <div class="col-sm-2">
-                            <select id="registerCity" name="registerCity" class="form-control"></select>
+                            <input id="registerCity" name="registerCity" class="form-control"></input>
                         </div>
                         <label class="control-label col-sm-2" for="registerArea">注册区/县</label>
                         <div class="col-sm-2">
-                            <select id="registerArea" name="registerArea" class="form-control"></select>
+                            <input id="registerArea" name="registerArea" class="form-control"></input>
                         </div>
 
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="registerAddress">注册详细所在地</label>
-                        <input type="text" class="col-sm-10" name="registerAddress" id="registerAddress">
+                       						<div class="col-sm-10">
+									<input type="text" class=" form-control" name="registerAddress"  id="registerAddress">
+								</div>
                     </div>
 
 
@@ -376,10 +379,5 @@
 				<div id="imgPreviewDiv"></div>
   </body>
 
-<script type="text/javascript">
-    addressInit('locationProvince', 'locationCity', 'locationArea');
-    addressInit('registerProvince', 'registerCity', 'registerArea');
 
-
-</script>
 </html>

@@ -144,7 +144,7 @@ public class SupplierManagerServiceImpl implements ISupplierManagerService {
 		// 修改supplier_info 信息
 		SupplierInfo supplierInfoAuto = new SupplierInfo();
 		BeanUtil.BeanToBean(supplierInfoAuto, supplierManagerReqBean);
-		int updateNum = supplierInfoMapper.updateByPrimaryKey(supplierInfoAuto);
+		int updateNum = supplierInfoMapper.updateByPrimaryKeySelective(supplierInfoAuto);
 		if(updateNum<=0) {
 		 throw new BizException(ErrorCodeEnum.UPDATE_FAILED);
 		}
@@ -260,7 +260,7 @@ public class SupplierManagerServiceImpl implements ISupplierManagerService {
 	@Transactional(propagation = Propagation.REQUIRED)
 	public BaseRespBean agreeThenAdd(SupplierAgreeInfoReqBean supplierManagerReqBean) {
 		//	流程同意
-		String taskId = supplierManagerReqBean.getTaskID();
+		String taskId = supplierManagerReqBean.getTaskId();
 		JSONObject jsonObject = new JSONObject(supplierManagerReqBean);
 		doAgree(jsonObject);
 //		添加进业务表中
@@ -279,7 +279,7 @@ public class SupplierManagerServiceImpl implements ISupplierManagerService {
 	@Override
 	@Transactional(propagation = Propagation.REQUIRED)
 	public BaseRespBean agreeThenMod(SupplierAgreeInfoReqBean supplierManagerReqBean) {
-		String taskId = supplierManagerReqBean.getTaskID();
+		String taskId = supplierManagerReqBean.getTaskId();
 		//流程同意
 		JSONObject jsonObject = new JSONObject(supplierManagerReqBean);
 		doAgree(jsonObject);

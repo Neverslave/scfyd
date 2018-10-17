@@ -50,149 +50,20 @@ function showTabs() {
                CloudUtils.getTab("../../supplierManager/supplierManager/custAgencyPackage.html", "projectInfo");
                jQuery.getScript("../../js/project/agencyCommon/custInfo.js");
            }
-    }
-    else if (procdefKey == "accAgencyProcess") {
-        CloudUtils.getTab('../../project/dykManager/agencyReview.html', "projectInfo");
-        jQuery.getScript("../../js/project/dykManager/agencyReview.js");
-    } else if (procdefKey == "contractSign") {
-        if (taskDefKey == "task_sign_ssm") {
-            CloudUtils.getTab('../../project/ssmManager/orderManager/ssmAgencyTask.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/orderManager/ssmAgencyTask.js");
+    
 
-        } else if (taskDefKey == "task_sign_fw") {
-            CloudUtils.getTab('../../project/ssmManager/orderManager/fwAgencyTask.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/orderManager/fwAgencyTask.js");
-
-        } else if (taskDefKey == "task_sign_pl") {
-            CloudUtils.getTab('../../project/ssmManager/orderManager/contractReapply.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/orderManager/contractReapply.js");
-        }
-    } else if (procdefKey == "ssmRepayManager") {
-        if (taskDefKey == "task_repay_cw") {
-            CloudUtils.getTab('../../project/ssmManager/repayManager/repayAgencyTask.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/repayManager/repayAgencyTask.js");
-        }
-    } else if (procdefKey == "financeMngProcess") {
-        if (taskDefKey == "usertask1") {
-            CloudUtils.getTab('../../project/dykManager/financeApply.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/financeApply.js");
-        } else if (taskDefKey == "usertask2") {
-            CloudUtils.getTab('../../project/dykManager/regGuarantee.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/regGuarantee.js");
-        } else {
-            CloudUtils.getTab('../../project/dykManager/financeReview.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/financeReview.js");
-        }
-    } else if (procdefKey == "payCommitment") {
-        if (taskDefKey == "usertask1") {
-            CloudUtils.getTab('../../project/dykManager/payCommitmentReapply.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/payCommitmentReapply.js");
-        } else if (taskDefKey == "usertask2") {
-            CloudUtils.getTab('../../project/dykManager/fillGuarantee.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/fillGuarantee.js");
-        } else {
-            CloudUtils.getTab('../../project/dykManager/payCommitmentReview.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/payCommitmentReview.js");
-        }
-    } else if (procdefKey == "refundDeposit") {
-        if (taskDefKey == "usertask1") {
-            CloudUtils.getTab('../../project/dykManager/refundDepositReapply.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/refundDepositReApply.js");
-        } else {
-            CloudUtils.getTab('../../project/dykManager/refundDepositAgency.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/refundDepositAgency.js");
-        }
-
-    } else if (procdefKey == "OffsetDeposit") {
-        if (taskDefKey == "usertask1") {
-            CloudUtils.getTab('../../project/dykManager/offsetDepositReapply.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/offsetDepositReapply.js");
-        } else {
-            CloudUtils.getTab('../../project/dykManager/offsetDepositAgency.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/offsetDepositAgency.js");
-        }
-    } else if (procdefKey == "revenue") {
-        CloudUtils.getTab('../../project/dykManager/revenueAgency.html', "projectInfo");
-        jQuery.getScript("../../js/project/dykManager/revenueAgency.js");
-    } else if (procdefKey == "dykRepayment") {
-        if (taskDefKey == "usertask1") {
-            CloudUtils.getTab('../../project/dykManager/repayReapply.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/repayReapply.js");
-        } else {
-            CloudUtils.getTab('../../project/dykManager/repayReview.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/repayReview.js");
-        }
     } else if (procdefKey == "dykRepayment2") {
         if (taskDefKey == "usertask1") {
-            CloudUtils.getTab('../../project/dykManager/repayReapply.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/repayReapply.js");
+        	//再申请
+  
+            CloudUtils.getTab('../../supplierManager/project/projectReapplyPackage.html', "projectInfo");
+            jQuery.getScript("../../js/project/supplier/projectReapply.js");
         } else {
-            CloudUtils.getTab('../../project/dykManager/repayReview.html', "projectInfo");
-            jQuery.getScript("../../js/project/dykManager/repayReview.js");
+        	//审批
+            CloudUtils.getTab('../../supplierManager/project/projectAgencyPackage.html', "projectInfo");
+            jQuery.getScript("../../js/project/supplier/projectInfo.js");
         }
-    } else if (procdefKey == "loanInfo") {
-        if (taskDefKey == "xmjl_apply") {
-            CloudUtils.getTab('../../project/ssmManager/LoanInfoManager/LoanInfoReapply.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/LoanInfoManager/LoanInfoReapply.js");
-        } else {
-            CloudUtils.getTab('../../project/ssmManager/LoanInfoManager/LoanInfoReview.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/LoanInfoManager/LoanInfoReview.js");
-        }
-    } else if (procdefKey == "orderManagerProcess") {
-        if (taskDefKey == "task_order_pl") {
-            //项目经理 task_order_fzr
-            CloudUtils.getTab('../../project/ssmManager/orderManager/orderManager.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/orderManager/orderManager.js");
-            // $('#mainFrame', top.document).attr('src', 'project/ssmManager/orderManager/orderManager.html?taskId=' + row.taskId + '&procInstId=' + row.procInstId + '&taskDefKey=' + row.taskDefKey);
-        } else if (taskDefKey == "task_order_fzr") {
-            //项目经理 task_order_fzr
-            CloudUtils.getTab('../../project/ssmManager/orderManager/orderManager.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/orderManager/orderManager.js");
-            // $('#mainFrame', top.document).attr('src', 'project/ssmManager/orderManager/orderManager.html?taskId=' + row.taskId + '&procInstId=' + row.procInstId + '&taskDefKey=' + row.taskDefKey);
-        }
-    } else if (procdefKey == "orderChargeBackProcess") {
-        CloudUtils.getTab('../../project/ssmManager/orderManager/orderUnusualManager.html', "projectInfo");
-        jQuery.getScript("../../js/project/ssmManager/orderManager/orderUnusualManager.js"); 
-        
-    } else if (procdefKey == "orderEarlyClearProcess") {
-        CloudUtils.getTab('../../project/ssmManager/orderManager/orderUnusualManager.html', "projectInfo");
-        jQuery.getScript("../../js/project/ssmManager/orderManager/orderUnusualManager.js"); 
-        
-    }else if (procdefKey == "orderManagerCheckProcess") {
-        if (taskDefKey == "task_order_check_pl") {
-            //项目经理 task_order_fzr
-            CloudUtils.getTab('../../project/ssmManager/orderManager/orderManager.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/orderManager/orderManager.js");
-            // $('#mainFrame', top.document).attr('src', 'project/ssmManager/orderManager/orderManager.html?taskId=' + row.taskId + '&procInstId=' + row.procInstId + '&taskDefKey=' + row.taskDefKey);
-        } else if (taskDefKey == "task_order_check_fw") {
-            //项目经理 task_order_fzr
-            CloudUtils.getTab('../../project/ssmManager/orderManager/orderManagerView.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/orderManager/orderManagerView.js");
-            // $('#mainFrame', top.document).attr('src', 'project/ssmManager/orderManager/orderManager.html?taskId=' + row.taskId + '&procInstId=' + row.procInstId + '&taskDefKey=' + row.taskDefKey);
-        }else if (taskDefKey == "task_order_check_fzr") {
-            //项目经理 task_order_fzr
-            CloudUtils.getTab('../../project/ssmManager/orderManager/orderManagerView.html', "projectInfo");
-            jQuery.getScript("../../js/project/ssmManager/orderManager/orderManagerView.js");
-            // $('#mainFrame', top.document).attr('src', 'project/ssmManager/orderManager/orderManager.html?taskId=' + row.taskId + '&procInstId=' + row.procInstId + '&taskDefKey=' + row.taskDefKey);
-        }
-    } 
     
-    else if (procdefKey == "project") {
-        CloudUtils.getTab('../../tradfact/project/project-audit.html', "projectInfo");
-        jQuery.getScript("../../js/tradfact/project/project-audit.js");
-    } else if (procdefKey == "recommendMeeting") {
-        CloudUtils.getTab('../../tradfact/recomMeet/recomMeet-audit.html', "projectInfo");
-        jQuery.getScript("../../js/tradfact/recomMeet/recomMeet-audit.js");
-    } else if (procdefKey == "signApplyProcess") {
-        CloudUtils.getTab("../../tradfact/projectSign/sign-audit.html", "projectInfo");
-        jQuery.getScript("../../js/tradfact/projectSign/sign-audit.js");
-    }
-    else if(procdefKey =="loanApplication"){
-    	CloudUtils.getTab('../../tradfact/loanApplication/loan-audit.html',"projectInfo");
-    	jQuery.getScript("../../js/tradfact/loanApplication/loan-audit.js");
-    }else if(procdefKey =="projectAdjust"){
-    	CloudUtils.getTab('../../tradfact/projectAdjust/projectAdjust-audit.html',"projectInfo");
-    	jQuery.getScript("../../js/tradfact/projectAdjust/projectAdjust-audit.js");
     }else if(procdefKey =="projectReview"){
     	CloudUtils.getTab('../../tradfact/projectReview/projectReview-audit.html',"projectInfo");
     	jQuery.getScript("../../js/tradfact/projectReview/projectReview-audit.js");
@@ -253,17 +124,9 @@ function showOrHideButton() {
         $(".reapplyButton").hide();
         $(".agencyButton").show();
     }
-    if (taskDefKey == "task_sign_ssm" || taskDefKey == "task_order_pl" || taskDefKey == "task_repay_cw"
-        || (procdefKey == "loanInfo" && taskDefKey == "cwbz_allow")
-        || (procdefKey == "revenue" && taskDefKey == "usertask2") 
-        || (procdefKey == "dykRepayment" && taskDefKey == "usertask4")
-        || (procdefKey == "dykRepayment2" && taskDefKey == "usertask4")
-        || (procdefKey == "project" && taskDefKey == "usertask5") 
-        || (procdefKey == "recommendMeeting" && taskDefKey == "usertask8")
-        || (procdefKey == "loanApplication" && taskDefKey == "usertask10")
-          || (procdefKey == "orderManagerCheckProcess" && taskDefKey == "task_order_check_pl"
-        	  || (procdefKey == "orderEarlyClearProcess")|| (procdefKey == "orderChargeBackProcess"))
-    ) {
+    if ((procdefKey == "changeAgency" && taskDefKey == "usertask1")||
+    		(procdefKey == "dykRepayment2" && taskDefKey == "usertask1")	)
+    {
         $("#btn_refuse").hide();
     }
 
@@ -559,13 +422,14 @@ function choosePage(row) {
         }
         jQuery.getScript("../../js/project/agencyCommon/repayDetail/repayDetail.js");
     } else if (row.proDefKey == "dykRepayment2") {
-        CloudUtils.getTab("../../project/dykManager/repayDetail/repayDetail.html", "taskInfo");
+    	
+        CloudUtils.getTab("../../supplierManager/project/projectDetail.html", "taskInfo");
         if (row.taskDefKey == "usertask1") {
             $(".adviceHidden").hide();
         } else {
             $(".adviceHidden").show();
         }
-        jQuery.getScript("../../js/project/agencyCommon/repayDetail/repayDetail.js");
+        jQuery.getScript("../../js/project/supplier/projectDetail.js");
     } else if (row.proDefKey == "revenue") {
         CloudUtils.getTab('../../project/dykManager/revenueReapplyJB.html', "taskInfo");
         jQuery.getScript("../../js/project/dykManager/revenueReapplyJB.js");

@@ -13,9 +13,9 @@ $(function() {
 //	 initShareHolderInfoTable(store.get('corpId'));
 //	 initcontractInfoTable(store.get('corpId'));
 //	 attachInfoTable(store.get('corpId'));
-	 shareFormValidator();
+	 
 	 ajaxFileUpload();
-	 formValidator();
+	
 	 propertychange();
 	 numFormat();
 	 $('#shareInfoModal').on('hidden.bs.modal', function() {
@@ -148,79 +148,15 @@ $(function() {
  function cancel(){
 	 $('#mainFrame',top.document).attr('src','supplierManager/AgencyManager/agencyManager.html');
  }
- function isDzIdExit(){
-		var options = {
-				url : '../agency/isIdExit?dzId='+$("#dzId").val(),
-				data : {},
-				callBackFun : function(data) {
-					if(data.result==0){
-						canDzSubmit = true;
-					}else{
-						console.log($("#corpId").val());
-						if(data.resultNote==$("#corpId").val())
-							{
-							canDzSubmit= true;
-							}
-						else
-							{
-							canDzSubmit =false;
-							}
-						
-					}
-				},
-				errorCallback:function(data){
-					bootbox.alert("error");
-				}
-		};
-		CloudUtils.ajax(options);
-	}
 
-	function isLsIdExit(){
-		var options = {
-				url : '../agency/isIdExit2?lsId='+$("#lsId").val(),
-				data : JSON.stringify(),
-				callBackFun : function(data) {
-					if(data.result==0){
-						canLsSubmit = true;
-					}else{
-						if(data.resultNote==$("#corpId").val())
-						{
-							canLsSubmit = true;
-						}
-						else
-							{
-							canLsSubmit =false;
-							}
-					
-					}
-				},
-				errorCallback:function(data){
-					bootbox.alert("error");
-				}
-		};
-		CloudUtils.ajax(options);
-	}
+
  function saveFun(type){//0.基础数据1股东2.合同信息
 	if(type === 0){//整个基础数据
-		 if(roleId == 'ROLE000016'){
-			 subCorpInfo();
-		 }else {
-			 $('#detailForm').data('bootstrapValidator').validate();
-			 if(!$('#detailForm').data('bootstrapValidator').isValid()){  
-				    //没有通过校验 
-				 return false;
-			 }else{
-				 subCorpInfo();
-			 }
-		 }
+		subCorpInfo();
 		 
 	}
 	 if(type ===1 ){//股东
-		 $('#shareInfoForm').data('bootstrapValidator').validate();
-		 if(!$('#shareInfoForm').data('bootstrapValidator').isValid()){  
-			    //没有通过校验 
-			 return false;
-		 }
+	
 			  var data = CloudUtils.convertStringJson('shareInfoForm');
 			  data = eval("(" + data + ")");
 			 
@@ -255,100 +191,43 @@ $(function() {
  
  function subCorpInfo(){
 
-	 isDzIdExit();
-	 isLsIdExit();
-	 if($("#maxCreditAmount").val() > 0){
-			if(!$("#dzId").val()){
-				bootbox.alert("大宗ID不能为空");
-				return false;
-			}
-			if(!canDzSubmit){
-				bootbox.alert("大宗ID与数据库重复");
-				return false;
-			}
-		}else if($("#maxLscreditAmount").val() > 0){
-			if(!$("#lsId").val()){
-				bootbox.alert("零售ID不能为空");
-				return false;
-			}
-			if(!canLsSubmit){
-				bootbox.alert("零售ID与数据库重复");
-				return false;
-			}
-		}else{
-			bootbox.alert("零售和大宗额度,ID至少要有一个");
-			return false;
-		}
+	
 	 //			保存到数据库
 	 var data = CloudUtils.convertStringJson('detailForm');
 	 console.log(data);
 	 var jsonData = eval("(" + data + ")");
      jsonData.regCap = jsonData.regCap == "" ? 0 : jsonData.regCap;
-     jsonData.maxLscreditAmount = jsonData.maxLscreditAmount == "" ? 0 : jsonData.maxLscreditAmount;
-     jsonData.maxCreditAmount = jsonData.maxCreditAmount == "" ? 0 : jsonData.maxCreditAmount;
+     
      var allTableData = $('#shareHolderInfoTable').bootstrapTable('getData');
-  /*   var regCap = $("#regCap").val() == "" ? 0 : $("#regCap").val();
-     var sum = 0;
-    	for(var i = 0; i < allTableData.length; i++){
-    		var registeredCapital = allTableData[i].registeredCapital;
-    		sum = sum + Number(registeredCapital);
-    		if(Number(regCap) < Number(sum)){
-    			bootbox.alert("注册资本份额不得超过注册资本，请修改！");
-    			return false;
-    		}
-    	}*/
+
      var attachData = $('#attachInfoTable').bootstrapTable('getData');
      var contractData = $('#contractInfoTable').bootstrapTable('getData');
      jsonData.shareInfoList = allTableData;
      jsonData.attachInfoList = attachData;
      jsonData.contractInfoList = contractData;
 //     jsonData = editUniqueCust(jsonData);
-     if(roleId == 'ROLE000016')
- 	{
-    	 var options = {
- 				url : '../custInfo/mod',
- 				data : JSON.stringify(jsonData),
- 				callBackFun : function(data) {
- 				
- 				    if (data.result == 0) {
- 	                    bootbox.alert(data.resultNote, function() {
- 	                        window.location.href = '../project/dykManager/agencyManager.html';
- 	                    });
- 	                } else {
- 	                    bootbox.alert(data.resultNote);
- 	                    return false;
- 	                }
- 				},
- 				errorCallback : function(data) {
- 					bootbox.alert(data.resultNote);
- 					return false;
- 				}
- 			};
-    	 CloudUtils.ajax(options);
- 	}
-     else 
-    	 {
-    	 var options = {
-	 				url : '../supplierInfo/startProcess',
-	 				data : JSON.stringify(jsonData),
-	 				callBackFun : function(data) {
-	 			
-	 				    if (data.result == 0) {
-	 	                    bootbox.alert(data.resultNote, function() {
-	 	                        window.location.href = '../supplierManager/companyManager.html';
-	 	                    });
-	 	                } else {
-	 	                    bootbox.alert(data.resultNote);
-	 	                    return false;
-	 	                }
-	 				},
-	 				errorCallback : function(data) {
-	 					bootbox.alert(data.resultNote);
-	 					return false;
-	 				}
-	 			};
-	    	 CloudUtils.ajax(options);
-    	 }
+
+	 var options = {
+				url : '../supplierInfo/mod',
+				data : JSON.stringify(jsonData),
+				callBackFun : function(data) {
+				
+				    if (data.result == 0) {
+	                    bootbox.alert(data.resultNote, function() {
+	                        window.location.href = '../supplierManager/AgencyManager/agencyManager.html';
+	                    });
+	                } else {
+	                    bootbox.alert(data.resultNote);
+	                    return false;
+	                }
+				},
+				errorCallback : function(data) {
+					bootbox.alert(data.resultNote);
+					return false;
+				}
+			};
+	 CloudUtils.ajax(options);
+	
  
  }
  
@@ -581,21 +460,13 @@ $(function() {
 	    $('#detailForm input').attr('readonly', true);
 	    $('#shareInfoForm input').attr('readonly', true);
 	    $("select").attr("disabled", true);
-	    document.getElementById("btn_add").style.display = "none";
-	    document.getElementById("btn_save").style.display = "none";
+
+
 	    document.getElementById("btn_contract").style.display = "none";
 	    document.getElementById("addContractInfo").style.display = "none";
 	    document.getElementById("saveCorpInfo").style.display = "none";
-	    document.getElementById("cp1").style.display = "none";
-	    document.getElementById("cp2").style.display = "none";
-	    document.getElementById("cp3").style.display = "none";
-	    document.getElementById("cp4").style.display = "none";
-	    document.getElementById("cp5").style.display = "none";
-	    document.getElementById("cp6").style.display = "none";
 	    document.getElementById("bl").style.display = "none";
-	    document.getElementById("pa").style.display = "none";
-	    document.getElementById("lin1").style.display = "none";
-	    document.getElementById("lin2").style.display = "none";
+
 	}
  
  function edit(){
@@ -723,179 +594,10 @@ function attachInfoTable(corpId){
 	       });  
 }
 
-function shareFormValidator(){
- 	$('#shareInfoForm').bootstrapValidator({
- 	      message: 'This value is not valid',
- 	      excluded:':disabled',
- 	      feedbackIcons: {
- 	          valid: 'glyphicon glyphicon-ok',
- 	          invalid: 'glyphicon glyphicon-remove',
- 	          validating: 'glyphicon glyphicon-refresh'
- 	      },
- 	      fields: {
- 	    	 shareName: {
-	              validators: {
-	                  notEmpty: {
-	                      message: '股东名称不能为空'
-	                  },
-	                  stringLength: {
-			              max: 16,
-			              message: '股东名称不能超过16'
-			          },
-	              }
-	          },
- 	    	 shareProportion: {
- 	    		 validators: {
- 	    			 notEmpty: {
-	                      message: '股东持股比例不能为空'
-	                  },
-	    			  numeric: {message: '只能输入数字'},
-		              callback: {  
-	                       message: '比例在0~100之间',  
-	                       callback: function(value, validator) { 
-	                    	    var shareProportionSum = parseFloat(getShareSum("shareProportion"));
-	                        	return value =="" || (parseFloat(value)>=0&&(parseFloat(value)+shareProportionSum)<=100);
-	                         }  
-	                     } 
- 	    		 }
- 	    	 },
- 	    	registeredCapitalProportion:{
- 	    		validators: {
- 	    			notEmpty: {
-	                      message: '注册资本占比不能为空'
-	                  },
-	            	  numeric: {message: '只能输入数字'},
-		              callback: {  
-		            	  message: '比例在0~100之间',  
-	                       callback: function(value, validator) { 
-	                    	   var registeredCapitalProportionSum = parseFloat(getShareSum("registeredCapitalProportion"));
-	                    	   return value =="" || (parseFloat(value)>=0&&(parseFloat(value)+registeredCapitalProportionSum)<=100);
-	                         }  
-	                     } 
-	              }
- 	    	}
- 	      }
- 		})
- 		.on('success.form.bv', function (e) {
- 			e.preventDefault();
- 		});	
- }
+
 //获取股东表中的数据和
-function getShareSum(type){
-	var shareInfo = $('#shareHolderInfoTable').bootstrapTable('getData');
-	var sum = 0;
-	$.each(shareInfo, function(i, item){
-		sum = CloudUtils.Math(sum,eval('item.'+type),'add');
-	});
-	//	如果是修改需要减去当前选中的值
-	if(!isEdit){
-		sum = CloudUtils.Math(sum,eval('shareDetailRow.'+type),'sub');
-	}
-	return sum;
-}
 
-function formValidator(){
- 	$('#detailForm').bootstrapValidator({
- 	      message: 'This value is not valid',
- 	      excluded: ':disabled',
- 	      feedbackIcons: {
- 	          valid: 'glyphicon glyphicon-ok',
- 	          invalid: 'glyphicon glyphicon-remove',
- 	          validating: 'glyphicon glyphicon-refresh'
- 	      },
- 	      fields: {
- 	    	 corpName:{
- 	    		validators: {
- 	    			notEmpty: {
-	                      message: '企业名称不能为空'
-	                  },
-	                  stringLength: {
-			              max: 32,
-			              message: '企业名称不能超过32'
-			          },
- 	    		}
- 	    	 },
-// 	    	orgnNum:{
-// 	    		validators: {
-// 	    			notEmpty: {
-//	                      message: '社会统一信用代码证号不能为空'
-//	                  },
-//	                  regexp: {
-//                          regexp: /[A-Z0-9]{18}/, 
-//                          message: '社会统一信用代码证号格式为18位大写拉丁字母及数字混合'
-//                      },
-//                      stringLength: {
-//                          max: 18,
-//                          message: '社会统一信用代码证号长度不能超过18'
-//                      },
-// 	    		}
-// 	    	 },
- 	    	corpType:{
- 	    		validators: {
- 	    			notEmpty: {
-	                      message: '企业类型不能为空'
-	                  },
- 	    		}
- 	    	 },
- 	    	legalPerson:{
- 	    		validators: {
- 	    			notEmpty: {
-	                      message: '法定代表人不能为空'
-	                  },
-	                  stringLength: {
-			              max: 32,
-			              message: '法定代表人不能超过32'
-			          },
 
- 	    		}
- 	    	 },
- 	    	regCap: {
- 	    		validators: {
-            	    numeric: {message: '只能输入数字'},
-	                callback: {  
-                       message: '金额在0~1000000000之间',  
-                       callback: function(value, validator) { 
-                        	return value =="" || (parseFloat(value)>=0&&parseFloat(value)<=1000000000);
-                         }  
-                     } 
-	              }
- 	    	},
-	    	contactInfo: {
-	              validators: {
-	            	  notEmpty: {
-	                      message: '手机号不能为空'
-	                  },
-	                  regexp: {
-	                      regexp: /^1(3|4|5|7|8)\d{9}$/,
-	                      message: '请输入11位真实手机号码'
-	                  }
-	              }
-	          },
-	          officeAddress:{
-	        	  validators: {
-	        		  notEmpty: {
-	                      message: '地址不能为空'
-	                  },
-	                  stringLength: {
-			              max: 32,
-			              message: '地址不能超过32'
-			          },
-	        	  }
-	          },
-	          fixedPhone:{
-	        	validators: {
-	        		regexp: {
-	                      regexp: /^0\d{2,4}-\d{7,8}$/,
-	                      message: '请输入正式号码为区号-电话号'
-	                  }
-	        	}
-	          }
- 	      }
- 		})
- 		.on('success.form.bv', function (e) {
- 			e.preventDefault();
- 		});	
- }
 
 //修改唯一性判断
  function editUniqueCust(data){

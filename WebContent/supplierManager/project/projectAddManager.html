@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html style="background-color: #ffffff;">
+<head>
+<meta charset="UTF-8" />
+	<title>融资管理</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--external css-->
+  <link href="../../css/style.css" rel="stylesheet">
+<link href="../../css/style-responsive.css" rel="stylesheet">
+<link href="../../css/bootstrap-table.css" rel="stylesheet">
+<link href="../../css/bootstrap.css" rel="stylesheet">
+<link href="../../css/validator/bootstrapValidator.css" rel="stylesheet">
+<link href="../../css/sysfun.css" rel="stylesheet">
+<link href="../../106/css/selectordie_theme_03.css" rel="stylesheet">
+<script src="../../js/jquery-3.0.0.min.js" type="text/javascript"></script>
+<script src="../../106/js/selectordie.min.js" type="text/javascript"></script>
+<script src="../../js/bootstrap.min.js"></script>
+<script src="../../js/CloudUtils.js"></script>
+<script src="../../js/password.js"></script>
+<script src="../../js/store.js" type="text/javascript"></script>
+<script src="../../js/bootstrap-treeview.js" type="text/javascript"></script>
+<script type="text/javascript" src="../../js/jquery.validate.min.js"></script>
+<script src="../../js/validation-init.js"></script>
+<script type="text/javascript"
+	src="../../js/advanced-datatable/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="../../js/bootstrap-table.js"></script>
+<script type="text/javascript"
+	src="../../js/bootstrap-validator/bootstrapValidator.js"></script>
+<script type="text/javascript"
+	src="../../js/bootstrap-validator/zh_CN.js"></script>
+<script type="text/javascript" src="../../js/bootbox-4.4.0/bootbox.js"></script>
+<script type="text/javascript" src="../../js/jquery.number.js"></script>
+	  <script type="text/javascript" src="../../js/ajaxfileupload.js"></script>
+	  <script type="text/javascript" src="../../js/fileUpload/jquery.ui.widget.js"></script>
+	  <script type="text/javascript" src="../../js/fileUpload/jquery.iframe-transport.js"></script>
+	  <script type="text/javascript" src="../../js/fileUpload/jquery.xdr-transport.js"></script>
+	  <script type="text/javascript" src="../../js/fileUpload/jquery.fileupload.js"></script>
+<!--dynamic table initialization -->
+<script type="text/javascript"
+	src="../../js/project/supplier/projectAddManager.js"></script>
+</head>
+<body class="iframeBody" style="background-color: #ffffff;">
+	<form class="form-horizontal" role="form" id="detailForm" data-toggle="validator">
+	<section>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px; text-align: center;">
+						<li class="tablename">
+							<b id="corpNameTitle" name="corpNameTitle" readonly="true" style="font-size: 20px;"></b>
+						</li>
+
+					</ol>
+				</div>
+				<fieldset id='field23'>
+				<div class="form-group">
+				<div class="form-group col-sm-12">
+					<div class="form-group">
+					
+				
+						<label class="col-sm-2 control-label" for="corpName">公司名称</label>
+						<div class="col-sm-2">
+							<input type="text" name="corpName" id="corpName" class="form-control" />
+						</div>
+						<label class="col-sm-2 control-label" for="agencyNum">公司编码</label>
+						<div class="col-sm-2">
+							<input type="text"  readonly class="form-control " name="agencyNum">
+						</div>
+
+						<label class="col-sm-2 control-label" for="fixedPhone">联系方式(座机):</label>
+						<div class="col-sm-2">
+							<input type="text" name="fixedPhone" id="fixedPhone" class="form-control"  >
+							<input type="hidden" id="sysType" name ="sysType" value="4">
+							<input type="hidden" id="corpId" name="corpId" />
+
+						</div>
+					</div>
+
+                    <!-- 公司所在地-->
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="locationProvince">所在省份</label>
+                        <div class="col-sm-2">
+						 <input id="locationProvince" name="locationProvince" class="form-control"></input>
+                        </div>
+                        <label class="control-label col-sm-2" for="locationCity" class="form-control">所在市/区</label>
+                        <div class="col-sm-2">
+                            <input id="locationCity" name="locationCity" class="form-control"></input>
+                        </div>
+                        <label class="control-label col-sm-2" for="locationArea">所在区/县</label>
+                        <div class="col-sm-2">
+                            <input id="locationArea" name="locationArea" class="form-control"></input>
+                        </div>
+
+					</div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="locationAddress">详细所在地</label>
+                       			<div class="col-sm-10">
+									<input type="text" class=" form-control" name="locationAddress"  id="locationAddress">
+								</div>
+                    </div>
+
+                    <!-- 注册所在地-->
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="registerProvince">注册省份</label>
+                        <div class="col-sm-2">
+                            <input id="registerProvince" name="registerProvince" class="form-control"></input>
+                        </div>
+                        <label class="control-label col-sm-2" for="registerCity" class="form-control">注册市/区</label>
+                        <div class="col-sm-2">
+                            <input id="registerCity" name="registerCity" class="form-control"></input>
+                        </div>
+                        <label class="control-label col-sm-2" for="registerArea">注册区/县</label>
+                        <div class="col-sm-2">
+                            <input id="registerArea" name="registerArea" class="form-control"></input>
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="registerAddress">注册详细所在地</label>
+                       						<div class="col-sm-10">
+									<input type="text" class=" form-control" name="registerAddress"  id="registerAddress">
+								</div>
+                    </div>
+
+
+					<div class="form-group">
+					    <label class="col-sm-2 control-label" for="email">邮箱</label>
+                        <div class="col-sm-2">
+                            <input type="text" name="email" id="email" class="form-control" >
+                        </div>
+
+                        <label class="col-sm-2 control-label" for="uniformCreditCode">统一社会信用代码:</label>
+                        <div class="col-sm-2">
+                            <input type="text" name="uniformCreditCode" class="form-control" id="uniformCreditCode">
+                        </div>
+                        <label class="col-sm-2 control-label" for="legalPerson">法人名称:</label>
+                        <div class="col-sm-2">
+                            <input type="text" name="legalPerson"  id="legalPerson" class="form-control"  >
+                        </div>
+
+					</div>
+
+
+					<div class="form-group">
+
+						<label class="col-sm-2 control-label" for="cellphone">手机号码</label>
+						<div class="col-sm-2">
+							<input type="text" name="cellphone" class="form-control"  id="cellphone" >
+						</div>
+                        <label class="col-sm-2 control-label" for="idNumber">身份证号码:</label>
+						<div class="col-sm-2">
+                            <input type="text" class="col-sm-2 form-control" name="idNumber" id="idNumber">
+                        </div>
+                    </div>
+				</div>
+                </div>
+                </fieldset>
+            </div>
+
+
+			</div>
+	</section>
+</form>
+
+<section>
+<form class="form-horizontal" role="form" id="projectForm">
+	<section>
+		<div class="main-content-child">
+	<div class="form-group col-sm-12">
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="projectName">项目名称:</label>
+						<div class="col-sm-2">
+							<input type="text" name="projectName" id="projectName" class="form-control"  >
+						</div>
+						<label class="col-sm-2 control-label" for="project_describe">备注:</label>
+						<div class="col-sm-2">
+							<input type="text" name="project_describe" id="project_describe" class="form-control"  >
+						</div>
+					</div>
+
+				</div>
+
+
+			</div>
+	</section>
+</form>
+		<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">融资管理</li>
+					</ol>
+				</div>
+				<fieldset >
+					<div class="whiteBgDiv row">
+				 	<!-- 添加合同信息按钮 -->
+					<div> 
+				       <button id="addContractInfo" type="button" class="btn btn-default add" onclick="addFun(2)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加</button> 
+				     </div> 
+					<!-- 合同信息 -->
+					 <table id="contractInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table> 
+					 </div>
+				</fieldset>
+			
+			</div>
+		</div>
+	</section>
+	<div class="form-group">
+	  	<div class="col-sm-1 col-sm-offset-8" style="margin-left:70%">
+	  	</div>
+		<div class="col-sm-1">
+			<button type="button" id="saveCorpInfo" class="btn btn-default save"
+				 onclick="saveFun(0);">保存
+			</button>
+		</div>
+		<div class="col-sm-1">
+			<button class="btn btn-default cancel" id="cancel" onclick="cancel();">取消
+			</button>
+		</div>
+	</div>
+	
+	
+
+	   
+	   <!--合同信息-->
+	    <div class="modal fade" id="contractInfoModal" tabindex="-1" role="dialog"
+				aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+							<h4 class="modal-title" >添加合同信息</h4>
+						</div>
+						<div class="modal-body">
+							<fieldset id='field'>
+							 <form class="form-horizontal" role="form" id="contractForm" data-toggle="validator">
+							 	<input type="hidden" name="contractid" class="form-control" id="contractid" placeholder="合同id ">
+							 	<div class="form-group">
+									<label class="col-sm-4 control-label" for="contractName"><span class="required">*</span>合同名称</label>
+									<div class="col-sm-6">
+										<input type="text" name="contractName" class="form-control"
+											id="contractName" placeholder="合同名称 ">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="contractNum"><span class="required">*</span>合同编号</label>
+									<div class="col-sm-6">
+										<input type="text" name="contractNum" class="form-control"
+											id="contractNum" placeholder="合同编号">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" ><span class="required">*</span>选择要上传的pdf文件</label>
+									<div class="col-sm-6">
+										<a id="uploadContractInfo" style="position:relative" class="btn btn-default add">上传
+                    						<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="contractfile" name="file" type="file" >
+                    					</a>
+                    					<input type="text" name="fileName" class="form-control" id="fileName" >
+                    					<input type="hidden" id="fileUrl" name="fileUrl">
+									</div>
+								</div>
+					         </form>
+							</fieldset>
+						</div>
+						<div class="modal-footer">
+							<div class="form-group">
+							  	<div class="col-sm-2 col-sm-offset-8">
+									<button type="button" class="btn btn-default cancel"
+										data-dismiss="modal">取消
+									</button>
+							  	</div>
+								<div class="col-sm-2">
+									<button type="submit" id="saveContract" class="btn btn-default save"
+										 onclick="saveFun(2);">确定
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div> 
+			
+			
+			
+  </body>
+
+
+</html>

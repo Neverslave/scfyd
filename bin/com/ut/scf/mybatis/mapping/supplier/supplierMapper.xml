@@ -11,7 +11,7 @@
 	si.register_city  registerCity, si.register_area registerArea,
 	si.register_address registerAddress,si.email email ,si.uniform_credit_code uniformCreditCode,
 	si.legal_person legalPerson ,si.cellphone cellphone ,si.id_number idNumber,
-	si.business_license_pic businessLincensePic, si.corp_consitution_doc corpConsitutionDoc,
+	si.business_license_path businessLicensePath, si.corp_consitution_doc corpConsitutionDoc,
 	si.note note 
 	from supplier_info si
 	<where>
@@ -23,10 +23,37 @@
 	and si.corp_name LIKE CONCAT(CONCAT('%',#{supplierName},'%'))
 	</if>
 	<if test = "corpId !=null and corpId !='' " >
-	and si.corp_id = corpId
+	and si.corp_id =#{corpId}
 	</if>
 	</where>
 </select>
-
+<select id="supplierProjectList" resultType="hashmap" parameterType="hashmap">
+	select
+		a.id id,
+	a.corp_id  corpId,
+	a.project_name projectName,
+	a.project_describe projectDescribe,
+	a.project_contract projectContract,
+	a.project_invoice projectInvoice,
+	a.project_qua projectQua,
+	a.project_accept projectAccept,
+	a.system_time  systemTime,
+	b.corp_name corpName,
+	b.agency_num agencyNum
+	
+	 from supplier_project_info a
+	LEFT JOIN supplier_info  b on a.corp_id=b.corp_id
+	WHERE
+	1=1
+	<if test = "corpId !=null and corpId !='' " >
+	 and a.corp_id  = #{corpId}
+	 </if>
+	 <if test = "corpId !=null and corpId !='' " >
+	 and b.agency_num  LIKE CONCAT(CONCAT('%',#{agencyNum}),'%')
+	 </if>
+	 <if test = "corpId !=null and corpId !='' " >
+	 and b.corp_name  LIKE CONCAT(CONCAT('%',#{corpName}),'%')
+	 </if>
+</select>
 
 </mapper>

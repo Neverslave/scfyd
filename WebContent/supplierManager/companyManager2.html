@@ -34,7 +34,7 @@
 	  <script type="text/javascript" src="../js/fileUpload/jquery.xdr-transport.js"></script>
 	  <script type="text/javascript" src="../js/fileUpload/jquery.fileupload.js"></script>
       <script src="../js/pubManager/companyManager2.js"></script>
-	<script type="text/javascript" src="../js/address.js"></script>
+
 </head>
 <body class="iframeBody" style="background-color: #ffffff;">
 	<form class="form-horizontal" role="form" id="detailForm" data-toggle="validator">
@@ -73,15 +73,15 @@
 						<div class="form-group">
 							<label class="control-label col-sm-2" for="locationProvince">所在省份</label>
 							<div class="col-sm-2">
-								<select id="locationProvince" name="locationProvince" class="form-control"></select>
+								<input id="locationProvince" name="locationProvince" class="form-control"></select>
 							</div>
 							<label class="control-label col-sm-2" for="locationCity" class="form-control">所在市/区</label>
 							<div class="col-sm-2">
-								<select id="locationCity" name="locationCity" class="form-control"></select>
+								<input id="locationCity" name="locationCity" class="form-control"></input>
 							</div>
 							<label class="control-label col-sm-2" for="locationArea">所在区/县</label>
 							<div class="col-sm-2">
-								<select id="locationArea" name="locationArea" class="form-control"></select>
+								<input id="locationArea" name="locationArea" class="form-control"></input>
 							</div>
 
 						</div>
@@ -96,15 +96,15 @@
 						<div class="form-group">
 							<label class="control-label col-sm-2" for="registerProvince">注册省份</label>
 							<div class="col-sm-2">
-								<select id="registerProvince" name="registerProvince" class="form-control"></select>
+								<input id="registerProvince" name="registerProvince" class="form-control"></input>
 							</div>
 							<label class="control-label col-sm-2" for="registerCity" class="form-control">注册市/区</label>
 							<div class="col-sm-2">
-								<select id="registerCity" name="registerCity" class="form-control"></select>
+								<input id="registerCity" name="registerCity" class="form-control"></input>
 							</div>
 							<label class="control-label col-sm-2" for="registerArea">注册区/县</label>
 							<div class="col-sm-2">
-								<select id="registerArea" name="registerArea" class="form-control"></select>
+								<input id="registerArea" name="registerArea" class="form-control"></input>
 							</div>
 
 						</div>
@@ -153,29 +153,7 @@
 			</div>
 
 	</section>
-	<section>
-		<div class="main-content-child">
-		 <div class="nav" id="nav"></div>
-			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
-		 		<div class="nav">
-					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
-						<li class="tablename">股东信息</li>
-					</ol>
-				</div>
-				<fieldset id='field'>
-					<div class="whiteBgDiv row">
-
-					<div> 
-				       <button id="btn_add" type="button" style="display: none" class="btn btn-default add" onclick="addFun(1)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加</button>
-				     </div> 
-
-
-					 <table id="shareHolderInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
-					</div>
-				</fieldset>
-			</div>
-		</div>
-	</section>
+	
 	<section>
 		<div class="main-content-child">
 		 <div class="nav" id="nav"></div>
@@ -442,8 +420,5 @@
   </body>
 
 
-<script type="text/javascript">
-    addressInit('locationProvince', 'locationCity', 'locationArea');
-    addressInit('registerProvince', 'registerCity', 'registerArea');
-</script>
+
 </html>

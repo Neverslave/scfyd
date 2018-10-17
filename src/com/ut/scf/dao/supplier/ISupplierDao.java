@@ -10,5 +10,7 @@ public interface ISupplierDao {
 
 	List<Map<String, Object>> supplierList(Map<String, Object> paramMap,
 			PageInfoBean page);
+	List<Map<String, Object>> supplierProjectList(Map<String, Object> paramMap,
+			PageInfoBean page);
 
 }

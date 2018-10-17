@@ -11,14 +11,14 @@ $(document).ready(function() {
 });
 
 window.operateEvents = {
-	'click .detail': function (e, value, row, index) {
-		store.set('custRow', row); //把数据存储在缓存中
-        $('#mainFrame', top.document).attr('src', 'supplierManager/companyManager.html?isEdit='+false);
-	},
-    'click .modify': function(e, value, row, index) {
-        store.set('custRow', row); //把数据存储在缓存中
-        $('#mainFrame', top.document).attr('src', 'supplierManager/companyManager.html?isEdit='+true);
-    }
+		'click .detail': function (e, value, row, index) {
+			store.set('custRow', row); //把数据存储在缓存中
+	        $('#mainFrame', top.document).attr('src', 'supplierManager/companyManager.html?isEdit='+false);
+		},
+	    'click .modify': function(e, value, row, index) {
+	        store.set('custRow', row); //把数据存储在缓存中
+	        $('#mainFrame', top.document).attr('src', 'supplierManager/companyManager.html?isEdit='+true);
+	    }
 };
 
 function searchFun() {
@@ -50,18 +50,7 @@ function initTable() {
                pageNumber: params.pageNumber,    
                pageSize: params.pageSize,
                agencyCode: jsonData.txt_agencyCode,
-               agencyName: jsonData.txt_agencyName,
-            /*   maxCreditAmountStart: jsonData.maxCreditAmountStart,
-               maxCreditAmountEnd: jsonData.maxCreditAmountEnd,
-               maxLscreditAmountStart: jsonData.maxLscreditAmountStart,
-               maxLscreditAmountEnd: jsonData.maxLscreditAmountEnd,
-               useAbleAmountStrat: jsonData.useAbleAmountStrat,
-               useAbleAmountEnd: jsonData.useAbleAmountEnd,
-               useLsableAmountStrat: jsonData.useLsableAmountStrat,
-               useLsableAmountEnd: jsonData.useLsableAmountEnd,
-               area: jsonData.area,
-               represent: jsonData.represent,*/
-               sysType:jsonData.sysType
+               agencyName: jsonData.txt_agencyName
                
            };    
            return JSON.stringify(param);
@@ -179,13 +168,13 @@ function initTable() {
  	            return $.number(value, 2);
  	        }*/
  	     {
- 	        field: 'officeAddress',
+ 	        field: 'locationAddress',
  	        title: '公司地址',
  	        align: 'center',
  	        width: 200,
             valign: 'middle'
  	    }, {
- 	        field: 'contactInfo',
+ 	        field: 'cellphone',
  	        title: '联系方式',
  	        align: 'center',
  	        width: 120,

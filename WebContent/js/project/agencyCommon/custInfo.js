@@ -1,22 +1,29 @@
 $(function(){
+console.log("01");
 	$("input").attr("readonly",true);
 	$("select").attr("disabled",true); 
+	console.log("02");
 	setForm();
+	console.log("03");
 	numFormat();
+	console.log("04");
 	detailFun();
+	console.log("05");
+	
 });
 
 function setForm(){
 	var data = {};
 	data.taskId = taskId;
+	
 	 var options = {
 		url : '../../activiti/getTaskDataByTaskId',
 		data : JSON.stringify(data),
 		callBackFun : function(data) {
 			if (data.result == 0) {
 				var jsonData =  eval("(" + data.str + ")");
-				loadAreas();
-			    changeArea(jsonData.area);
+				//loadAreas();
+		
 				CloudUtils.setForm(jsonData,"detailForm");
 				if(jsonData.companyPicturePath1!=null && jsonData.companyPicturePath1!=''){
 					$("#Path1").attr("src",jsonData.companyPicturePath1);
@@ -69,9 +76,9 @@ function setForm(){
 					 $("#lin2").hide();
 				}
                 $(".required").hide();
-                custManage.initShareHolderTable(jsonData.shareInfoList);
+       /*         custManage.initShareHolderTable(jsonData.shareInfoList);
                 custManage.attachInfoTable(jsonData.attachInfoList);
-                custManage.contractInfoTable(jsonData.contractInfoList);
+                custManage.contractInfoTable(jsonData.contractInfoList);*/
             	$("#corpNameTitle").text(jsonData.corpName);
 			} else {
 				return false;
@@ -304,16 +311,9 @@ function detailFun() {
     document.getElementById("btn_contract").style.display = "none";
     document.getElementById("addContractInfo").style.display = "none";
     document.getElementById("saveCorpInfo").style.display = "none";
-    document.getElementById("cp1").style.display = "none";
-    document.getElementById("cp2").style.display = "none";
-    document.getElementById("cp3").style.display = "none";
-    document.getElementById("cp4").style.display = "none";
-    document.getElementById("cp5").style.display = "none";
-    document.getElementById("cp6").style.display = "none";
+
     document.getElementById("bl").style.display = "none";
-    document.getElementById("pa").style.display = "none";
-    document.getElementById("lin1").style.display = "none";
-    document.getElementById("lin2").style.display = "none";
+
 }
 function saveFun(){
 	$("select").attr("disabled",false); 
@@ -407,7 +407,7 @@ function numFormat(){
  	$("#registeredCapitalProportion").number(true, 2);
  }
 
-function loadAreas() {
+/*function loadAreas() {
     var options = {
         url: '../../represent/areas',
         data: '{}',
@@ -418,7 +418,7 @@ function loadAreas() {
         }
     };
     CloudUtils.ajax(options);
-}
+}*/
 
 function changeArea(area) {
     var data = { areaId: area };

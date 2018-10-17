@@ -134,11 +134,11 @@ public class SupplierServiceImpl  implements ISupplierService{
 			supplierInfo.setLegalPerson(obj.getString("legalPerson"));
 			supplierInfo.setCellphone(obj.getString("cellphone"));
 			supplierInfo.setIdNumber(obj.getString("idNumber"));
-			supplierInfo.setBusinessLicensePic(obj.getString("businessLicensePic"));
+			supplierInfo.setBusinessLicensePath(obj.getString("businessLicensePath"));
 			supplierInfo.setCorpConsitutionDoc(obj.getString("corpConsitutionDoc"));
 			supplierInfo.setNote(obj.getString("note"));
 			
-			int result = supplierInfoMapper.insert(supplierInfo);
+			int result = supplierInfoMapper.insertSelective(supplierInfo);
 			if (result<1) {
 				throw new BizException(ErrorCodeEnum.ADD_FAILED);
 				

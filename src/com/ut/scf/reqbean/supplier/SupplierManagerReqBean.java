@@ -23,14 +23,14 @@ public class SupplierManagerReqBean extends BaseReqBean {
 	private String uniformCreditCode;
 	private String legalPerson;
 	private String cellphone;
-	private String idNumer; //身份证号码
-	private String businessLincensePic ; //营业执照地址
+	private String idNumber; //身份证号码
+	private String businessLicensePath ; //营业执照地址
 	private String corpConsitutionDoc; //公司章程地址
 	private Byte status;
 	private Date createTime;
-	private String taskID;
+	private String taskId;
 	private String  agree;
-	private String  userID;
+	private String  userId;
 	
 	
 	public String getAgree() {
@@ -39,18 +39,7 @@ public class SupplierManagerReqBean extends BaseReqBean {
 	public void setAgree(String agree) {
 		this.agree = agree;
 	}
-	public String getUserID() {
-		return userID;
-	}
-	public void setUserID(String userID) {
-		this.userID = userID;
-	}
-	public String getTaskID() {
-		return taskID;
-	}
-	public void setTaskID(String taskID) {
-		this.taskID = taskID;
-	}
+	
 	public Date getCreateTime() {
 		return createTime;
 	}
@@ -165,23 +154,37 @@ public class SupplierManagerReqBean extends BaseReqBean {
 	public void setCellphone(String cellphone) {
 		this.cellphone = cellphone;
 	}
-	public String getIdNumer() {
-		return idNumer;
-	}
-	public void setIdNumer(String idNumer) {
-		this.idNumer = idNumer;
-	}
-	public String getBusinessLincensePic() {
-		return businessLincensePic;
-	}
-	public void setBusinessLincensePic(String businessLincensePic) {
-		this.businessLincensePic = businessLincensePic;
-	}
+
 	public String getCorpConsitutionDoc() {
 		return corpConsitutionDoc;
 	}
 	public void setCorpConsitutionDoc(String corpConsitutionDoc) {
 		this.corpConsitutionDoc = corpConsitutionDoc;
+	}
+
+	public String getBusinessLicensePath() {
+		return businessLicensePath;
+	}
+	public void setBusinessLicensePath(String businessLicensePath) {
+		this.businessLicensePath = businessLicensePath;
+	}
+	public String getIdNumber() {
+		return idNumber;
+	}
+	public void setIdNumber(String idNumber) {
+		this.idNumber = idNumber;
+	}
+	public String getTaskId() {
+		return taskId;
+	}
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+	public String getUserId() {
+		return userId;
+	}
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 
 	
