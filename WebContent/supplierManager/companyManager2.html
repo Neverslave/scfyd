@@ -145,6 +145,12 @@
 								<input type="text" class="col-sm-2 form-control" name="idNumber" id="idNumber">
 							</div>
 						</div>
+						<div style="height: 120px">
+							<label class="control-label col-sm-2" for="businessScope">公司经营范围</label>
+							<div class="col-sm-10" >
+							<input type="text" class="form-control " name="businessScope" id="businessScope">
+							</div>
+						</div>
 					</div>
 				</div>
 				</fieldset>
@@ -186,30 +192,6 @@
 			</div>
 		</div>
 	</section>
-	<section>
-		<div class="main-content-child">
-		 <div class="nav" id="nav"></div>
-			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
-		 		<div class="nav">
-					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
-						<li class="tablename">合同信息信息</li>
-					</ol>
-				</div>
-				<fieldset >
-					<div class="whiteBgDiv row">
-				 	<!-- 添加合同信息按钮 -->
-					<div> 
-				       <button id="addContractInfo" type="button" class="btn btn-default add" onclick="addFun(2)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加</button> 
-				     </div> 
-					<!-- 合同信息 -->
-
-					 <table id="contractInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
-					</div>
-				</fieldset>
-			
-			</div>
-		</div>
-	</section>
 
 </form>
 	<div class="form-group">
@@ -227,7 +209,7 @@
 	</div>
 	
 	
-	    <!--  股东信息模态框 -->
+	 <!--   &lt;!&ndash;  股东信息模态框 &ndash;&gt;
 	    <div class="modal fade" id="shareInfoModal" tabindex="-1" role="dialog"
 				aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
 				<div class="modal-dialog" role="document">
@@ -289,86 +271,86 @@
 						</div>
 					</div>
 				</div>
-			</div> 
-	   </div> 
+			</div>
+	   </div> -->
 	   
 	   <!--合同信息-->
-	    <div class="modal fade" id="contractInfoModal" tabindex="-1" role="dialog"
-				aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
-				<div class="modal-dialog" role="document">
-					<div class="modal-content">
-						<div class="modal-header">
-							<button type="button" class="close" data-dismiss="modal"
-								aria-label="Close">
-								<span aria-hidden="true">&times;</span>
-							</button>
-							<h4 class="modal-title" >添加合同信息</h4>
-						</div>
-						<div class="modal-body">
-							<fieldset id='field'>
-							 <form class="form-horizontal" role="form" id="contractForm" data-toggle="validator">
-							 	<input type="hidden" name="contractid" class="form-control" id="contractid" placeholder="合同id ">
-							 	<div class="form-group">
-									<label class="col-sm-4 control-label" for="contractName"><span class="required">*</span>合同名称</label>
-									<div class="col-sm-6">
-										<input type="text" name="contractName" class="form-control"
-											id="contractName" placeholder="合同名称 ">
-									</div>
-								</div>
-								<div class="form-group">
-									<label class="col-sm-4 control-label" for="contractNum"><span class="required">*</span>合同编号</label>
-									<div class="col-sm-6">
-										<input type="text" name="contractNum" class="form-control"
-											id="contractNum" placeholder="合同编号">
-									</div>
-								</div>
-								<div class="form-group">
-									<label class="col-sm-4 control-label" for="contractType">业务类型</label>
-									<div class="col-sm-6">
-										<div class="col-sm-5">
-											<select id="contractType" name=contractType class="form-control">
-												<option value="大宗">大宗</option>
-											     <option value="零售">零售</option>
-											</select>
-										</div>
-									</div>
-								</div>
-								<div class="form-group">
-										<label class="col-sm-4 control-label" for="endDate"><span class="required">*</span>合同到期日</label>
-									<div class="col-sm-6">
-										<input type="date" name="endDate" class="form-control" id="endDate" placeholder="合同到期日">
-									</div>
-								</div>
-								<div class="form-group">
-									<label class="col-sm-4 control-label" ><span class="required">*</span>选择要上传的pdf文件</label>
-									<div class="col-sm-6">
-										<a id="uploadContractInfo" style="position:relative" class="btn btn-default add">上传
-                    						<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="contractfile" name="file" type="file" >
-                    					</a>
-                    					<input type="text" name="fileName" class="form-control" id="fileName" >
-                    					<input type="hidden" id="fileUrl" name="fileUrl">
-									</div>
-								</div>
-					         </form>
-							</fieldset>
-						</div>
-						<div class="modal-footer">
-							<div class="form-group">
-							  	<div class="col-sm-2 col-sm-offset-8">
-									<button type="button" class="btn btn-default cancel"
-										data-dismiss="modal">取消
-									</button>
-							  	</div>
-								<div class="col-sm-2">
-									<button type="submit" id="saveContract" class="btn btn-default save"
-										 onclick="saveFun(2);">确定
-									</button>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div> 
+	    <!--<div class="modal fade" id="contractInfoModal" tabindex="-1" role="dialog"-->
+				<!--aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">-->
+				<!--<div class="modal-dialog" role="document">-->
+					<!--<div class="modal-content">-->
+						<!--<div class="modal-header">-->
+							<!--<button type="button" class="close" data-dismiss="modal"-->
+								<!--aria-label="Close">-->
+								<!--<span aria-hidden="true">&times;</span>-->
+							<!--</button>-->
+							<!--<h4 class="modal-title" >添加合同信息</h4>-->
+						<!--</div>-->
+						<!--<div class="modal-body">-->
+							<!--<fieldset id='field'>-->
+							 <!--<form class="form-horizontal" role="form" id="contractForm" data-toggle="validator">-->
+							 	<!--<input type="hidden" name="contractid" class="form-control" id="contractid" placeholder="合同id ">-->
+							 	<!--<div class="form-group">-->
+									<!--<label class="col-sm-4 control-label" for="contractName"><span class="required">*</span>合同名称</label>-->
+									<!--<div class="col-sm-6">-->
+										<!--<input type="text" name="contractName" class="form-control"-->
+											<!--id="contractName" placeholder="合同名称 ">-->
+									<!--</div>-->
+								<!--</div>-->
+								<!--<div class="form-group">-->
+									<!--<label class="col-sm-4 control-label" for="contractNum"><span class="required">*</span>合同编号</label>-->
+									<!--<div class="col-sm-6">-->
+										<!--<input type="text" name="contractNum" class="form-control"-->
+											<!--id="contractNum" placeholder="合同编号">-->
+									<!--</div>-->
+								<!--</div>-->
+								<!--<div class="form-group">-->
+									<!--<label class="col-sm-4 control-label" for="contractType">业务类型</label>-->
+									<!--<div class="col-sm-6">-->
+										<!--<div class="col-sm-5">-->
+											<!--<select id="contractType" name=contractType class="form-control">-->
+												<!--<option value="大宗">大宗</option>-->
+											     <!--<option value="零售">零售</option>-->
+											<!--</select>-->
+										<!--</div>-->
+									<!--</div>-->
+								<!--</div>-->
+								<!--<div class="form-group">-->
+										<!--<label class="col-sm-4 control-label" for="endDate"><span class="required">*</span>合同到期日</label>-->
+									<!--<div class="col-sm-6">-->
+										<!--<input type="date" name="endDate" class="form-control" id="endDate" placeholder="合同到期日">-->
+									<!--</div>-->
+								<!--</div>-->
+								<!--<div class="form-group">-->
+									<!--<label class="col-sm-4 control-label" ><span class="required">*</span>选择要上传的pdf文件</label>-->
+									<!--<div class="col-sm-6">-->
+										<!--<a id="uploadContractInfo" style="position:relative" class="btn btn-default add">上传-->
+                    						<!--<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="contractfile" name="file" type="file" >-->
+                    					<!--</a>-->
+                    					<!--<input type="text" name="fileName" class="form-control" id="fileName" >-->
+                    					<!--<input type="hidden" id="fileUrl" name="fileUrl">-->
+									<!--</div>-->
+								<!--</div>-->
+					         <!--</form>-->
+							<!--</fieldset>-->
+						<!--</div>-->
+						<!--<div class="modal-footer">-->
+							<!--<div class="form-group">-->
+							  	<!--<div class="col-sm-2 col-sm-offset-8">-->
+									<!--<button type="button" class="btn btn-default cancel"-->
+										<!--data-dismiss="modal">取消-->
+									<!--</button>-->
+							  	<!--</div>-->
+								<!--<div class="col-sm-2">-->
+									<!--<button type="submit" id="saveContract" class="btn btn-default save"-->
+										 <!--onclick="saveFun(2);">确定-->
+									<!--</button>-->
+								<!--</div>-->
+							<!--</div>-->
+						<!--</div>-->
+					<!--</div>-->
+				<!--</div>-->
+			<!--</div> -->
 			
 			
 			<!--添加附件-->
@@ -388,10 +370,7 @@
 										<label class="col-sm-2 control-label" for="uploadType"><span class="required">*</span>附件类型</label>
 										<div class="col-sm-5">
 											<select id="uploadType" name=uploadType class="form-control">
-												<option value="财产/审计报告">财产/审计报告(pdf)</option>
-											     <option value="实际控制人征信报告">实际控制人征信报告(pdf)</option>
-											     <option value="经销商企业征信报告">经销商企业征信报告(pdf)</option>
-											     <option value="实际控制人婚姻证明">实际控制人婚姻证明(jpg)</option>
+												<option value="公司章程">公司章程(pdf)</option>
 											</select>
 										</div>	
 									</div>

@@ -93,7 +93,13 @@ function initTable() {
  	        field: 'projectContract',
  	        title: '项目合同',
  	        align: 'center',
-            valign: 'middle'
+            valign: 'middle',
+	  formatter:function(value,row,index){
+        //  var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="attach" href="javascript:void(0)"></a>';
+          var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#d864fd;padding:0px 5px;" title="查看" data-type="view" href="javascript:void(0)"></a>';
+          return m ;
+      },
+    events: 'operateEvents'
  	    },{
  	        field: 'projectInvoice',
  	        title: '项目发票',
@@ -122,5 +128,18 @@ function initTable() {
 function accAgency() {
 	$('#mainFrame',top.document).attr('src','supplierManager/project/projectAddManager.html');
 }
+
+var row = store.get('agencyRow');//从缓存中获取数据
+window.operateEvents={
+	'click.view':function (e,value,row,index) {
+		$("#modal_contrator").modal("show");
+
+
+
+    }
+	
+	
+}
+
 
 

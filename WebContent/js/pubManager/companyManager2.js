@@ -527,24 +527,7 @@ $(function() {
 	    $("#lin2").show();*/
  }
  
- function changeArea(areaVal) {
-	$("#represent").empty();
-	if (areaVal == '0') {
-		$("#represent").append("<option value='0'>南京</option>")
-						.append("<option value='1'>上海</option>");
-	} else if (areaVal == '1') {
-		$("#represent").append("<option value='2'>西安</option>")
-						.append("<option value='3'>成都</option>");
-	} else if (areaVal == '2') {
-		$("#represent").append("<option value='4'>广州</option>")
-						.append("<option value='5'>武汉</option>")
-						.append("<option value='6'>郑州</option>");
-	} else if (areaVal == '3') {
-		$("#represent").append("<option value='7'>北京</option>")
-						.append("<option value='8'>沈阳</option>")
-						.append("<option value='9'>济南</option>");
-	}
-}
+
  
 // 添加附件信息
 function attachInfoTable(corpId){
@@ -713,19 +696,7 @@ function shareFormValidator() {
             //$('#btn_save').attr('disabled',false);
         });
 }
-//获取股东表中的数据和
-function getShareSum(type){
-	var shareInfo = $('#shareHolderInfoTable').bootstrapTable('getData');
-	var sum = 0;
-	$.each(shareInfo, function(i, item){
-		sum = CloudUtils.Math(sum,eval('item.'+type),'add');
-	});
-	//	如果是修改需要减去当前选中的值
-	if(!isEdit){
-		sum = CloudUtils.Math(sum,eval('shareDetailRow.'+type),'sub');
-	}
-	return sum;
-}
+
 
 function formValidator() {
     $('#detailForm').bootstrapValidator({
