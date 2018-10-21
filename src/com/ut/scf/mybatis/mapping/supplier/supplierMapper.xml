@@ -18,7 +18,7 @@
 	<where>
 	si.status =1 and si.sys_type = 4 
 	<if test="agencyCode!=null and agencyCode !='' ">
-	and si.angency_num LIKE CONCAT(CONCAT('%',#{agencyCode}),'%')
+	and si.agency_num LIKE CONCAT(CONCAT('%',#{agencyCode}),'%')
 	</if>
 	<if test = "agencyName !=null and agencyName !='' " >
 	and si.corp_name LIKE CONCAT(CONCAT('%',#{agencyName},'%'))
@@ -52,7 +52,7 @@
 	 <if test = "corpId !=null and corpId !='' " >
 	 and b.agency_num  LIKE CONCAT(CONCAT('%',#{agencyNum}),'%')
 	 </if>
-	 <if test = "corpId !=null and corpId !='' " >
+	 <if test = "corpName !=null and corpName !='' " >
 	 and b.corp_name  LIKE CONCAT(CONCAT('%',#{corpName}),'%')
 	 </if>
 </select>

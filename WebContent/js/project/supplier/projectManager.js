@@ -1,4 +1,10 @@
+var corpId = store.get("corpId")
+var roleId =store.get("roleId")
 $(document).ready(function() {
+	// noinspection JSAnnotator
+    if(roleId =='ROLE000016'||roleId=='4028808e668a142011868a1955790005'){
+		$("#btn_add").attr("style","display:none;");
+	}
 	$("form").attr("autocomplete","off");
 	CloudUtils.getMenuNames("nav");
 	//modal绑定事件
@@ -11,12 +17,16 @@ $(document).ready(function() {
 
 
 
+
 function searchFun() {
 	initTable();
 }
 
 function initTable() { 
-	$('#agencyProjectListTable').bootstrapTable('destroy');  
+	$('#agencyProjectListTable').bootstrapTable('destroy');
+	if(roleId !='ROLE000020'){
+		corpId='';
+	}
 	$("#agencyProjectListTable").bootstrapTable({  
          method: "post", 
          url: "../../supplierProject/list",
@@ -41,8 +51,9 @@ function initTable() {
                pageSize: params.pageSize,
                agencyNum: jsonData.txt_agencyCode,
                corpName: jsonData.txt_agencyName,
-        
-               sysType:jsonData.sysType
+               sysType:jsonData.sysType,
+			   corpId:corpId
+
                
            };    
            return JSON.stringify(param);
