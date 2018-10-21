@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ut.scf.dao.project.IRepayPlanDao" >
+
+  	
+  <select id="selectRepayPlanInfo" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+    o.order_id orderId,
+    o.batch_id batchId,
+    s.stu_name stuName,
+    s.id_card idCard,
+    s.mobile_phone mobilePhone,
+    o.total_price totalPrice,
+    o.cr_req_amt crReqAmt,
+    o.pay_m payM,
+    r.current_repay_date currentRepayDate,
+    r.student_repay_status studentRepayStatus,
+    r.super_repay_status superRepayStatus,
+    r.period,
+	r.current_payable_interest currentPayableInterest,
+	r.current_payable_principal currentPayablePrincipal
+	from 
+		order_info o 
+	INNER JOIN repayment_plan_info r ON o.order_id = r.order_id 
+	INNER JOIN stu_info s ON o.stu_id = s.stu_id 
+	WHERE o.batch_id = #{batchId} 
+	and o.state = 1 
+	order BY o.order_id,r.period
+  </select>
+  
+  <select id="selectRepayPlanInfoByOrderSuper" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+    o.order_id orderId,
+    o.batch_id batchId,
+    s.name name,
+    s.id_card idCard,
+    s.mobile mobile,
+    o.total_price totalPrice,
+    o.cr_req_amt crReqAmt,
+    o.pay_m payM,
+    r.current_repay_date currentRepayDate,
+    r.student_repay_status studentRepayStatus,
+    r.super_repay_status superRepayStatus,
+    r.period,
+	r.current_payable_interest currentPayableInterest,
+	r.current_payable_principal currentPayablePrincipal
+	from 
+		order_info o 
+	INNER JOIN repayment_plan_info_un r ON o.order_id = r.order_id 
+	INNER JOIN stu_info s ON o.stu_id = s.stu_id 
+	WHERE o.order_id = #{orderId} 
+	and o.state = 1 
+	order BY o.order_id,r.period
+  </select>
+  <select id="selectRepayPlanInfoByOrder" resultType="hashmap" parameterType="hashmap" >
+    SELECT
+    o.order_id orderId,
+    o.batch_id batchId,
+    s.name name,
+    s.id_card idCard,
+    s.mobile mobile,
+    o.total_price totalPrice,
+    o.cr_req_amt crReqAmt,
+    o.pay_m payM,
+    r.current_repay_date currentRepayDate,
+    r.student_repay_status studentRepayStatus,
+    r.super_repay_status superRepayStatus,
+    r.period,
+	r.current_payable_interest currentPayableInterest,
+	r.current_payable_principal currentPayablePrincipal
+	from 
+		order_info o 
+	INNER JOIN repayment_plan_info r ON o.order_id = r.order_id 
+	INNER JOIN stu_info s ON o.stu_id = s.stu_id 
+	WHERE o.order_id = #{orderId} 
+	and o.state = 1 
+	order BY o.order_id,r.period
+  </select>
+  
+  <select id="selectRepayPlanInfoByOrders" resultType="hashmap" parameterType="hashmap" >
+  SELECT temp1.*,temp2.sumMarketingFeeYi,temp3.totalPrice from
+    (SELECT
+      o.order_id orderId,
+   	  o.batch_id batchId,
+      s.name name,
+      s.id_card idCard,
+      s.mobile mobile,
+     
+      o.needmoney needmoney,
+      r.current_money+r.interest+r.marketing_fee_yi  periodBlRepayAmt, 
+       r.current_money+r.interest+r.marketing_fee_yi +r.lc_money+r.service_charge_yi periodYhPayAmt,
+      r.current_repay_date currentRepayDate,
+	  r.period,
+	  r.current_money currentMoney,
+	  r.marketing_fee_yi marketingFeeYi,
+	  r.interest interest,
+	  r.lc_money lcMoney,
+	  r.service_charge_yi serviceChargeYi
+	from 
+		order_info o 
+	INNER JOIN repayment_plan_info r ON o.order_id = r.order_id 
+	INNER JOIN stu_info s ON o.stu_id = s.stu_id 
+	WHERE o.order_id in
+	 <foreach item="item" index="index" collection="orderId" open="(" separator="," close=")">  
+ 			 #{item}  
+	 </foreach>
+	and o.state = 1 
+	)temp1 INNER JOIN
+	(SELECT
+	order_id,
+	SUM(marketing_fee_yi) sumMarketingFeeYi
+	from 
+		repayment_plan_info 
+	WHERE order_id in
+	 <foreach item="item" index="index" collection="orderId" open="(" separator="," close=")">  
+ 			 #{item}  
+	 </foreach>
+GROUP BY order_id
+	)temp2  ON temp1.orderId= temp2.order_id
+	INNER JOIN
+	(SELECT
+	order_id,
+	SUM(current_money+interest+marketing_fee_yi +lc_money+service_charge_yi) totalPrice
+	from 
+		repayment_plan_info 
+	WHERE order_id in
+	 <foreach item="item" index="index" collection="orderId" open="(" separator="," close=")">  
+ 			 #{item}  
+	 </foreach>
+GROUP BY order_id
+	)temp3  ON temp1.orderId= temp3.order_id order BY temp1.orderId,temp1.period
+  </select>
+  
+  <select id="selectCrReqAmtByBatchId" resultType="java.lang.String" parameterType="hashmap">
+  	SELECT
+		COALESCE(SUM(o.cr_req_amt),0 ) sumAmt
+	from
+		order_info o
+	WHERE
+		o.batch_id = #{batchId}
+  	
+  </select>
+  
+  
+  
+  
+  
+  
+  <select id="selectRepayInfo" resultType="hashmap" parameterType="hashmap">
+  	select temp.* from (SELECT
+		o.batch_id batchId,
+		c.contract_no contractNo,
+		SUM(o.cr_req_amt) crReqAmt,
+		SUM(r.current_payable_principal) currentPayablePrincipal,
+		SUM(r.current_payable_interest) currentPayableInterest,
+		g.guarantee_money_rate guaranteeMoneyRate,
+		g.guarantee_balance guaranteeBalance,
+		g.pay_able_guarantee payAbleGuarantee,
+		g.pay_act_guarantee payActGuarantee,
+		GROUP_CONCAT(r.repayment_id SEPARATOR ',') repaymentId
+	from
+		order_info o
+	INNER JOIN repayment_plan_info r ON o.order_id = r.order_id
+	INNER JOIN factor_contract_info c ON c.batch_id = o.batch_id
+	INNER JOIN finance_info f ON f.finance_id = c.contract_no 
+	INNER JOIN guarantee_info g ON g.finance_id = c.contract_no
+	WHERE 1=1
+	<if test="repayDate!= null and repayDate!=''">
+		and r.current_repay_date <![CDATA[<=]]> SUBDATE(STR_TO_DATE(#{repayDate},'%Y-%m-%d'), INTERVAL - 3 DAY)
+	</if>
+	<if test="superRepayStatus!= null and superRepayStatus!=''">
+		and r.super_repay_status = #{superRepayStatus} 
+	</if>
+	<if test="batchId!=null and batchId.size>0">
+   		and o.batch_id in
+   		 <foreach item="item" index="index" collection="batchId" open="(" separator="," close=")">  
+ 			 #{item}  
+		 </foreach>
+   	</if>
+   	<if test="repaymentIds!=null and repaymentIds.size > 0 ">
+   		and r.repayment_id in
+   		 <foreach item="item" index="index" collection="repaymentIds" open="(" separator="," close=")">  
+ 			 #{item}  
+		 </foreach>
+   	</if>
+   	<if test="repaymentIds == null or repaymentIds.size ==0 ">
+	   		and (
+		f.finance_status = 2
+		OR f.finance_status = 3
+		OR f.finance_status = 5
+		)
+   	</if>
+	GROUP BY o.batch_id) temp
+  </select>
+  
+   <select id="selectSumAmt" resultType="hashmap" parameterType="hashmap">
+  	SELECT
+		COALESCE (SUM(r.current_payable_interest),0) sumInterest,
+		COALESCE (SUM(r.current_payable_principal),0) sumPrincipal
+	from
+		order_info o
+	INNER JOIN repayment_plan_info r ON o.order_id = r.order_id 
+	INNER JOIN factor_contract_info c ON c.batch_id = o.batch_id
+	INNER JOIN finance_info f ON f.finance_id = c.contract_no 
+	INNER JOIN guarantee_info g ON g.finance_id = c.contract_no
+	WHERE
+		r.current_repay_date <![CDATA[<=]]> SUBDATE(STR_TO_DATE(#{repayDate},'%Y-%m-%d'), INTERVAL - 3 DAY) 
+	and r.super_repay_status = '0'
+	and (
+	f.finance_status = 2
+	OR f.finance_status = 3
+	OR f.finance_status = 5
+		)
+  </select>
+  
+  
+  <update id="updateSSMStatus" parameterType="hashmap">
+  	UPDATE repayment_plan_info pl
+		SET pl.super_repay_status='1'
+	WHERE
+	pl.repayment_id in
+  	<foreach item="item" index="index" collection="repaymentIds" open="(" separator="," close=")">  
+			 #{item}  
+	 </foreach>
+  </update>
+  
+  <select id="findCountByBatchId" resultType="hashmap" parameterType="hashmap" >
+  	SELECT COUNT(0) counts,o.order_id orderId,cr_req_amt crReqAmt
+  	from 
+		order_info o 
+	INNER JOIN repayment_plan_info r ON o.order_id = r.order_id 
+	INNER JOIN stu_info s ON o.stu_id = s.stu_id 
+	WHERE o.batch_id = #{batchId} 
+	and o.state = 1
+	GROUP BY o.order_id
+  </select>
+
+  <select id="getRepymentInfoList" resultType="hashmap" parameterType="hashmap" >
+	 select
+		repayment_id ,
+		order_id ,
+		order_batch_id ,
+		period ,
+		current_repay_date ,
+		interest ,
+		lc_money ,
+		marketing_fee_yi,
+		service_charge_yi,
+		current_money ,
+		ensure_money ,
+		payed_time ,
+		repayment_money ,
+		paid_money,
+		state state,
+		ensure_money_state,
+		student_repay_status
+	from
+		repayment_plan_info
+	where
+		1=1
+		
+	  <if test="orderId != null and orderId != ''">
+	    and order_id = #{orderId}
+	  </if>
+	   <if test="batchId != null and batchId != ''">
+	    and order_batch_id = #{batchId}
+	  </if>
+	   <if test="peopleType != null and peopleType != ''">
+	    and people_type = #{peopleType}
+	  </if>
+	   <if test="payedTime != null and payedTime != ''">
+	 	and DATE_FORMAT(payed_time,'%Y-%m-%d')=	DATE_FORMAT(#{payedTime},'%Y-%m-%d')
+	  </if>
+	 <if test="orderBy =='desc'">
+	 ORDER BY ${orderByName}+0 desc
+	</if>
+	<if test="orderBy =='asc'">
+	 ORDER BY ${orderByName}+0 asc
+	</if>
+  </select>
+<select id="getComputeDayRepay" resultType="hashmap" parameterType="hashmap" >
+
+	SELECT	
+	count(*) repayCount,
+	sum(paid_money) paidMoneySum
+	FROM
+		repayment_plan_info 
+	WHERE
+		DATE_FORMAT(payed_time,'%Y-%m-%d')=	DATE_FORMAT(#{payedTime},'%Y-%m-%d')
+		and people_type=${peopleType}
+
+  </select>
+  <select id="getComputeDayShouldRepay" resultType="hashmap" parameterType="hashmap" >
+
+	SELECT	
+	count(*) repayCount,
+	sum(paid_money) paidMoneySum
+	FROM
+		repayment_plan_info 
+	WHERE
+		DATE_FORMAT(current_repay_date,'%Y-%m-%d')=	DATE_FORMAT(#{payedTime},'%Y-%m-%d')
+		and people_type=${peopleType}
+
+  </select>
+
+</mapper>

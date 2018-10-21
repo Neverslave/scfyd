@@ -6,7 +6,8 @@ apply plugin: 'war'
 apply plugin: 'eclipse-wtp'
 
 
-sourceCompatibility = 1.7   // 设置 JDK 版本
+sourceCompatibility = 1.7 
+targetCompatibility =1.7  // 设置 JDK 版本
 webAppDirName = 'WebContent'    // 设置 WebApp 根目录
 sourceSets.main.java.srcDir 'src'   // 设置 Java 源码所在目录
 sourceSets.test.java.srcDir 'test'   // 设置 Java 单元测试源码所在目录
@@ -46,7 +47,9 @@ dependencies {
             "commons-httpclient:commons-httpclient:3.1",
             "com.thetransactioncompany:cors-filter:2.5",
 			"com.thetransactioncompany:java-property-utils:1.9",
-			'org.apache.httpcomponents:httpclient:4.5.3'
+			'org.apache.httpcomponents:httpclient:4.5.3',
+			 'com.jcraft:jsch:0.1.53',
+			 "junit:junit:4.12"
     )
     compile files(
             'lib/taobao-sdk-java-auto_1440141115463-20150908.jar',
@@ -61,11 +64,12 @@ dependencies {
             'lib/itext7-font-asian-7.0.2.jar',
             'lib/itext7-barcodes-7.0.2.jar',
             'lib/iText-5.0.6.jar',
-            'lib/iTextAsian.jar',
+            'lib/iTextAsian.jar'
+          
     )
     testCompile( 
             "org.springframework:spring-test:4.3.1.RELEASE", 
-            "junit:junit:4.12",
+            "junit:junit:4.12"
     )
     providedCompile 'javax.servlet:javax.servlet-api:3.0.1' // 编译期
     providedRuntime 'javax.servlet:jstl:1.2'    // 运行时
@@ -97,4 +101,13 @@ sourceSets {
             srcDirs = ['test']
         }
     }
+}
+war {
+    archiveName 'sims.war'
+ 
+}
+tasks.withType(JavaCompile) {
+
+    options.encoding = "UTF-8"
+
 }

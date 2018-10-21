@@ -8,7 +8,7 @@
     <javaModelGenerator targetPackage="com.ut.scf.pojo.auto" targetProject="scfyd" />
     <sqlMapGenerator targetPackage="com.ut.scf.mybatis.mapping.auto" targetProject="scfyd" />
     <javaClientGenerator targetPackage="com.ut.scf.dao.auto" targetProject="scfyd" type="XMLMAPPER" />
-    <table tableName="supplier_project_info" domainObjectName="SupplierProjectInfo" >
+    <table tableName="supplier_info" domainObjectName="SupplierInfo" >
     </table>
   </context>
   

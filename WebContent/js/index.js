@@ -98,7 +98,7 @@ function InitLeftMenu() {
 		menuNames.push(data.text);
 		getParentNodeName(data.nodeId);
 		if(!CloudUtils.isEmpty(data.menuPath)){
-			$("#setIndex").show();
+		
 			$("[name='mainFrame']").attr("src",data.menuPath);
 			$("[name='mainFrame']").attr("menuPathNames",JSON.stringify(menuNames.reverse()));
 		}

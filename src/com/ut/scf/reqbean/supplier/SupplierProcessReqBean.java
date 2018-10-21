@@ -35,7 +35,14 @@ public class SupplierProcessReqBean extends BaseReqBean {
 	private String activitiKey;
 	private String orginName;
 	private String advice ;
+	private String  businessScope;
 	
+	public String getBusinessScope() {
+		return businessScope;
+	}
+	public void setBusinessScope(String businessScope) {
+		this.businessScope = businessScope;
+	}
 	public String getOrginName() {
 		return orginName;
 	}

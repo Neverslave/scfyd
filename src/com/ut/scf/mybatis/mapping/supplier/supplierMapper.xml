@@ -12,15 +12,16 @@
 	si.register_address registerAddress,si.email email ,si.uniform_credit_code uniformCreditCode,
 	si.legal_person legalPerson ,si.cellphone cellphone ,si.id_number idNumber,
 	si.business_license_path businessLicensePath, si.corp_consitution_doc corpConsitutionDoc,
-	si.note note 
+	si.note note ,
+	si.business_scope businessScope
 	from supplier_info si
 	<where>
 	si.status =1 and si.sys_type = 4 
-	<if test="supplierCode!=null and supplierCode !='' ">
-	and si.angency_num LIKE CONCAT(CONCAT('%',#{supplierCode}),'%')
+	<if test="agencyCode!=null and agencyCode !='' ">
+	and si.angency_num LIKE CONCAT(CONCAT('%',#{agencyCode}),'%')
 	</if>
-	<if test = "suppleirName !=null and supplierName !='' " >
-	and si.corp_name LIKE CONCAT(CONCAT('%',#{supplierName},'%'))
+	<if test = "agencyName !=null and agencyName !='' " >
+	and si.corp_name LIKE CONCAT(CONCAT('%',#{agencyName},'%'))
 	</if>
 	<if test = "corpId !=null and corpId !='' " >
 	and si.corp_id =#{corpId}

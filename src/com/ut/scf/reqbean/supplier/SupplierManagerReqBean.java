@@ -31,6 +31,7 @@ public class SupplierManagerReqBean extends BaseReqBean {
 	private String taskId;
 	private String  agree;
 	private String  userId;
+	private String  businessScope;
 	
 	
 	public String getAgree() {
@@ -185,6 +186,12 @@ public class SupplierManagerReqBean extends BaseReqBean {
 	}
 	public void setUserId(String userId) {
 		this.userId = userId;
+	}
+	public String getBusinessScope() {
+		return businessScope;
+	}
+	public void setBusinessScope(String businessScope) {
+		this.businessScope = businessScope;
 	}
 
 	

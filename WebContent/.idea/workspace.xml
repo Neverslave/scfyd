@@ -4,13 +4,35 @@
     <list default="true" id="793154e0-d8a1-432d-8a9d-64b7a5528fd7" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/../.settings/org.eclipse.core.resources.prefs" beforeDir="false" afterPath="$PROJECT_DIR$/../.settings/org.eclipse.core.resources.prefs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/js/project/supplier/projectManager.js" beforeDir="false" afterPath="$PROJECT_DIR$/js/project/supplier/projectManager.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/js/pubManager/companyManager2.js" beforeDir="false" afterPath="$PROJECT_DIR$/js/pubManager/companyManager2.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supplierManager/companyManager.html" beforeDir="false" afterPath="$PROJECT_DIR$/supplierManager/companyManager.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/supplierManager/companyManager2.html" beforeDir="false" afterPath="$PROJECT_DIR$/supplierManager/companyManager2.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/supplierManager/project/projectAddManager.html" beforeDir="false" afterPath="$PROJECT_DIR$/supplierManager/project/projectAddManager.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/supplierManager/project/projectAgencyPackage.html" beforeDir="false" afterPath="$PROJECT_DIR$/supplierManager/project/projectAgencyPackage.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supplierManager/project/projectDetail.html" beforeDir="false" afterPath="$PROJECT_DIR$/supplierManager/project/projectDetail.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/supplierManager/project/projectManager.html" beforeDir="false" afterPath="$PROJECT_DIR$/supplierManager/project/projectManager.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supplierManager/supplierManager/custHisDetail/custHisDetail.html" beforeDir="false" afterPath="$PROJECT_DIR$/supplierManager/supplierManager/custHisDetail/custHisDetail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supplierManager/supplierManager/custReapplyPackage.html" beforeDir="false" afterPath="$PROJECT_DIR$/supplierManager/supplierManager/custReapplyPackage.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../bin/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bin/com/ut/scf/mybatis/mapping/auto/SupplierInfoMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../bin/com/ut/scf/mybatis/mapping/auto/SupplierInfoMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bin/com/ut/scf/mybatis/mapping/supplier/supplierMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../bin/com/ut/scf/mybatis/mapping/supplier/supplierMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bin/com/ut/scf/pojo/auto/SupplierInfo.class" beforeDir="false" afterPath="$PROJECT_DIR$/../bin/com/ut/scf/pojo/auto/SupplierInfo.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bin/com/ut/scf/pojo/auto/SupplierInfoExample$Criteria.class" beforeDir="false" afterPath="$PROJECT_DIR$/../bin/com/ut/scf/pojo/auto/SupplierInfoExample$Criteria.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bin/com/ut/scf/pojo/auto/SupplierInfoExample$Criterion.class" beforeDir="false" afterPath="$PROJECT_DIR$/../bin/com/ut/scf/pojo/auto/SupplierInfoExample$Criterion.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bin/com/ut/scf/pojo/auto/SupplierInfoExample$GeneratedCriteria.class" beforeDir="false" afterPath="$PROJECT_DIR$/../bin/com/ut/scf/pojo/auto/SupplierInfoExample$GeneratedCriteria.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bin/com/ut/scf/reqbean/supplier/SupplierAgreeInfoReqBean.class" beforeDir="false" afterPath="$PROJECT_DIR$/../bin/com/ut/scf/reqbean/supplier/SupplierAgreeInfoReqBean.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bin/com/ut/scf/reqbean/supplier/SupplierManagerReqBean.class" beforeDir="false" afterPath="$PROJECT_DIR$/../bin/com/ut/scf/reqbean/supplier/SupplierManagerReqBean.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bin/com/ut/scf/reqbean/supplier/SupplierProcessReqBean.class" beforeDir="false" afterPath="$PROJECT_DIR$/../bin/com/ut/scf/reqbean/supplier/SupplierProcessReqBean.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bin/generatorConfig.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../bin/generatorConfig.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/com/ut/scf/dao/auto/SupplierInfoMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/com/ut/scf/dao/auto/SupplierInfoMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/com/ut/scf/mybatis/mapping/auto/SupplierInfoMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../src/com/ut/scf/mybatis/mapping/auto/SupplierInfoMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/com/ut/scf/mybatis/mapping/supplier/supplierMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../src/com/ut/scf/mybatis/mapping/supplier/supplierMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/com/ut/scf/pojo/auto/SupplierInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/com/ut/scf/pojo/auto/SupplierInfo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/com/ut/scf/pojo/auto/SupplierInfoExample.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/com/ut/scf/pojo/auto/SupplierInfoExample.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/com/ut/scf/reqbean/supplier/SupplierAgreeInfoReqBean.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/com/ut/scf/reqbean/supplier/SupplierAgreeInfoReqBean.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/com/ut/scf/reqbean/supplier/SupplierManagerReqBean.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/com/ut/scf/reqbean/supplier/SupplierManagerReqBean.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/com/ut/scf/reqbean/supplier/SupplierProcessReqBean.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/com/ut/scf/reqbean/supplier/SupplierProcessReqBean.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/generatorConfig.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../src/generatorConfig.xml" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -21,60 +43,42 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="DockManager">
-    <window id="1">
-      <content type="file-editors">
-        <state>
-          <leaf>
-            <file pinned="false" current-in-tab="true">
-              <entry file="file://$PROJECT_DIR$/js/project/supplier/projectAddManager.js">
-                <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="31">
-                    <caret line="28" column="55" lean-forward="true" selection-start-line="28" selection-start-column="55" selection-end-line="28" selection-end-column="55" />
-                  </state>
-                </provider>
-              </entry>
-            </file>
-          </leaf>
-        </state>
-      </content>
-    </window>
-  </component>
   <component name="FUSProjectUsageTrigger">
     <session id="-228400688">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="3" />
+          <entry key="project.closed" value="4" />
           <entry key="project.open.time.1" value="1" />
           <entry key="project.open.time.20" value="1" />
+          <entry key="project.open.time.28" value="1" />
           <entry key="project.open.time.38" value="1" />
           <entry key="project.open.time.4" value="1" />
           <entry key="project.open.time.41" value="1" />
-          <entry key="project.opened" value="5" />
+          <entry key="project.opened" value="6" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="html" value="346" />
-          <entry key="js" value="235" />
+          <entry key="html" value="364" />
+          <entry key="js" value="239" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="HTML" value="346" />
-          <entry key="JavaScript" value="235" />
+          <entry key="HTML" value="364" />
+          <entry key="JavaScript" value="239" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="html" value="23" />
-          <entry key="js" value="15" />
+          <entry key="html" value="40" />
+          <entry key="js" value="18" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="HTML" value="23" />
-          <entry key="JavaScript" value="15" />
+          <entry key="HTML" value="40" />
+          <entry key="JavaScript" value="18" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.vcs.git.usages" />
@@ -125,16 +129,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/js/pubManager/companyManager2.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-3534">
-              <caret line="12" column="19" lean-forward="true" selection-start-line="12" selection-start-column="19" selection-end-line="12" selection-end-column="19" />
-              <folding>
-                <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-              </folding>
+            <state relative-caret-position="125">
+              <caret line="1245" column="23" lean-forward="true" selection-start-line="1245" selection-start-column="23" selection-end-line="1245" selection-end-column="23" />
             </state>
           </provider>
         </entry>
@@ -142,8 +138,17 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/supplierManager/project/projectManager.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="207">
-              <caret line="92" lean-forward="true" selection-start-line="92" selection-end-line="92" />
+            <state relative-caret-position="185">
+              <caret line="73" column="22" lean-forward="true" selection-start-line="73" selection-start-column="22" selection-end-line="73" selection-end-column="22" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custAgencyTask.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="769">
+              <caret line="170" column="19" lean-forward="true" selection-start-line="170" selection-start-column="19" selection-end-line="170" selection-end-column="19" />
             </state>
           </provider>
         </entry>
@@ -151,17 +156,16 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/supplierManager/companyManager.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="217">
-              <caret line="349" column="12" selection-start-line="349" selection-start-column="12" selection-end-line="349" selection-end-column="12" />
+            <state relative-caret-position="1612">
+              <caret line="205" column="12" lean-forward="true" selection-start-line="205" selection-start-column="12" selection-end-line="205" selection-end-column="12" />
               <folding>
                 <element signature="n#style#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#div#1;n#fieldset#0;n#div#1;n#div#0;n#section#0;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#div#1;n#div#0;n#section#1;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#ol#0;n#div#0;n#div#1;n#div#0;n#section#1;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#img#0;n#div#0;n#div#1;n#div#1;n#div#0;n#section#1;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#input#0;n#div#0;n#div#1;n#div#1;n#div#0;n#section#1;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#button#0;n#div#0;n#div#0;n#div#1;n#div#1;n#div#0;n#section#1;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#div#1;n#div#0;n#section#2;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#ol#0;n#div#0;n#div#1;n#div#0;n#section#2;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#a#0;n#div#0;n#div#4;n#form#0;n#fieldset#0;n#div#1;n#div#0;n#div#0;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#input#0;n#a#0;n#div#0;n#div#4;n#form#0;n#fieldset#0;n#div#1;n#div#0;n#div#0;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -175,13 +179,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/supplierManager/companyManager2.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="50">
-              <caret line="184" column="34" selection-start-line="184" selection-start-column="24" selection-end-line="184" selection-end-column="34" />
-              <folding>
-                <element signature="n#style#0;n#div#7;n#div#0;n#div#0;n#fieldset#0;n#div#1;n#div#0;n#section#0;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#a#0;n#div#1;n#div#0;n#div#2;n#div#0;n#div#0;n#div#3;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#input#0;n#a#0;n#div#1;n#div#0;n#div#2;n#div#0;n#div#0;n#div#3;n#body#0;n#html#0;n#!!top" expanded="true" />
-              </folding>
+            <state relative-caret-position="-3671">
+              <caret line="294" column="5" lean-forward="true" selection-start-line="294" selection-start-column="5" selection-end-line="294" selection-end-column="5" />
             </state>
           </provider>
         </entry>
@@ -189,32 +188,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/supplierManager/imageShow.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="490">
-              <caret line="19" column="22" lean-forward="true" selection-start-line="19" selection-start-column="22" selection-end-line="19" selection-end-column="22" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/js/project/supplier/projectManager.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3969">
-              <caret line="135" selection-start-line="135" selection-end-line="135" />
-              <folding>
-                <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/js/project/supplier/projectInfo.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="545">
-              <caret line="186" column="61" lean-forward="true" selection-start-line="186" selection-start-column="61" selection-end-line="186" selection-end-column="61" />
-              <folding>
-                <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-              </folding>
+            <state relative-caret-position="466">
+              <caret line="19" column="22" selection-start-line="19" selection-start-column="22" selection-end-line="19" selection-end-column="22" />
             </state>
           </provider>
         </entry>
@@ -222,8 +197,26 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/supplierManager/project/projectAddManager.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1661">
-              <caret line="210" selection-start-line="210" selection-end-line="210" />
+            <state relative-caret-position="242">
+              <caret line="211" lean-forward="true" selection-start-line="211" selection-end-line="211" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/supplierManager/project/projectAgencyPackage.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="204">
+              <caret line="135" column="82" selection-start-line="135" selection-start-column="82" selection-end-line="135" selection-end-column="82" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/supplierManager/project/projectDetail.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="320">
+              <caret line="144" lean-forward="true" selection-start-line="144" selection-end-line="144" />
             </state>
           </provider>
         </entry>
@@ -231,20 +224,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/supplierManager/project/projectReapplyPackage.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="7192">
-              <caret line="232" column="38" lean-forward="true" selection-start-line="232" selection-start-column="38" selection-end-line="232" selection-end-column="38" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/js/project/supplier/projectDetail.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="165">
-              <caret line="13" column="4" selection-start-line="13" selection-start-column="4" selection-end-line="13" selection-end-column="47" />
-              <folding>
-                <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-              </folding>
+            <state relative-caret-position="917">
+              <caret line="228" column="54" lean-forward="true" selection-start-line="228" selection-start-column="54" selection-end-line="228" selection-end-column="54" />
             </state>
           </provider>
         </entry>
@@ -264,7 +245,6 @@
       <find>taskId</find>
       <find>corpName</find>
       <find>initDetailForm</find>
-      <find>businessLicensePath</find>
       <find>save</find>
       <find>formatter</find>
       <find>operateEvents</find>
@@ -273,6 +253,10 @@
       <find>modal</find>
       <find>row</find>
       <find>btn_upload</find>
+      <find>projectDescribe</find>
+      <find>changeArea</find>
+      <find>businessLicensePath</find>
+      <find>$('#bl').fileupload</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -301,16 +285,19 @@
         <option value="$PROJECT_DIR$/js/pubManager/custManager/custAdd.js" />
         <option value="$PROJECT_DIR$/js/project/dykManager/agencyManager.js" />
         <option value="$PROJECT_DIR$/js/project/dykManager/agencyAdd.js" />
-        <option value="$PROJECT_DIR$/supplierManager/companyManager.html" />
         <option value="$PROJECT_DIR$/project/agencyCommon/agencyCommon.html" />
         <option value="$PROJECT_DIR$/js/project/agencyCommon/agencyCommon.js" />
         <option value="$PROJECT_DIR$/js/pubManager/custManager/custAgencyTask.js" />
         <option value="$PROJECT_DIR$/js/address.js" />
-        <option value="$PROJECT_DIR$/supplierManager/project/projectAgencyPackage.html" />
-        <option value="$PROJECT_DIR$/supplierManager/project/projectManager.html" />
         <option value="$PROJECT_DIR$/js/project/supplier/projectManager.js" />
         <option value="$PROJECT_DIR$/js/project/supplier/projectInfo.js" />
+        <option value="$PROJECT_DIR$/supplierManager/project/projectManager.html" />
+        <option value="$PROJECT_DIR$/supplierManager/supplierManager/custReapplyPackage.html" />
+        <option value="$PROJECT_DIR$/supplierManager/supplierManager/custHisDetail/custHisDetail.html" />
         <option value="$PROJECT_DIR$/supplierManager/project/projectAddManager.html" />
+        <option value="$PROJECT_DIR$/supplierManager/project/projectAgencyPackage.html" />
+        <option value="$PROJECT_DIR$/supplierManager/project/projectDetail.html" />
+        <option value="$PROJECT_DIR$/supplierManager/companyManager.html" />
         <option value="$PROJECT_DIR$/supplierManager/companyManager2.html" />
         <option value="$PROJECT_DIR$/js/pubManager/companyManager2.js" />
       </list>
@@ -390,13 +377,13 @@
     <property name="settings.editor.selected.configurable" value="com.chrisrm.idea.config" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="K:\scfyd\WebContent\supplierManager" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="K:\scfyd\WebContent\pubManager" />
       <recent name="K:\scfyd\WebContent\supplierManager\supplierManager" />
       <recent name="K:\scfyd\WebContent\js\pubManager" />
+      <recent name="K:\scfyd\WebContent\supplierManager" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
       <recent name="K:\scfyd\WebContent\supplierManager" />
     </key>
   </component>
@@ -432,15 +419,15 @@
       <workItem from="1539737399709" duration="4343000" />
       <workItem from="1539762525377" duration="2963000" />
       <workItem from="1539823670362" duration="10636000" />
+      <workItem from="1539912752404" duration="5222000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="75242000" />
+    <option name="totallyTimeSpent" value="80464000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2544643" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -629,20 +616,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custAgencyPackage.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="155">
-          <caret line="5" column="33" selection-start-line="5" selection-start-column="33" selection-end-line="5" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custAdd.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1674">
-          <caret line="54" column="88" selection-start-line="54" selection-start-column="88" selection-end-line="54" selection-end-column="88" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/js/address.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="155">
@@ -657,10 +630,48 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custHandldTask.html">
+    <entry file="file://$PROJECT_DIR$/js/pubManager/companyManager.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="217">
-          <caret line="7" column="57" selection-start-line="7" selection-start-column="57" selection-end-line="7" selection-end-column="57" />
+        <state relative-caret-position="5053">
+          <caret line="187" column="50" lean-forward="true" selection-start-line="187" selection-start-column="50" selection-end-line="187" selection-end-column="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/project/supplier/projectInfo.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5766">
+          <caret line="186" column="61" selection-start-line="186" selection-start-column="61" selection-end-line="186" selection-end-column="61" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/project/supplier/projectDetail.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="403">
+          <caret line="13" column="4" selection-start-line="13" selection-start-column="4" selection-end-line="13" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/project/supplier/projectManager.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="466">
+          <caret line="135" selection-start-line="135" selection-end-line="135" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/project/supplier/projectReapply.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-8848">
+          <caret line="38" column="79" selection-start-line="38" selection-start-column="72" selection-end-line="38" selection-end-column="79" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custReapplyPackage.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="117" column="30" selection-start-line="117" selection-start-column="30" selection-end-line="117" selection-end-column="30" />
+          <folding>
+            <element signature="n#style#0;n#div#1;n#div#0;n#fieldset#0;n#div#1;n#div#0;n#section#0;n#form#0;n#!!top" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -671,112 +682,91 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custReapplyPackage.html">
+    <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custHandldTask.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4774">
-          <caret line="154" column="34" selection-start-line="154" selection-start-column="34" selection-end-line="154" selection-end-column="34" />
+        <state relative-caret-position="-1457">
+          <caret line="13" column="43" selection-start-line="13" selection-start-column="43" selection-end-line="13" selection-end-column="43" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/supplierManager/project/projectAgencyPackage.html">
+    <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custAdd.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="80">
-          <caret line="155" column="25" lean-forward="true" selection-start-line="155" selection-start-column="25" selection-end-line="155" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/supplierManager/project/projectDetail.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="93">
-          <caret line="132" column="46" lean-forward="true" selection-start-line="132" selection-start-column="46" selection-end-line="132" selection-end-column="46" />
+        <state relative-caret-position="490">
+          <caret line="54" column="88" selection-start-line="54" selection-start-column="88" selection-end-line="54" selection-end-column="88" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custHisDetail/custHisDetail.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="217">
-          <caret line="18" column="20" lean-forward="true" selection-start-line="18" selection-start-column="20" selection-end-line="18" selection-end-column="20" />
+        <state relative-caret-position="341">
+          <caret line="103" column="24" selection-start-line="103" selection-start-column="24" selection-end-line="103" selection-end-column="24" />
+          <folding>
+            <element signature="n#style#0;n#div#7;n#div#0;n#div#0;n#fieldset#0;n#div#1;n#div#0;n#section#0;n#form#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custAgencyPackage.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-775">
+          <caret line="5" column="33" selection-start-line="5" selection-start-column="33" selection-end-line="5" selection-end-column="33" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/supplierManager/supplierManager/custAgencyTask.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="158" column="50" lean-forward="true" selection-start-line="158" selection-start-column="50" selection-end-line="158" selection-end-column="50" />
+        <state relative-caret-position="769">
+          <caret line="170" column="19" lean-forward="true" selection-start-line="170" selection-start-column="19" selection-end-line="170" selection-end-column="19" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/js/project/supplier/projectReapply.js">
+    <entry file="file://$PROJECT_DIR$/supplierManager/project/projectAgencyPackage.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="806">
-          <caret line="38" column="79" selection-start-line="38" selection-start-column="72" selection-end-line="38" selection-end-column="79" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/js/pubManager/companyManager.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5053">
-          <caret line="187" column="50" lean-forward="true" selection-start-line="187" selection-start-column="50" selection-end-line="187" selection-end-column="50" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/js/project/supplier/projectDetail.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="13" column="4" selection-start-line="13" selection-start-column="4" selection-end-line="13" selection-end-column="47" />
-          <folding>
-            <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-          </folding>
+        <state relative-caret-position="204">
+          <caret line="135" column="82" selection-start-line="135" selection-start-column="82" selection-end-line="135" selection-end-column="82" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/supplierManager/project/projectReapplyPackage.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7192">
-          <caret line="232" column="38" lean-forward="true" selection-start-line="232" selection-start-column="38" selection-end-line="232" selection-end-column="38" />
+        <state relative-caret-position="917">
+          <caret line="228" column="54" lean-forward="true" selection-start-line="228" selection-start-column="54" selection-end-line="228" selection-end-column="54" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/js/project/supplier/projectManager.js">
+    <entry file="file://$PROJECT_DIR$/supplierManager/project/projectDetail.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3969">
-          <caret line="135" selection-start-line="135" selection-end-line="135" />
-          <folding>
-            <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-          </folding>
+        <state relative-caret-position="320">
+          <caret line="144" lean-forward="true" selection-start-line="144" selection-end-line="144" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/js/project/supplier/projectInfo.js">
+    <entry file="file://$PROJECT_DIR$/supplierManager/imageShow.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="545">
-          <caret line="186" column="61" lean-forward="true" selection-start-line="186" selection-start-column="61" selection-end-line="186" selection-end-column="61" />
-          <folding>
-            <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-          </folding>
+        <state relative-caret-position="466">
+          <caret line="19" column="22" selection-start-line="19" selection-start-column="22" selection-end-line="19" selection-end-column="22" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/supplierManager/project/projectAddManager.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1661">
-          <caret line="210" selection-start-line="210" selection-end-line="210" />
+        <state relative-caret-position="242">
+          <caret line="211" lean-forward="true" selection-start-line="211" selection-end-line="211" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/supplierManager/companyManager.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="217">
-          <caret line="349" column="12" selection-start-line="349" selection-start-column="12" selection-end-line="349" selection-end-column="12" />
+        <state relative-caret-position="1612">
+          <caret line="205" column="12" lean-forward="true" selection-start-line="205" selection-start-column="12" selection-end-line="205" selection-end-column="12" />
           <folding>
             <element signature="n#style#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#div#1;n#fieldset#0;n#div#1;n#div#0;n#section#0;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#div#1;n#div#0;n#section#1;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#ol#0;n#div#0;n#div#1;n#div#0;n#section#1;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#img#0;n#div#0;n#div#1;n#div#1;n#div#0;n#section#1;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#input#0;n#div#0;n#div#1;n#div#1;n#div#0;n#section#1;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#button#0;n#div#0;n#div#0;n#div#1;n#div#1;n#div#0;n#section#1;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#div#1;n#div#0;n#section#2;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#ol#0;n#div#0;n#div#1;n#div#0;n#section#2;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#a#0;n#div#0;n#div#4;n#form#0;n#fieldset#0;n#div#1;n#div#0;n#div#0;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#input#0;n#a#0;n#div#0;n#div#4;n#form#0;n#fieldset#0;n#div#1;n#div#0;n#div#0;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -786,51 +776,31 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/supplierManager/project/projectManager.html">
+    <entry file="file://$PROJECT_DIR$/js/project/supplier/projectAddManager.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="207">
-          <caret line="92" lean-forward="true" selection-start-line="92" selection-end-line="92" />
+        <state relative-caret-position="740">
+          <caret line="380" column="9" selection-start-line="380" selection-start-column="9" selection-end-line="380" selection-end-column="9" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/supplierManager/imageShow.html">
+    <entry file="file://$PROJECT_DIR$/supplierManager/project/projectManager.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="490">
-          <caret line="19" column="22" lean-forward="true" selection-start-line="19" selection-start-column="22" selection-end-line="19" selection-end-column="22" />
+        <state relative-caret-position="185">
+          <caret line="73" column="22" lean-forward="true" selection-start-line="73" selection-start-column="22" selection-end-line="73" selection-end-column="22" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/supplierManager/companyManager2.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="50">
-          <caret line="184" column="34" selection-start-line="184" selection-start-column="24" selection-end-line="184" selection-end-column="34" />
-          <folding>
-            <element signature="n#style#0;n#div#7;n#div#0;n#div#0;n#fieldset#0;n#div#1;n#div#0;n#section#0;n#form#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#a#0;n#div#1;n#div#0;n#div#2;n#div#0;n#div#0;n#div#3;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#a#0;n#div#1;n#div#0;n#div#2;n#div#0;n#div#0;n#div#3;n#body#0;n#html#0;n#!!top" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/js/project/supplier/projectAddManager.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="31">
-          <caret line="28" column="55" lean-forward="true" selection-start-line="28" selection-start-column="55" selection-end-line="28" selection-end-column="55" />
+        <state relative-caret-position="-3671">
+          <caret line="294" column="5" lean-forward="true" selection-start-line="294" selection-start-column="5" selection-end-line="294" selection-end-column="5" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/js/pubManager/companyManager2.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3534">
-          <caret line="12" column="19" lean-forward="true" selection-start-line="12" selection-start-column="19" selection-end-line="12" selection-end-column="19" />
-          <folding>
-            <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#a#0;n#!!top" expanded="true" />
-          </folding>
+        <state relative-caret-position="125">
+          <caret line="1245" column="23" lean-forward="true" selection-start-line="1245" selection-start-column="23" selection-end-line="1245" selection-end-column="23" />
         </state>
       </provider>
     </entry>

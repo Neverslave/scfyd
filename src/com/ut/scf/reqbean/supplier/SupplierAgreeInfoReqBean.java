@@ -24,6 +24,7 @@ public class SupplierAgreeInfoReqBean {
 	private String idNumber; //身份证号码
 	private String businessLicensePath ; //营业执照地址
 	private String corpConsitutionDoc; //公司章程地址
+	private String  businessScope;
 	private Byte status;
 	private Date createTime;
 	private String taskId;
@@ -225,6 +226,12 @@ public class SupplierAgreeInfoReqBean {
 	}
 	public void setAdvice(String advice) {
 		this.advice = advice;
+	}
+	public String getBusinessScope() {
+		return businessScope;
+	}
+	public void setBusinessScope(String businessScope) {
+		this.businessScope = businessScope;
 	}
 
 
