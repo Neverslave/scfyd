@@ -176,7 +176,11 @@
 						</div>
 						<label class="col-sm-2 control-label" for="projectDescribe">备注:</label>
 						<div class="col-sm-2">
-							<input type="text" name="projectDescribe" id="projectDescribe" class="form-control"  >
+							<select  name="projectDescribe" id="projectDescribe" class="form-control"  >
+								<option value="项目公司">供应商</option>
+								<option value="项目公司">建筑商</option>
+								<option value="项目公司">服务商</option>
+							</select>
 						</div>
 					</div>
 
@@ -185,7 +189,7 @@
 
 			</div>
 	</section>
-</form>
+
 		<div class="main-content-child">
 		 <div class="nav" id="nav"></div>
 			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
@@ -194,16 +198,106 @@
 						<li class="tablename">融资管理</li>
 					</ol>
 				</div>
+
+				<!--法人身份证正反 -->
+				<div class="form-group">
+					<label class="col-sm-1 control-label" for="legalID1">法人身份证正面:</label>
+					<div class="col-sm-2">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="legalID1" id="legalID1" src="../../images/add-pic.png" onclick="$('#leg1').click();">
+						<input style="display: none;" id="leg1" name="file" type="file" >
+						<input type="hidden" name="legalID1" id="legalID1">
+						<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink7" onclick="showImg(8)" style="margin-left: 30px;">预览</button>
+						</div>
+					</div>
+
+					<label class="col-sm-1 control-label" for="legalID2">法人身份证反面:</label>
+					<div class="col-sm-2">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="legalID2" id="legalID2" src="../../images/add-pic.png" onclick="$('#leg2').click();">
+						<input style="display: none;" id="leg2" name="file" type="file" >
+						<input type="hidden" name="legalID2" id="legalID2">
+						<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink7" onclick="showImg(9)" style="margin-left: 30px;">预览</button>
+						</div>
+					</div>
+				</div>
+
+         <!-- 授权人身份证正反-->
+				<div class="form-group">
+					<label class="col-sm-1 control-label" for="authID1">授权人身份证正面:</label>
+					<div class="col-sm-2">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="authID1" id="authID1" src="../../images/add-pic.png" onclick="$('#auth1').click();">
+						<input style="display: none;" id="auth1" name="file" type="file" >
+						<input type="hidden" name="authID1" id="authID1">
+						<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink9" onclick="showImg(10)" style="margin-left: 30px;">预览</button>
+						</div>
+					</div>
+
+					<label class="col-sm-1 control-label" for="authID2">授权人身份证反面:</label>
+					<div class="col-sm-2">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="authID2" id="authID2" src="../../images/add-pic.png" onclick="$('#auth2').click();">
+						<input style="display: none;" id="auth2" name="file" type="file" >
+						<input type="hidden" name="authID2" id="authID2">
+						<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink10" onclick="showImg(11)" style="margin-left: 30px;">预览</button>
+						</div>
+					</div>
+				</div>
+
 				<fieldset >
+
 					<div class="whiteBgDiv row">
 				 	<!-- 添加合同信息按钮 -->
 					<div> 
-				       <button id="addContractInfo" type="button" class="btn btn-default add" onclick="addFun(2)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加</button> 
+				       <button id="addContractInfo" type="button" class="btn btn-default add" onclick="addFun(2)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加合同信息</button>
 				     </div> 
 					<!-- 合同信息 -->
 					 <table id="contractInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table> 
 					 </div>
 				</fieldset>
+
+				<fieldset >
+					<div class="whiteBgDiv row">
+						<!-- 添加发票信息按钮 -->
+						<div>
+							<button id="addInvoiceInfo" type="button" class="btn btn-default add" onclick="addFun(4)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加发票信息</button>
+						</div>
+						<!-- 发票信息 -->
+						<table id="invoicetInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
+					</div>
+				</fieldset>
+
+				<fieldset >
+					<div class="whiteBgDiv row">
+						<!-- 文件资质按钮 -->
+						<div>
+							<button id="quaInfo" type="button" class="btn btn-default add" onclick="addFun(5)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加资质信息</button>
+						</div>
+						<!-- 文件资质 -->
+						<table id="quaInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
+					</div>
+				</fieldset>
+
+
+
+				<fieldset >
+					<div class="whiteBgDiv row">
+						<!-- 材料设备三方验收单 -->
+						<div>
+							<button id="acceptInfo" type="button" class="btn btn-default add" onclick="addFun(6)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加第三方验收单信息</button>
+						</div>
+						<!-- 材料设备三方验收单 -->
+						<table id="acceptInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
+					</div>
+				</fieldset>
+
+
+
+
+
+
+			</div>
 			
 			</div>
 		</div>
@@ -267,6 +361,7 @@
                     					</a>
                     					<input type="text" name="fileName" class="form-control" id="fileName" >
                     					<input type="hidden" id="fileUrl" name="fileUrl">
+                    					<input type="hidden" id="type" name="type" value="4">
 									</div>
 								</div>
 					         </form>
@@ -288,11 +383,188 @@
 						</div>
 					</div>
 				</div>
-			</div> 
-			
-			
-			
-  </body>
+			</div>
+
+
+<!--发票信息 -->
+	<div class="modal fade" id="invoiceModal" tabindex="-1" role="dialog"
+		 aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+							aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" >添加发票信息</h4>
+				</div>
+				<div class="modal-body">
+					<fieldset id='field'>
+						<form class="form-horizontal" role="form" id="contractForm" data-toggle="validator">
+							<input type="hidden" name="contractid" class="form-control" id="contractid" placeholder="发票号 ">
+							<div class="form-group">
+								<label class="col-sm-4 control-label" for="contractName"><span class="required">*</span>银行账号</label>
+								<div class="col-sm-6">
+									<input type="text" name="contractName" class="form-control"
+										   id="contractName" placeholder="银行账号 ">
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label" for="contractNum"><span class="required">*</span>发票金额</label>
+								<div class="col-sm-6">
+									<input type="text" name="contractNum" class="form-control"
+										   id="contractNum" placeholder="发票金额">
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label" ><span class="required">*</span>选择要上传的pdf文件</label>
+								<div class="col-sm-6">
+									<a id="uploadContractInfo" style="position:relative" class="btn btn-default add">上传
+										<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="contractfile" name="file" type="file" >
+									</a>
+									<input type="hiddle" id="type" name="type" value="4">
+									<input type="text" name="fileName" class="form-control" id="fileName" >
+									<input type="hidden" id="projectInvoice" name="projectInvoice">
+								</div>
+							</div>
+						</form>
+					</fieldset>
+				</div>
+				<div class="modal-footer">
+					<div class="form-group">
+						<div class="col-sm-2 col-sm-offset-8">
+							<button type="button" class="btn btn-default cancel"
+									data-dismiss="modal">取消
+							</button>
+						</div>
+						<div class="col-sm-2">
+							<button type="submit" id="saveInvoice" class="btn btn-default save"
+									onclick="saveFun(4);">确定
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+<!-- 资质上传-->
+	<div class="modal fade" id="quaModal" tabindex="-1" role="dialog"
+		 aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+							aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" >添加资质文件</h4>
+				</div>
+				<div class="modal-body">
+					<fieldset id='field'>
+						<form class="form-horizontal" role="form" id="contractForm" data-toggle="validator">
+							<input type="hidden" name="contractid" class="form-control" id="contractid" placeholder="发票号 ">
+							<div class="form-group">
+								<label class="col-sm-4 control-label" ><span class="required">*</span>选择要上传的pdf文件</label>
+								<div class="col-sm-6">
+									<a id="uploadContractInfo" style="position:relative" class="btn btn-default add">上传
+										<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="contractfile" name="file" type="file" >
+									</a>
+									<input type="hiddle" id="type" name="type" value="5">
+									<input type="text" name="fileName" class="form-control" id="fileName" >
+									<input type="hidden" id="projectQua" name="projectQua">
+								</div>
+							</div>
+						</form>
+					</fieldset>
+				</div>
+				<div class="modal-footer">
+					<div class="form-group">
+						<div class="col-sm-2 col-sm-offset-8">
+							<button type="button" class="btn btn-default cancel"
+									data-dismiss="modal">取消
+							</button>
+						</div>
+						<div class="col-sm-2">
+							<button type="submit" id="saveInvoice" class="btn btn-default save"
+									onclick="saveFun(5);">确定
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+
+
+
+
+	<!-- 三方验收单上传-->
+	<div class="modal fade" id="acceptModal" tabindex="-1" role="dialog"
+		 aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+							aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" >添加三方验收文件</h4>
+				</div>
+				<div class="modal-body">
+					<fieldset id='field'>
+						<form class="form-horizontal" role="form" id="contractForm" data-toggle="validator">
+							<input type="hidden" name="contractid" class="form-control" id="contractid" placeholder="三方验收文件 ">
+							<div class="form-group">
+								<label class="col-sm-4 control-label" ><span class="required">*</span>选择要上传的pdf文件</label>
+								<div class="col-sm-6">
+									<a id="uploadContractInfo" style="position:relative" class="btn btn-default add">上传
+										<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="contractfile" name="file" type="file" >
+									</a>
+									<input type="hiddle" id="type" name="type" value="6">
+									<input type="text" name="fileName" class="form-control" id="fileName" >
+									<input type="hidden" id="projectAccept" name="projectAccept">
+								</div>
+							</div>
+						</form>
+					</fieldset>
+				</div>
+				<div class="modal-footer">
+					<div class="form-group">
+						<div class="col-sm-2 col-sm-offset-8">
+							<button type="button" class="btn btn-default cancel"
+									data-dismiss="modal">取消
+							</button>
+						</div>
+						<div class="col-sm-2">
+							<button type="submit" id="saveInvoice" class="btn btn-default save"
+									onclick="saveFun(6);">确定
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+	</form>
+
+
+	<div id="imgPreviewDiv"></div>
+</body>
 
 
 </html>

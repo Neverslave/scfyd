@@ -12,7 +12,7 @@ $(function() {
     attachInfoTable(store.get('corpId'));
     getFormInfo();
     formValidator();
-    shareFormValidator();
+   // shareFormValidator();
     ajaxFileUpload();
     propertychange();
     numFormat();
