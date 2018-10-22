@@ -28,7 +28,14 @@ public class SupplierAgreeInfoReqBean {
 	private Byte status;
 	private Date createTime;
 	private String taskId;
+	private String corpConsitutionfileUrl;
 
+	public String getCorpConsitutionfileUrl() {
+		return corpConsitutionfileUrl;
+	}
+	public void setCorpConsitutionfileUrl(String corpConsitutionfileUrl) {
+		this.corpConsitutionfileUrl = corpConsitutionfileUrl;
+	}
 	public String getTaskId() {
 		return taskId;
 	}

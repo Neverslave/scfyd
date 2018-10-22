@@ -28,7 +28,106 @@ public class SupplierProjectReqBean extends PageReqBean {
 	private String activitiKey;
 	private String orginName;
 	private String advice ;
+	private String legalID1;
+	private String legalID2;
+	private String authID1;
+	private String authID2;
+	private String noObjectionfileUrl;
+	private String noObjectionfileName;
+	private String acceptfileUrl;
+	private String acceptfileName;
+	private String quafileUrl;
+	private String quafileName;
+	private String invoicefileUrl;
+	private String invoicefileName;
+	private String contractName;
+	private String contractNum;
+	public String getLegalID1() {
+		return legalID1;
+	}
+	public void setLegalID1(String legalID1) {
+		this.legalID1 = legalID1;
+	}
+	public String getLegalID2() {
+		return legalID2;
+	}
+	public void setLegalID2(String legalID2) {
+		this.legalID2 = legalID2;
+	}
+	public String getAuthID1() {
+		return authID1;
+	}
+	public void setAuthID1(String authID1) {
+		this.authID1 = authID1;
+	}
+	public String getAuthID2() {
+		return authID2;
+	}
+	public void setAuthID2(String authID2) {
+		this.authID2 = authID2;
+	}
+	public String getNoObjectionfileUrl() {
+		return noObjectionfileUrl;
+	}
+	public void setNoObjectionfileUrl(String noObjectionfileUrl) {
+		this.noObjectionfileUrl = noObjectionfileUrl;
+	}
+	public String getNoObjectionfileName() {
+		return noObjectionfileName;
+	}
+	public void setNoObjectionfileName(String noObjectionfileName) {
+		this.noObjectionfileName = noObjectionfileName;
+	}
+	public String getAcceptfileUrl() {
+		return acceptfileUrl;
+	}
+	public void setAcceptfileUrl(String acceptfileUrl) {
+		this.acceptfileUrl = acceptfileUrl;
+	}
+	public String getAcceptfileName() {
+		return acceptfileName;
+	}
+	public void setAcceptfileName(String acceptfileName) {
+		this.acceptfileName = acceptfileName;
+	}
+	public String getQuafileUrl() {
+		return quafileUrl;
+	}
+	public void setQuafileUrl(String quafileUrl) {
+		this.quafileUrl = quafileUrl;
+	}
+	public String getQuafileName() {
+		return quafileName;
+	}
+	public void setQuafileName(String quafileName) {
+		this.quafileName = quafileName;
+	}
+	public String getInvoicefileUrl() {
+		return invoicefileUrl;
+	}
+	public void setInvoicefileUrl(String invoicefileUrl) {
+		this.invoicefileUrl = invoicefileUrl;
+	}
+	public String getInvoicefileName() {
+		return invoicefileName;
+	}
+	public void setInvoicefileName(String invoicefileName) {
+		this.invoicefileName = invoicefileName;
+	}
+	public String getContractName() {
+		return contractName;
+	}
+	public void setContractName(String contractName) {
+		this.contractName = contractName;
+	}
+	public String getContractNum() {
+		return contractNum;
+	}
+	public void setContractNum(String contractNum) {
+		this.contractNum = contractNum;
+	}
 	private Integer isPage = 1;
+	
 	public String getOrginName() {
 		return orginName;
 	}

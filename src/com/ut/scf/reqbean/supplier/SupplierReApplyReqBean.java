@@ -37,6 +37,7 @@ public class SupplierReApplyReqBean  extends BaseReqBean{
 	private String countersign;
 	private String createUserId;
 	private String  advice;
+	private String  corpConsitutionfileUrl;
 	public String getCorpId() {
 		return corpId;
 	}
@@ -230,6 +231,12 @@ public class SupplierReApplyReqBean  extends BaseReqBean{
 	}
 	public void setTaskId(String taskId) {
 		this.taskId = taskId;
+	}
+	public String getCorpConsitutionfileUrl() {
+		return corpConsitutionfileUrl;
+	}
+	public void setCorpConsitutionfileUrl(String corpConsitutionfileUrl) {
+		this.corpConsitutionfileUrl = corpConsitutionfileUrl;
 	}
 
 

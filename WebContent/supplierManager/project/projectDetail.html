@@ -155,6 +155,63 @@
 						<li class="tablename">融资管理</li>
 					</ol>
 				</div>
+				
+				
+						<div class="main-content-child">
+		 <div class="nav" id="nav"></div>
+			<div class="col-md-12" style="border: 1px solid #e7ecf1;margin-top: 30px; margin-bottom: 30px;padding-bottom: 30px;">
+		 		<div class="nav">
+					<ol class="breadcrumb" style="margin-left: -15px;margin-right: -15px;">
+						<li class="tablename">融资管理</li>
+					</ol>
+				</div>
+
+				<!--法人身份证正反 -->
+				<div class="form-group">
+					<label class="col-sm-3 control-label" for="legalID1">法人身份证正面:</label>
+					<div class="col-sm-3">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="legalID1" id="legalID1" src="../../images/add-pic.png" onclick="$('#leg1').click();">
+						<input style="display: none;" id="leg1" name="file" type="file" >
+						<input type="hidden" name="legalID1" id="legalID1">
+						<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink7" onclick="showImg(8)" style="margin-left: 30px;">预览</button>
+						</div>
+					</div>
+
+					<label class="col-sm-3 control-label" for="legalID2">法人身份证反面:</label>
+					<div class="col-sm-3">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="legalID2" id="legalID2" src="../../images/add-pic.png" onclick="$('#leg2').click();">
+						<input style="display: none;" id="leg2" name="file" type="file" >
+						<input type="hidden" name="legalID2" id="legalID2">
+						<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink7" onclick="showImg(9)" style="margin-left: 30px;">预览</button>
+						</div>
+					</div>
+				</div>
+
+         <!-- 授权人身份证正反-->
+				<div class="form-group">
+					<label class="col-sm-3 control-label" for="authID1">授权人身份证正面:</label>
+					<div class="col-sm-3">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="authID1" id="authID1" src="../../images/add-pic.png" onclick="$('#auth1').click();">
+						<input style="display: none;" id="auth1" name="file" type="file" >
+						<input type="hidden" name="authID1" id="authID1">
+						<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink9" onclick="showImg(10)" style="margin-left: 30px;">预览</button>
+						</div>
+					</div>
+
+					<label class="col-sm-3 control-label" for="authID2">授权人身份证反面:</label>
+					<div class="col-sm-3">
+						<img style="width:120px;height:160px;margin-left:15px;cursor:pointer;" name="authID2" id="authID2" src="../../images/add-pic.png" onclick="$('#auth2').click();">
+						<input style="display: none;" id="auth2" name="file" type="file" >
+						<input type="hidden" name="authID2" id="authID2">
+						<div class="col-sm-3">
+							<button type="button" class="btn btn-link" id="previewLink10" onclick="showImg(11)" style="margin-left: 30px;">预览</button>
+						</div>
+					</div>
+				</div>
+				
 				<fieldset >
 					<div class="whiteBgDiv row">
 				 	<!-- 添加合同信息按钮 -->
@@ -162,6 +219,54 @@
 					<!-- 合同信息 -->
 					 <table id="contractInfoNoteTable" class="table table-bordered" cellspacing="0" width="100%">  </table> 
 					 </div>
+				</fieldset>
+				
+								<fieldset >
+					<div class="whiteBgDiv row">
+						<!-- 添加发票信息按钮 -->
+						<div>
+							<button id="addInvoiceInfo" type="button" class="btn btn-default add" onclick="addFun(4)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加发票信息</button>
+						</div>
+						<!-- 发票信息 -->
+						<table id="invoiceInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
+					</div>
+				</fieldset>
+
+				<fieldset >
+					<div class="whiteBgDiv row">
+						<!-- 文件资质按钮 -->
+						<div>
+							<button id="quaInfo" type="button" class="btn btn-default add" onclick="addFun(5)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加资质信息</button>
+						</div>
+						<!-- 文件资质 -->
+						<table id="quaInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
+					</div>
+				</fieldset>
+
+
+
+				<fieldset >
+					<div class="whiteBgDiv row">
+						<!-- 材料设备三方验收单 -->
+						<div>
+							<button id="acceptInfo" type="button" class="btn btn-default add" onclick="addFun(6)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加第三方验收单信息</button>
+						</div>
+						<!-- 材料设备三方验收单 -->
+						<table id="acceptInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
+					</div>
+				</fieldset>
+
+
+
+				<fieldset >
+					<div class="whiteBgDiv row">
+						<!-- 产值无异议证明 -->
+						<div>
+							<button id="noObjectionInfo" type="button" class="btn btn-default add" onclick="addFun(7)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>产值无异议证明</button>
+						</div>
+						<!-- 产值无异议证明 -->
+						<table id="noObjectionInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table>
+					</div>
 				</fieldset>
 			
 			</div>

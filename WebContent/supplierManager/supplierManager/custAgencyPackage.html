@@ -157,13 +157,17 @@
 
 					</div>
 
-					<div id=fileUpload>
-						<input type="hidden" id="num" value="0">
-						<button id="btn_contract" style="display: none" type="button" class="btn btn-default add" onclick="addFun(3)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>上传</button>
-					</div>
-					<table id="attachInfoTable" class="table table-bordered"
-						   cellspacing="0" width="100%">
-					</table>
+				<fieldset >
+
+					<div class="whiteBgDiv row">
+				 	<!-- 添加附件信息按钮 -->
+					<div> 
+				       <button id="addContractInfo" type="button" class="btn btn-default add" onclick="addFun(3)"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加公司章程</button>
+				     </div> 
+					<!-- 附件信息 -->
+					 <table id="attachInfoTable" class="table table-bordered" cellspacing="0" width="100%">  </table> 
+					 </div>
+				</fieldset>
 				</div>
 			</div>
 		</section>

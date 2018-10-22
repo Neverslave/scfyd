@@ -5,10 +5,14 @@ $(function() {
 	 CloudUtils.getMenuNames("nav");
 	 detailFun();
 	 initcontractInfoTable();
+	 initinvoiceInfoTable();
+	 initquaInfoTable();
+	 initacceptInfoTable();
+	 initnoObjectionInfoTable();
 
-	 
-	 ajaxFileUpload();
     ajaxPICUpload();
+	 ajaxFileUpload();
+
 
 	 numFormat();
 	 $('#shareInfoModal').on('hidden.bs.modal', function() {
@@ -37,6 +41,11 @@ $(function() {
 	    'click .remove':function (e, value, row, index) {
 	    	var attachData = $('#attachInfoTable').bootstrapTable('getData');
 	    	var contractData = $('#contractInfoTable').bootstrapTable('getData');
+	    	var invoiceData =$('invoceInfoTable').bootstrapTable('getData');
+	    	var quaData =$('quaInfoTable').bootstrapTable('getData');
+	    	var acceptData =$('acceptInfoTable').bootstrapTable('getData');
+            var noObjectionData =$('noObjectionInfoTable').bootstrapTable('getData');
+
 	    	//$('#shareHolderInfoTable').bootstrapTable('removeByUniqueId', index);
 	    	if($(e.target).data('type')==="shareInfo"){
 	    		var values = [];
@@ -52,11 +61,57 @@ $(function() {
 	    		var values = [];
 		    	values.push(row.contractid);
 		    	$('#contractInfoTable').bootstrapTable('remove', {field: 'contractid', values: values});
-	    	}
-		},
+		}else if ($(e.target).data('type')==="accept"){
+    		acceptData.length - 1;
+    		var values = [];
+	    	values.push(row.acceptfileName);
+	    	$("#acceptInfoTable").bootstrapTable('remove', {field: 'acceptfileName', values: values});
+    	}else if ($(e.target).data('type')==="invoice"){
+    		invoiceData.length - 1;
+    		var values = [];
+	    	values.push(row.invoicefileName);
+	    	$('#invoiceInfoTable').bootstrapTable('remove', {field: 'invoicefileName', values: values});
+    	}else if ($(e.target).data('type')==="qua"){
+    		contractData.length - 1;
+    		var values = [];
+	    	values.push(row.quafileName);
+	    	$('#quaInfoTable').bootstrapTable('remove', {field: 'quafileName', values: values});
+	    	
+    	  }else if ($(e.target).data('type')==="noObjection"){
+                noObjectionData.length - 1;
+                var values = [];
+                values.push(row.noObjectionfileName);
+                $('#noObjectionInfoTable').bootstrapTable('remove', {field: 'noObjectionfileName', values: values});
+
+            }
+    	},
+	  
+	    
 	    'click .yulan': function (e, value, row, index) {
 	    	window.open("../../.." + row.fileUrl);//预览pdf的js方法
 	    }
+,
+	  
+	    
+	    'click .previewInvoice': function (e, value, row, index) {
+	    	window.open("../../.." + row.invoicefileUrl);//预览pdf的js方法
+	    },
+	  
+	    
+	    'click .previewQua': function (e, value, row, index) {
+	    	window.open("../../.." + row.quafileUrl);//预览pdf的js方法
+	    },
+	  
+	    
+	    'click .previewAccept': function (e, value, row, index) {
+	    	window.open("../../.." + row.acceptfileUrl);//预览pdf的js方法
+	    }
+     ,
+
+
+     'click .previewnoObjection': function (e, value, row, index) {
+         window.open("../../.." + row.noObjectionfileUrl);//预览pdf的js方法
+     }
  };
  
  function subFileNum() {
@@ -112,6 +167,9 @@ $(function() {
      }else if(type==6){
          $("#acceptModal").modal();
      }
+     else if(type==7){
+         $("#noObjectionModal").modal();
+     }
  }
  //取消
  function cancel(){
@@ -127,14 +185,16 @@ $(function() {
 	 if(type ===2 ){//合同
 
 			  var data = CloudUtils.convertStringJson('contractForm');
+			 
 			  data = eval("(" + data + ")");
-			
-			  data.contractid=CloudUtils.getUUID(32, 63);
-			  data.contractName = data.contractName ==""?0:data.contractName;
-			  data.contractNum = data.contractNum ==""?0:data.contractNum;
+			 
+			 // data.contractid=CloudUtils.getUUID(32, 63);
+			 // data.contractName = data.contractName;
+			 /* data.contractNum = data.contractNum ==""?0:data.contractNum;
 			  data.contractType = data.contractType ==""?0:data.contractType;
 			  data.endDate = data.endDate ==""?0:data.endDate;
-			  data.uploadFileName = data.uploadFileName ==""?0:data.uploadFileName;
+			  data.uploadFileName = data.uploadFileName ==""?0:data.uploadFileName;*/
+			  //console.log(data);
 //					 先只在页面显示，不录入数据库
 			 $("#contractInfoTable").bootstrapTable('append', data);
 			$("#contractInfoModal").modal("hide");
@@ -143,53 +203,69 @@ $(function() {
 
          var data = CloudUtils.convertStringJson('invoiceForm');
          data = eval("(" + data + ")");
-
          data.contractid=CloudUtils.getUUID(32, 63);
-         data.contractName = data.contractName ==""?0:data.contractName;
+         data.contractName = data.contractName ;
          data.contractNum = data.contractNum ==""?0:data.contractNum;
          data.contractType = data.contractType ==""?0:data.contractType;
          data.endDate = data.endDate ==""?0:data.endDate;
          data.uploadFileName = data.uploadFileName ==""?0:data.uploadFileName;
 //					 先只在页面显示，不录入数据库
          $("#invoiceInfoTable").bootstrapTable('append', data);
-         $("#invoiceInfoModal").modal("hide");
+         $("#invoiceModal").modal("hide");
 
 	 }
      if(type==5){//资质
 
-         var data = CloudUtils.convertStringJson('invoiceForm');
+         var data = CloudUtils.convertStringJson('quaForm');
          data = eval("(" + data + ")");
 
          data.contractid=CloudUtils.getUUID(32, 63);
 //					 先只在页面显示，不录入数据库
          $("#quaInfoTable").bootstrapTable('append', data);
-         $("#quaInfoModal").modal("hide");
+         $("#quaModal").modal("hide");
 
      }
-     if(type==6){//资质
+     if(type==6){//三方
 
-         var data = CloudUtils.convertStringJson('invoiceForm');
+         var data = CloudUtils.convertStringJson('acceptForm');
          data = eval("(" + data + ")");
 
          data.contractid=CloudUtils.getUUID(32, 63);
 //					 先只在页面显示，不录入数据库
          $("#acceptInfoTable").bootstrapTable('append', data);
-         $("#acceptInfoModal").modal("hide");
+         $("#acceptModal").modal("hide");
+
+     }
+     if(type==7){//无异议
+
+         var data = CloudUtils.convertStringJson('noObjectionForm');
+         data = eval("(" + data + ")");
+
+         data.contractid=CloudUtils.getUUID(32, 63);
+//					 先只在页面显示，不录入数据库
+         $("#noObjectionInfoTable").bootstrapTable('append', data);
+         $("#noObjectionModal").modal("hide");
 
      }
  }
  
+ 
  function subCorpInfo(){
 
 	 var data = CloudUtils.convertStringJson('projectForm');
-	 console.log(data);
 	 var jsonData = eval("(" + data + ")");
      var contractData = $('#contractInfoTable').bootstrapTable('getData');
+ 	var invoiceData =$('invoceInfoTable').bootstrapTable('getData');
+	var quaData =$('quaInfoTable').bootstrapTable('getData');
+	var acceptData =$('acceptInfoTable').bootstrapTable('getData');
+     var noObjectionData =$('noObjectionInfoTable').bootstrapTable('getData');
      jsonData.contractInfoList = contractData;
-
+     jsonData.invoiceInfoList =invoiceData;
+     jsonData.quaInfoList =quaData;
+     jsonData.acceptInfoList =acceptData;
+     jsonData.noObjectionInfoList =noObjectionData;
      jsonData.corpId=store.get('corpId');
-     
-
+     console.log(data)
 	 var options = {
 				url : '../../supplierProject/startProcess',
 				data : JSON.stringify(jsonData),
@@ -453,6 +529,109 @@ function ajaxFileUpload(){
 			return false;
 		}
 	});
+	
+	$('#invoicefile').fileupload({
+		  url:"../../file/uploadFile?pathId=3",
+	        dataType: 'json',
+	        // 上传完成后的执行逻辑
+	        done: function(e, data) {
+	        	data = data.result;
+	            if(data.result==0){
+	            	$("#invoicefileName").val(data.fileName);
+	            	$("#invoicefileUrl").val(data.fileUrl);
+	            } else {
+	            	 bootbox.alert(data.resultNote);
+	            }
+		            
+		     }
+	});
+	$('#invoicefile').bind('fileuploadadd', function (e, data) {
+		var obj = data.files[0];
+		var name = obj.name;
+		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+		if(type !=".pdf"){
+			bootbox.alert("仅支持上传pdf类型");
+			return false;
+		}
+	});
+	
+	$('#quafile').fileupload({
+		  url:"../../file/uploadFile?pathId=3",
+	        dataType: 'json',
+	        // 上传完成后的执行逻辑
+	        done: function(e, data) {
+	        	data = data.result;
+	            if(data.result==0){
+	            	$("#quafileName").val(data.fileName);
+	            	$("#quafileUrl").val(data.fileUrl);
+	            } else {
+	            	 bootbox.alert(data.resultNote);
+	            }
+		            
+		     }
+	});
+	$('#quafile').bind('fileuploadadd', function (e, data) {
+		var obj = data.files[0];
+		var name = obj.name;
+		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+		if(type !=".pdf"){
+			bootbox.alert("仅支持上传pdf类型");
+			return false;
+		}
+	});
+	
+	$('#acceptfile').fileupload({
+		  url:"../../file/uploadFile?pathId=3",
+	        dataType: 'json',
+	        // 上传完成后的执行逻辑
+	        done: function(e, data) {
+	        	data = data.result;
+	            if(data.result==0){
+	            	$("#acceptfileName").val(data.fileName);
+	            	$("#acceptfileUrl").val(data.fileUrl);
+	            } else {
+	            	 bootbox.alert(data.resultNote);
+	            }
+		            
+		     }
+	});
+	$('#acceptfile').bind('fileuploadadd', function (e, data) {
+		var obj = data.files[0];
+		var name = obj.name;
+		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+		if(type !=".pdf"){
+			bootbox.alert("仅支持上传pdf类型");
+			return false;
+		}
+	});
+	
+	$('#noObjectionfile').fileupload({
+		  url:"../../file/uploadFile?pathId=3",
+	        dataType: 'json',
+	        // 上传完成后的执行逻辑
+	        done: function(e, data) {
+	        	data = data.result;
+	            if(data.result==0){
+	            	$("#noObjectionfileName").val(data.fileName);
+	            	$("#noObjectionfileUrl").val(data.fileUrl);
+	            } else {
+	            	 bootbox.alert(data.resultNote);
+	            }
+		            
+		     }
+	});
+	$('#noObjectionfile').bind('fileuploadadd', function (e, data) {
+		var obj = data.files[0];
+		var name = obj.name;
+		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+		if(type !=".pdf"){
+			bootbox.alert("仅支持上传pdf类型");
+			return false;
+		}
+	});
+	
+	
+	
 }
 
 var fileTypes = [".doc", ".xls", ".xlsx", ".docx", ".pdf", ".png", ".jpg"];
@@ -477,14 +656,64 @@ function checkFileSize(fileSize) {
 
 //照片上传逻辑
 function ajaxPICUpload(){
+
+    $('#legalID1').bind('fileuploadadd', function (e, data) {
+        var obj = data.files[0];
+        var name = obj.name;
+        var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+        if(type ==".jpg" || type == ".png"){
+        }else{
+            bootbox.alert("仅支持上传png、jpg类型的图片");
+            return false;
+        }
+    });
+
+    $('#legalID2').bind('fileuploadadd', function (e, data) {
+        var obj = data.files[0];
+        var name = obj.name;
+        var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+        if(type ==".jpg" || type == ".png"){
+        }else{
+            bootbox.alert("仅支持上传png、jpg类型的图片");
+            return false;
+        }
+    });
+
+    $('#authID1').bind('fileuploadadd', function (e, data) {
+        var obj = data.files[0];
+        var name = obj.name;
+        var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+        if(type ==".jpg" || type == ".png"){
+        }else{
+            bootbox.alert("仅支持上传png、jpg类型的图片");
+            return false;
+        }
+    });
+
+
+    $('#authID2').bind('fileuploadadd', function (e, data) {
+        var obj = data.files[0];
+        var name = obj.name;
+        var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+        if(type ==".jpg" || type == ".png"){
+        }else{
+            bootbox.alert("仅支持上传png、jpg类型的图片");
+            return false;
+        }
+    });
+
+
+
+
+
     $('#leg1').fileupload({
-        url:"../file/uploadFile?pathId=3",
+        url:"../../file/uploadFile?pathId=3",
         dataType: 'json',
         // 上传完成后的执行逻辑
         done: function(e, data) {
             data = data.result;
             if(data.result==0){
-                $("#leg1").attr("src",data.fileUrl);
+                $("#legalID1").attr("src",data.fileUrl);
                 $("#legalID1").val(data.fileUrl);
             } else {
                 bootbox.alert(data.resultNote);
@@ -493,7 +722,7 @@ function ajaxPICUpload(){
         }
     });
     $('#leg2').fileupload({
-        url:"../file/uploadFile?pathId=3",
+        url:"../../file/uploadFile?pathId=3",
         dataType: 'json',
         // 上传完成后的执行逻辑
         done: function(e, data) {
@@ -509,7 +738,7 @@ function ajaxPICUpload(){
     });
 
     $('#auth1').fileupload({
-        url:"../file/uploadFile?pathId=3",
+        url:"../../file/uploadFile?pathId=3",
         dataType: 'json',
         // 上传完成后的执行逻辑
         done: function(e, data) {
@@ -524,7 +753,7 @@ function ajaxPICUpload(){
         }
     });
     $('#auth1').fileupload({
-        url:"../file/uploadFile?pathId=3",
+        url:"../file../uploadFile?pathId=3",
         dataType: 'json',
         // 上传完成后的执行逻辑
         done: function(e, data) {
@@ -560,7 +789,7 @@ function showImg(val) {
     }
 
 
-    CloudUtils.getTab("../supplierManager/imageShow.html", "imgPreviewDiv");
+    CloudUtils.getTab("../../supplierManager/imageShow.html", "imgPreviewDiv");
     $("#img").attr('src',imgSrc);
     $("#imgPreviewShow").modal("show");
 
@@ -619,13 +848,13 @@ function initinvoiceInfoTable(){
                 align: 'center',
                 valign: 'middle'
             }, {
-                field: 'fileName',
+                field: 'invoicefileName',
                 title: '合同pdf名称',
                 align: 'center',
                 valign: 'middle',
                 visible:false
             },{
-                field: 'fileUrl',
+                field: 'invoicefileUrl',
                 title: '合同地址',
                 align: 'center',
                 valign: 'middle',
@@ -636,8 +865,8 @@ function initinvoiceInfoTable(){
                 align: 'center',
                 valign: 'middle',
                 formatter:function(value,row,index){
-                    var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="contract" href="javascript:void(0)"></a>';
-                    var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#278bdd;padding:0px 5px;" title="预览" data-type="contract" href="javascript:void(0)"></a>';
+                    var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="invoice" href="javascript:void(0)"></a>';
+                    var m = '<a class = "glyphicon glyphicon-file previewInvoice" style="color:#278bdd;padding:0px 5px;" title="预览" data-type="invoice" href="javascript:void(0)"></a>';
                     return  r+"  "+m;
                 },
                 events: 'operateEvents'
@@ -693,19 +922,20 @@ function initquaInfoTable(){
                 title: '银行账号',
                 align: 'center',
                 valign: 'middle',
+                visible:false
             },{
                 field: 'contractNum',
                 title: '发票金额',
                 align: 'center',
-                valign: 'middle'
-            }, {
-                field: 'fileName',
-                title: '合同pdf名称',
-                align: 'center',
                 valign: 'middle',
                 visible:false
+            }, {
+                field: 'quafileName',
+                title: '文件pdf名称',
+                align: 'center',
+                valign: 'middle'
             },{
-                field: 'fileUrl',
+                field: 'quafileUrl',
                 title: '合同地址',
                 align: 'center',
                 valign: 'middle',
@@ -716,8 +946,8 @@ function initquaInfoTable(){
                 align: 'center',
                 valign: 'middle',
                 formatter:function(value,row,index){
-                    var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="contract" href="javascript:void(0)"></a>';
-                    var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#278bdd;padding:0px 5px;" title="预览" data-type="contract" href="javascript:void(0)"></a>';
+                    var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="qua" href="javascript:void(0)"></a>';
+                    var m = '<a class = "glyphicon glyphicon-file previewQua" style="color:#278bdd;padding:0px 5px;" title="预览" data-type="qua" href="javascript:void(0)"></a>';
                     return  r+"  "+m;
                 },
                 events: 'operateEvents'
@@ -728,7 +958,7 @@ function initquaInfoTable(){
 
 
 function initacceptInfoTable(){
-    $('#acceptInfoTableIn').bootstrapTable('destroy');
+    $('#acceptInfoTable').bootstrapTable('destroy');
     $("#acceptInfoTable").bootstrapTable({
         method: "post",
         /*url: "../contractinfo/list", */
@@ -772,19 +1002,20 @@ function initacceptInfoTable(){
                 title: '银行账号',
                 align: 'center',
                 valign: 'middle',
+                visible:false
             },{
                 field: 'contractNum',
                 title: '发票金额',
                 align: 'center',
-                valign: 'middle'
-            }, {
-                field: 'fileName',
-                title: '合同pdf名称',
-                align: 'center',
                 valign: 'middle',
                 visible:false
+            }, {
+                field: 'acceptfileName',
+                title: '文件名称',
+                align: 'center',
+                valign: 'middle',
             },{
-                field: 'fileUrl',
+                field: 'acceptfileUrl',
                 title: '合同地址',
                 align: 'center',
                 valign: 'middle',
@@ -795,8 +1026,88 @@ function initacceptInfoTable(){
                 align: 'center',
                 valign: 'middle',
                 formatter:function(value,row,index){
-                    var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="contract" href="javascript:void(0)"></a>';
-                    var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#278bdd;padding:0px 5px;" title="预览" data-type="contract" href="javascript:void(0)"></a>';
+                    var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="accept" href="javascript:void(0)"></a>';
+                    var m = '<a class = "glyphicon glyphicon-file previewAccept" style="color:#278bdd;padding:0px 5px;" title="预览" data-type="accept" href="javascript:void(0)"></a>';
+                    return  r+"  "+m;
+                },
+                events: 'operateEvents'
+            }
+        ]
+    });
+}
+
+
+function initnoObjectionInfoTable(){
+    $('#noObjectionInfoTable').bootstrapTable('destroy');
+    $("#noObjectionInfoTable").bootstrapTable({
+        method: "post",
+        /*url: "../contractinfo/list", */
+        //striped: true,  //表格显示条纹
+        //pagination: true, //启动分页
+        //pageSize: 5,  //每页显示的记录数
+        //pageNumber:1, //当前第几页
+        // pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+        search: false,  //是否启用查询
+        showColumns: false,  //显示下拉框勾选要显示的列
+        showRefresh: false,  //显示刷新按钮
+        sidePagination: "client", //表示服务端请求
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+        //设置为limit可以获取limit, offset, search, sort, order
+        queryParamsType : "undefined",
+        queryParams: function queryParams(params) {},
+        responseHandler:function responseHandler(res) {
+            if (res.result==0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [
+            {
+                field: 'contractid',
+                title: '发票编号',
+                align: 'center',
+                valign: 'middle',
+                visible:false
+            },{
+                field: 'contractName',
+                title: '银行账号',
+                align: 'center',
+                valign: 'middle',
+                visible:false
+            },{
+                field: 'contractNum',
+                title: '发票金额',
+                align: 'center',
+                valign: 'middle',
+                visible:false
+            }, {
+                field: 'noObjectionfileName',
+                title: '文件名称',
+                align: 'center',
+                valign: 'middle',
+            },{
+                field: 'noObjectionfileUrl',
+                title: '合同地址',
+                align: 'center',
+                valign: 'middle',
+                visible:false
+            }, {
+                field: 'operation',
+                title: '操作',
+                align: 'center',
+                valign: 'middle',
+                formatter:function(value,row,index){
+                    var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="noObjection" href="javascript:void(0)"></a>';
+                    var m = '<a class = "glyphicon glyphicon-file previewnoObjection" style="color:#278bdd;padding:0px 5px;" title="预览" data-type="noObjection" href="javascript:void(0)"></a>';
                     return  r+"  "+m;
                 },
                 events: 'operateEvents'

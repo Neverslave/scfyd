@@ -36,7 +36,14 @@ public class SupplierProcessReqBean extends BaseReqBean {
 	private String orginName;
 	private String advice ;
 	private String  businessScope;
+	private String  corpConsitutionfileUrl;
 	
+	public String getCorpConsitutionfileUrl() {
+		return corpConsitutionfileUrl;
+	}
+	public void setCorpConsitutionfileUrl(String corpConsitutionfileUrl) {
+		this.corpConsitutionfileUrl = corpConsitutionfileUrl;
+	}
 	public String getBusinessScope() {
 		return businessScope;
 	}

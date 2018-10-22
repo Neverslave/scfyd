@@ -2,13 +2,10 @@ $(function(){
 console.log("01");
 	$("input").attr("readonly",true);
 	$("select").attr("disabled",true); 
-	console.log("02");
 	setForm();
-	console.log("03");
 	numFormat();
-	console.log("04");
 	detailFun();
-	console.log("05");
+
 	
 });
 
@@ -20,11 +17,12 @@ function setForm(){
 		url : '../../activiti/getTaskDataByTaskId',
 		data : JSON.stringify(data),
 		callBackFun : function(data) {
+			
 			if (data.result == 0) {
 				var jsonData =  eval("(" + data.str + ")");
-				//loadAreas();
-		
+				console.log(jsonData);
 				CloudUtils.setForm(jsonData,"detailForm");
+				//$("#attachInfoTable").bootstrapTable('append', data.);
 				if(jsonData.companyPicturePath1!=null && jsonData.companyPicturePath1!=''){
 					$("#Path1").attr("src",jsonData.companyPicturePath1);
 					$("#cp1a").attr("href",jsonData.companyPicturePath1);
@@ -157,62 +155,85 @@ var custManage = new Object({
 		  });  
 　　　　},
 　　　　attachInfoTable : function (data){
-	 $('#attachInfoTable').bootstrapTable('destroy'); 
-		$("#attachInfoTable").bootstrapTable({  
-			 method: "post", 
-		     data : data, 
-		     striped: false,  //表格显示条纹  
-		     search: false,  //是否启用查询  
-		     showColumns: false,  //显示下拉框勾选要显示的列  
-		     showRefresh: false,  //显示刷新按钮  
-		     sidePagination: "server", //表示服务端请求  
-		     //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
-		     //设置为limit可以获取limit, offset, search, sort, order  
-		     queryParamsType : "undefined",    
-	         responseHandler:function responseHandler(res) {
-	        	 if (res.result==0) {
-		        	 return {
-		        		 "rows": res.dataList,
-		        		 "total": res.records
-		        	 };
+	  $('#attachInfoTable').bootstrapTable('destroy');
+	    $("#attachInfoTable").bootstrapTable({
+	        method: "post",
+	        //url: "../uploadFile/list",
+	        search: false,  //是否启用查询
+	        showColumns: false,  //显示下拉框勾选要显示的列
+	        showRefresh: false,  //显示刷新按钮
+	        sidePagination: "client", //表示服务端请求
+	        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+	        //设置为limit可以获取limit, offset, search, sort, order
+	        queryParamsType : "undefined",
+	        queryParams: function queryParams(params) {   //设置查询参数
+	            var param = {
+	                pageNumber: params.pageNumber,
+	                pageSize: params.pageSize
+	            };
+	            if(corpId){
+	                param.corpId = corpId
+	            }
+	            return JSON.stringify(param);
+	        },
+	        responseHandler:function responseHandler(res) {
+	            if (res.result==0) {
+	                return {
+	                    "rows": res.dataList,
+	                    "total": res.records
+	                };
 
-	        	 } else {
-	        		 bootbox.alert(res.resultNote);
-	        		 return {
-				        	 "rows": [],
-				        	 "total": 0
-				        	 };
-	        	 }
-	         },
-	         columns: [{
-	 	        field: 'fileUrl',
-	 	        title: '附件地址',
-	 	        align: 'center',
+	            } else {
+	                bootbox.alert(res.resultNote);
+	                return {
+	                    "rows": [],
+	                    "total": 0
+	                };
+	            }
+	        },
+	        columns: [{
+	            field: 'corpConsitutionfileUrl',
+	            title: '附件地址',
+	            align: 'center',
 	            valign: 'middle',
 	            visible: false
-		 	}, {
-	 	        field: 'fileName',
-	 	        title: '附件名称',
-	 	        align: 'center',
+	        },{
+	            field: 'uploadType',
+	            title: '附件格式',
+	            align: 'center',
+	            valign: 'middle',
+	            visible: false
+	        },{
+	            field: 'corpConsitutionfileName',
+	            title: '附件名称',
+	            align: 'center',
+	            valign: 'middle',
+
+	        }, {
+	            field: 'attachType',
+	            title: '附件格式',
+	            align: 'center',
+	            valign: 'middle',
+	            visible: false
+	        }, {
+	            field: 'attachSize',
+	            title: '附件大小(KB)',
+	            align: 'center',
+	            valign: 'middle',
+	            visible: false
+	        }, {
+	            field: 'operation',
+	            title: '操作',
+	            align: 'center',
 	            valign: 'middle',
 	            formatter:function(value,row,index){
-					 var s = '<a target="view_window" href="/../..'+row.fileUrl+'" download="'+value+'">'+value+'</a>';
-			         return s;
-		           
-		        }
-	 	    }, {
-	 	        field: 'attachType',
-	 	        title: '附件格式',
-	 	        align: 'center',
-	             valign: 'middle'
-	 	    }, {
-	 	        field: 'attachSize',
-	 	        title: '附件大小(KB)',
-	 	        align: 'center',
-	             valign: 'middle'
-	 	    }
-	 	    ]
-	       }); 
+	                var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="attach" href="javascript:void(0)"></a>';
+	                var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#d864fd;padding:0px 5px;" title="预览" data-type="attach" href="javascript:void(0)"></a>';
+	                return r+"  "+m;
+	            },
+	            events: 'operateEvents'
+	        }]
+	    });
 　　　　},
 contractInfoTable: function(data) {
     $('#contractInfoTable').bootstrapTable('destroy');

@@ -32,8 +32,15 @@ public class SupplierManagerReqBean extends BaseReqBean {
 	private String  agree;
 	private String  userId;
 	private String  businessScope;
+	private String corpConsitutionfileUrl;
 	
 	
+	public String getCorpConsitutionfileUrl() {
+		return corpConsitutionfileUrl;
+	}
+	public void setCorpConsitutionfileUrl(String corpConsitutionfileUrl) {
+		this.corpConsitutionfileUrl = corpConsitutionfileUrl;
+	}
 	public String getAgree() {
 		return agree;
 	}
