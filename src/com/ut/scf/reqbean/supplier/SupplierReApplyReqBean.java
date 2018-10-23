@@ -38,6 +38,7 @@ public class SupplierReApplyReqBean  extends BaseReqBean{
 	private String createUserId;
 	private String  advice;
 	private String  corpConsitutionfileUrl;
+	private String businessScope;
 	public String getCorpId() {
 		return corpId;
 	}
@@ -237,6 +238,12 @@ public class SupplierReApplyReqBean  extends BaseReqBean{
 	}
 	public void setCorpConsitutionfileUrl(String corpConsitutionfileUrl) {
 		this.corpConsitutionfileUrl = corpConsitutionfileUrl;
+	}
+	public String getBusinessScope() {
+		return businessScope;
+	}
+	public void setBusinessScope(String businessScope) {
+		this.businessScope = businessScope;
 	}
 
 

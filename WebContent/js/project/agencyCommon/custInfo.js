@@ -74,9 +74,10 @@ function setForm(){
 					 $("#lin2").hide();
 				}
                 $(".required").hide();
+                custManage.contractInfoTable(jsonData.contractInfoList);
        /*         custManage.initShareHolderTable(jsonData.shareInfoList);
                 custManage.attachInfoTable(jsonData.attachInfoList);
-                custManage.contractInfoTable(jsonData.contractInfoList);*/
+              */
             	$("#corpNameTitle").text(jsonData.corpName);
 			} else {
 				return false;
@@ -155,86 +156,76 @@ var custManage = new Object({
 		  });  
 　　　　},
 　　　　attachInfoTable : function (data){
-	  $('#attachInfoTable').bootstrapTable('destroy');
-	    $("#attachInfoTable").bootstrapTable({
-	        method: "post",
-	        //url: "../uploadFile/list",
-	        search: false,  //是否启用查询
-	        showColumns: false,  //显示下拉框勾选要显示的列
-	        showRefresh: false,  //显示刷新按钮
-	        sidePagination: "client", //表示服务端请求
-	        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
-	        //设置为limit可以获取limit, offset, search, sort, order
-	        queryParamsType : "undefined",
-	        queryParams: function queryParams(params) {   //设置查询参数
-	            var param = {
-	                pageNumber: params.pageNumber,
-	                pageSize: params.pageSize
-	            };
-	            if(corpId){
-	                param.corpId = corpId
-	            }
-	            return JSON.stringify(param);
-	        },
-	        responseHandler:function responseHandler(res) {
-	            if (res.result==0) {
-	                return {
-	                    "rows": res.dataList,
-	                    "total": res.records
-	                };
+    $('#attachInfoTable').bootstrapTable('destroy');
+    $("#attachInfoTable").bootstrapTable({
+        method: "post",
+        //url: "../uploadFile/list",
+        search: false,  //是否启用查询
+        showColumns: false,  //显示下拉框勾选要显示的列
+        showRefresh: false,  //显示刷新按钮
+        sidePagination: "client", //表示服务端请求
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+        //设置为limit可以获取limit, offset, search, sort, order
+        queryParamsType : "undefined",
+        responseHandler:function responseHandler(res) {
+            if (res.result==0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
 
-	            } else {
-	                bootbox.alert(res.resultNote);
-	                return {
-	                    "rows": [],
-	                    "total": 0
-	                };
-	            }
-	        },
-	        columns: [{
-	            field: 'corpConsitutionfileUrl',
-	            title: '附件地址',
-	            align: 'center',
-	            valign: 'middle',
-	            visible: false
-	        },{
-	            field: 'uploadType',
-	            title: '附件格式',
-	            align: 'center',
-	            valign: 'middle',
-	            visible: false
-	        },{
-	            field: 'corpConsitutionfileName',
-	            title: '附件名称',
-	            align: 'center',
-	            valign: 'middle',
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'corpConsitutionfileUrl',
+            title: '附件地址',
+            align: 'center',
+            valign: 'middle',
+            visible: false
+        },{
+            field: 'uploadType',
+            title: '附件格式',
+            align: 'center',
+            valign: 'middle',
+            visible: false
+        },{
+            field: 'corpConsitutionfileName',
+            title: '附件名称',
+            align: 'center',
+            valign: 'middle',
 
-	        }, {
-	            field: 'attachType',
-	            title: '附件格式',
-	            align: 'center',
-	            valign: 'middle',
-	            visible: false
-	        }, {
-	            field: 'attachSize',
-	            title: '附件大小(KB)',
-	            align: 'center',
-	            valign: 'middle',
-	            visible: false
-	        }, {
-	            field: 'operation',
-	            title: '操作',
-	            align: 'center',
-	            valign: 'middle',
-	            formatter:function(value,row,index){
-	                var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="attach" href="javascript:void(0)"></a>';
-	                var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#d864fd;padding:0px 5px;" title="预览" data-type="attach" href="javascript:void(0)"></a>';
-	                return r+"  "+m;
-	            },
-	            events: 'operateEvents'
-	        }]
-	    });
-　　　　},
+        }, {
+            field: 'attachType',
+            title: '附件格式',
+            align: 'center',
+            valign: 'middle',
+            visible: false
+        }, {
+            field: 'attachSize',
+            title: '附件大小(KB)',
+            align: 'center',
+            valign: 'middle',
+            visible: false
+        }, {
+            field: 'operation',
+            title: '操作',
+            align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+                var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="attach" href="javascript:void(0)"></a>';
+                var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#d864fd;padding:0px 5px;" title="预览" data-type="attach" href="javascript:void(0)"></a>';
+                return r+"  "+m;
+            },
+            events: 'operateEvents'
+        }]
+    });
+},
 contractInfoTable: function(data) {
     $('#contractInfoTable').bootstrapTable('destroy');
     $("#contractInfoTable").bootstrapTable({
@@ -320,7 +311,7 @@ contractInfoTable: function(data) {
 
 window.operateEvents = {
 	    'click .yulan': function (e, value, row, index) {
-	    	window.open(row.fileUrl);//预览pdf的js方法
+	        window.open("../.." + row.corpConsitutionfileUrl);//预览pdf的js方法
 	    }
  };
 function detailFun() {

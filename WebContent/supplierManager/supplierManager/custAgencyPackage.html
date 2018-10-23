@@ -342,34 +342,34 @@
 		</div>
 	</div>
 
-
 	<!--添加附件-->
-	<div class="modal fade" id="fjModal" tabindex="-1" role="dialog" aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
-		<div class="modal-dialog" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-						<span aria-hidden="true">&times;</span>
-					</button>
-					<h4 class="modal-title" >添加附件</h4>
-				</div>
-				<div class="modal-body">
-					<fieldset id='field'>
-						<form class="form-horizontal" role="form" >
+	    	<div class="modal fade" id="fjModal" tabindex="-1" role="dialog" aria-labelledby="shareInfoModalLabel" aria-hidden="true" data-backdrop="static">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+							<h4 class="modal-title" >公司章程</h4>
+						</div>
+						<div class="modal-body">
+							<fieldset id='field'>
+								<form class="form-horizontal" role="form" id='attatchForm' >
 							<div class="form-group">
-								<label class="col-sm-2 control-label" for="uploadType"><span class="required">*</span>附件类型</label>
-								<div class="col-sm-5">
-									<select id="uploadType" name=uploadType class="form-control">
-										<option value="财产/审计报告">财产/审计报告(pdf)</option>
-										<option value="实际控制人征信报告">实际控制人征信报告(pdf)</option>
-										<option value="经销商企业征信报告">经销商企业征信报告(pdf)</option>
-										<option value="实际控制人婚姻证明">实际控制人婚姻证明(jpg)</option>
-									</select>
+								<label class="col-sm-4 control-label" ><span class="required">*</span>选择要上传的pdf文件</label>
+								<div class="col-sm-6">
+									<a id="uploadContractInfo" style="position:relative" class="btn btn-default add">上传
+										<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="corpConsitutionfile" name="file" type="file" >
+									</a>
+									<input type="hidden" id="type" name="type" value="10">
+									<input type="text" name="corpConsitutionfileName" class="form-control" id="corpConsitutionfileName" >
+									<input type="hidden" id="corpConsitution" name="corpConsitution">
+									<input type="hidden" id="corpConsitutionfileUrl" name="corpConsitutionfileUrl">
 								</div>
 							</div>
-						</form>
-					</fieldset>
-				</div>
+					        	 </form>
+							</fieldset>
+						</div>
 				<div class="modal-footer">
 					<div class="form-group">
 						<div class="col-sm-2 col-sm-offset-8">
@@ -378,14 +378,14 @@
 							</button>
 						</div>
 						<div class="col-sm-2">
-							<a id="btn_upload" style="position:relative" class="btn btn-default add">上传
-								<input style="cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;opacity:0;" id="file" name="file" type="file" >
-							</a>
+							<button type="submit" id="saveInvoice" class="btn btn-default save"
+									onclick="saveFun(7);">确定
+							</button>
 						</div>
 					</div>
 				</div>
-			</div>
-		</div>
-	</div>
+					</div>
+				</div>
+			</div> 
 
 	<div id="imgPreviewDiv"></div>

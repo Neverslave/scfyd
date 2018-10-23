@@ -1,17 +1,11 @@
 $(function() {
     setForm();
     formValidator();
- 
- /*   propertychange();*/
+
     numFormat();
-/*    $('#shareInfoModal').on('hidden.bs.modal', function() {
-        $("#shareInfoForm").bootstrapValidator('resetForm', true);
-        $("#shareInfoForm")[0].reset();
-    });
-    $('#detailModal').on('hidden.bs.modal', function() {
-        $("#detailForm").bootstrapValidator('resetForm', true);
-    });*/
     ajaxFileUpload();
+    attachInfoTable();
+ 
  
 });
 
@@ -313,40 +307,44 @@ var custManageReapply = new Object({　　　　
         });　　　　
     }
 });
-var shareIndex = 0;
+var shareIndex =0;
 var shareDetailRow = null;
 window.operateEvents = {
-
-    'click .modify': function(e, value, row, index) {
-        if ($(e.target).data('type') === "shareInfo") {
+    'click .detail': function (e, value, row, index) {
+        detailFun(row);
+        initShareHolderInfoTable(row.corpId);
+        attachInfoTable(row.corpId);
+    },
+    'click .modify': function (e, value, row, index) {
+        if($(e.target).data('type')==="shareInfo"){
             //修改
-            modShareFun(row, 2);
+            modShareFun(row);
+            shareDetailRow = row;//吧数据存进全局变量里
             shareIndex = index;
-            shareDetailRow = row; //吧数据存进全局变量里
         }
     },
     'click .remove':function (e, value, row, index) {
-    	var attachData = $('#attachInfoTable').bootstrapTable('getData');
-    	var contractData = $('#contractInfoTable').bootstrapTable('getData');
-    	//$('#shareHolderInfoTable').bootstrapTable('removeByUniqueId', index);
-    	if($(e.target).data('type')==="shareInfo"){
-    		var values = [];
-	    	values.push(row.shareHolderId);
-	    	$('#shareHolderInfoTable').bootstrapTable('remove', {field: 'shareHolderId', values: values});
-    	}else if ($(e.target).data('type')==="attach"){
-    		attachData.length - 1;
-    		var values = [];
-	    	values.push(row.fileUrl);
-	    	$('#attachInfoTable').bootstrapTable('remove', {field: 'fileUrl', values: values});
-    	}else if ($(e.target).data('type')==="contract"){
-    		contractData.length - 1;
-    		var values = [];
-	    	values.push(row.contractid);
-	    	$('#contractInfoTable').bootstrapTable('remove', {field: 'contractid', values: values});
-    	}
-	},
+        var attachData = $('#attachInfoTable').bootstrapTable('getData');
+        var contractData = $('#contractInfoTable').bootstrapTable('getData');
+        //$('#shareHolderInfoTable').bootstrapTable('removeByUniqueId', index);
+        if($(e.target).data('type')==="shareInfo"){
+            var values = [];
+            values.push(row.shareHolderId);
+            $('#shareHolderInfoTable').bootstrapTable('remove', {field: 'shareHolderId', values: values});
+        }else if ($(e.target).data('type')==="attach"){
+            attachData.length - 1;
+            var values = [];
+            values.push(row.corpConsitutionfileUrl);
+            $('#attachInfoTable').bootstrapTable('remove', {field: 'corpConsitutionfileUrl', values: values});
+        }else if ($(e.target).data('type')==="contract"){
+            contractData.length - 1;
+            var values = [];
+            values.push(row.contractid);
+            $('#contractInfoTable').bootstrapTable('remove', {field: 'contractid', values: values});
+        }
+    },
     'click .yulan': function (e, value, row, index) {
-    	window.open(row.fileUrl);//预览pdf的js方法
+        window.open("../.." + row.corpConsitutionfileUrl);//预览pdf的js方法
     }
 };
 
@@ -403,6 +401,19 @@ function saveFun(type) {//0.基础数据1股东2.合同信息
 			 $("#contractInfoTable").bootstrapTable('append', data);
 			$("#contractInfoModal").modal("hide");
 	 }
+     if(type === 7){
+     	
+
+ 	    var data = CloudUtils.convertStringJson('attatchForm');
+        data = eval("(" + data + ")");
+        console.log(data);
+
+        data.contractid=CloudUtils.getUUID(32, 63);
+//					 先只在页面显示，不录入数据库
+        $("#attachInfoTable").bootstrapTable('append', data);
+        $("#fjModal").modal("hide");
+}
+	 
 }
 
 var fileTypes = [".doc", ".xls", ".xlsx", ".docx", ".pdf", ".png", ".jpg"];
@@ -424,340 +435,74 @@ function checkFileSize(fileSize) {
     return true;
 }
 
-function ajaxFileUpload() {
-    $('#file').fileupload({
-        url: "../../file/uploadFile?pathId=3",
+function ajaxFileUpload(){
+
+    $('#bl').fileupload({
+        url:"../../file/uploadFile?pathId=3",
         dataType: 'json',
         // 上传完成后的执行逻辑
         done: function(e, data) {
+        	 console.log("here"+type);
             data = data.result;
-            if (data.result == 0) {
-                var relData = {};
-                relData.fileName = data.fileName;
-                relData.attachSize = data.fileSize;
-                relData.fileUrl = data.fileUrl;
-                relData.attachType = data.fileType;
-                $("#attachInfoTable").bootstrapTable("append", relData);
+            console.log(data);
+            if(data.result==0){
+                $("#businessLicensePath2").attr("src",data.fileUrl);
+                $("#businessLicensePath").val(data.fileUrl);
+                
             } else {
-            	bootbox.alert(data.resultNote);
+                bootbox.alert(data.resultNote);
             }
 
         }
     });
-    $('#file').bind('fileuploadadd', function(e, data) {
+    $('#bl').bind('fileuploadadd', function (e, data) {
         var obj = data.files[0];
         var name = obj.name;
-        var size = obj.size;
-        var attachData = $('#attachInfoTable').bootstrapTable('getData');
-        if (attachData.length > 9) {
-            bootbox.alert("上传的附件数不能超过10个");
-            return false;
-        }
         var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-        if (!checkFileType(type)) {
-            bootbox.alert("仅支持上传word、excel、pdf、png、jpg类型的文件");
+       
+        if(type ==".jpg" || type == ".png"){
+        }else{
+            bootbox.alert("仅支持上传png、jpg类型的图片");
             return false;
         }
-
-        if (!checkFileSize(size)) {
-            bootbox.alert("上传文件不超过50M");
-            return false;
-        }
-
     });
-    $('#cp1').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#Path1").attr("src",data.fileUrl);
-	            	$("#companyPicturePath1").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#cp1').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type ==".jpg" || type == ".png"){
-		}else{
-			bootbox.alert("仅支持上传png、jpg类型的图片");
-			return false;
-		}
-	});
-	
-	$('#cp2').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#Path2").attr("src",data.fileUrl);
-	            	$("#companyPicturePath2").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#cp2').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type ==".jpg" || type == ".png"){
-		}else{
-			bootbox.alert("仅支持上传png、jpg类型的图片");
-			return false;
-		}
-	});
-	
-	$('#cp3').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#Path3").attr("src",data.fileUrl);
-	            	$("#companyPicturePath3").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#cp3').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type ==".jpg" || type == ".png"){
-		}else{
-			bootbox.alert("仅支持上传png、jpg类型的图片");
-			return false;
-		}
-	});
-	
-	$('#cp4').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#Path4").attr("src",data.fileUrl);
-	            	$("#companyPicturePath4").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#cp4').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type ==".jpg" || type == ".png"){
-		}else{
-			bootbox.alert("仅支持上传png、jpg类型的图片");
-			return false;
-		}
-	});
-	
-	$('#cp5').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#Path5").attr("src",data.fileUrl);
-	            	$("#companyPicturePath5").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#cp5').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type ==".jpg" || type == ".png"){
-		}else{
-			bootbox.alert("仅支持上传png、jpg类型的图片");
-			return false;
-		}
-	});
-	
-	$('#cp6').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#Path6").attr("src",data.fileUrl);
-	            	$("#companyPicturePath6").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#cp6').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type ==".jpg" || type == ".png"){
-		}else{
-			bootbox.alert("仅支持上传png、jpg类型的图片");
-			return false;
-		}
-	});
-	
-	$('#bl').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#businessLicensePath2").attr("src",data.fileUrl);
-	            	$("#businessLicensePath").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#bl').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type ==".jpg" || type == ".png"){
-		}else{
-			bootbox.alert("仅支持上传png、jpg类型的图片");
-			return false;
-		}
-	});
-	
-	$('#pa').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#permissionAccountPath2").attr("src",data.fileUrl);
-	            	$("#permissionAccountPath").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#pa').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type ==".jpg" || type == ".png"){
-		}else{
-			bootbox.alert("仅支持上传png、jpg类型的图片");
-			return false;
-		}
-	});
-	
-	$('#lin1').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#legalIdNumberPath11").attr("src",data.fileUrl);
-	            	$("#legalIdNumberPath1").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#lin1').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type ==".jpg" || type == ".png"){
-		}else{
-			bootbox.alert("仅支持上传png、jpg类型的图片");
-			return false;
-		}
-	});
-	
-	$('#lin2').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#legalIdNumberPath22").attr("src",data.fileUrl);
-	            	$("#legalIdNumberPath2").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#lin2').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type ==".jpg" || type == ".png"){
-		}else{
-			bootbox.alert("仅支持上传png、jpg类型的图片");
-			return false;
-		}
-	});
-	
-	$('#contractfile').fileupload({
-		  url:"../../file/uploadFile?pathId=3",
-	        dataType: 'json',
-	        // 上传完成后的执行逻辑
-	        done: function(e, data) {
-	        	data = data.result;
-	            if(data.result==0){
-	            	$("#fileName").val(data.fileName);
-	            	$("#fileUrl").val(data.fileUrl);
-	            } else {
-	            	 bootbox.alert(data.resultNote);
-	            }
-		            
-		     }
-	});
-	$('#contractfile').bind('fileuploadadd', function (e, data) {
-		var obj = data.files[0];
-		var name = obj.name;
-		var type = name.substr(name.lastIndexOf(".")).toLowerCase();
-		if(type !=".pdf"){
-			bootbox.alert("仅支持上传pdf类型的图片");
-			return false;
-		}
-	});
+
+    $('#corpConsitutionfile').fileupload({
+        url:"../../file/uploadFile?pathId=3",
+        dataType: 'json',
+        // 上传完成后的执行逻辑
+        done: function(e, data) {
+            data = data.result;
+            if(data.result==0){
+                $("#corpConsitutionfileName").val(data.fileName);
+                $("#corpConsitutionfileUrl").val(data.fileUrl);
+            } else {
+                bootbox.alert(data.resultNote);
+            }
+
+        }
+    });
+    $('#corpConsitutionfile').bind('fileuploadadd', function (e, data) {
+        var obj = data.files[0];
+        var name = obj.name;
+        var type = name.substr(name.lastIndexOf(".")).toLowerCase();
+        if(type !=".pdf"){
+            bootbox.alert("仅支持上传pdf类型的图片");
+            return false;
+        }
+    });
 }
+
 
 //再申请
 function reapply() {
-    $('#detailForm').data('bootstrapValidator').validate();
+	console.log("1111");
+  /*  $('#detailForm').data('bootstrapValidator').validate();
     if (!$('#detailForm').data('bootstrapValidator').isValid()) {
         //没有通过校验 
         return false;
-    } else {
+    } else {*/
+    	console.log("222");
         var data = CloudUtils.convertAllJson('detailForm');
         data = eval("(" + data + ")");
         data.regCap = data.regCap == "" ? 0 : data.regCap;
@@ -770,6 +515,7 @@ function reapply() {
         data.shareInfoList = allTableData;
         data.attachInfoList = attachData;
         data.contractInfoList = contractData;
+        console.log(data)
         var options = {
             url: '../../supplierInfo/reApply',
             data: JSON.stringify(data),
@@ -789,21 +535,9 @@ function reapply() {
         };
         CloudUtils.ajax(options);
     }
-}
 
-/************dyk地域开始*****************//*
-function loadAreas() {
-    var options = {
-        url: '../../represent/areas',
-        data: '{}',
-        callBackFun: function(data) {
-            $.each(data.dataList, function(index, units) {
-                $("#area").append("<option value=" + units.areaId + ">" + units.areaName + "</option>");
-            });
-        }
-    };
-    CloudUtils.ajax(options);
-}*/
+
+
 
 function changeArea(area) {
     var data = { areaId: area };
@@ -915,94 +649,6 @@ function formValidator() {
                 validating: 'glyphicon glyphicon-refresh'
             },
             fields: {
-               
-            	/* agencyNum: {
-                    validators: {
-                        notEmpty: {
-                            message: '经销商代码不能为空'
-                        },
-                        stringLength: {
-                            max: 32,
-                            message: '经销商代码不能超过32'
-                        }
-                    }
-                },
-                maxCreditAmount: {
-                    validators: {
-                        numeric: { message: '只能输入数字' },
-                        callback: {
-                            message: '金额在0~1000000000之间(>0)',
-                            callback: function(value, validator) {
-                                return value == "" || (parseFloat(value) > 0 && parseFloat(value) <= 1000000000);
-                            }
-                        },
-                        notEmpty: {
-                            message: '请输入最高授信额度'
-                        }
-                    }
-                },
-                orgnNum: {
-                    validators: {
-                        regexp: {
-                            regexp: /[A-Z0-9]{18}/, 
-                            message: '社会统一信用代码证号格式为18位大写拉丁字母及数字混合'
-                        },
-                        stringLength: {
-                            max: 18,
-                            message: '社会统一信用代码证号长度不能超过18'
-                        },
-                    }
-                },
-                legalPerson: {
-                    validators: {
-                        notEmpty: {
-                            message: '法定代表人不能为空'
-                        },
-                        stringLength: {
-                            max: 32,
-                            message: '法定代表人不能超过32'
-                        },
-
-                    }
-                },
-                maxCreditAmount: {
-                    validators: {
-                        numeric: { message: '只能输入数字' },
-                        callback: {
-                            message: '金额在0~1000000000之间',
-                            callback: function(value, validator) {
-                                return value == "" || (parseFloat(value) >= 0 && parseFloat(value) <= 1000000000);
-                            }
-                        }
-                    }
-                },
-                regCap: {
-                    validators: {
-                        numeric: { message: '只能输入数字' },
-                        callback: {
-                            message: '金额在0~1000000000之间',
-                            callback: function(value, validator) {
-                                return value == "" || (parseFloat(value) >= 0 && parseFloat(value) <= 1000000000);
-                            }
-                        }
-                    }
-                },
-                contactInfo: {
-                    validators: {
-                        notEmpty: {
-                            message: '手机号不能为空'
-                        },
-                        stringLength: {
-                            min: 11,
-                            max: 11,
-                            message: '手机号长度为11'
-                        },
-                        regexp: {
-                            regexp: /^[0-9]*$/,
-                            message: '手机号只能是数字'
-                        }
-                    }
-                },*/
                 officeAddress: {
                     validators: {
                         notEmpty: {
@@ -1093,4 +739,88 @@ function showImg(val){
 	
 	  $("#img").attr('src',imgSrc);
 	  $("#imgPreviewShow").modal("show");
+}
+
+
+//添加附件信息
+function attachInfoTable(corpId){
+    $('#attachInfoTable').bootstrapTable('destroy');
+    $("#attachInfoTable").bootstrapTable({
+        method: "post",
+        //url: "../uploadFile/list",
+        search: false,  //是否启用查询
+        showColumns: false,  //显示下拉框勾选要显示的列
+        showRefresh: false,  //显示刷新按钮
+        sidePagination: "client", //表示服务端请求
+        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+        //设置为limit可以获取limit, offset, search, sort, order
+        queryParamsType : "undefined",
+        queryParams: function queryParams(params) {   //设置查询参数
+            var param = {
+                pageNumber: params.pageNumber,
+                pageSize: params.pageSize
+            };
+            if(corpId){
+                param.corpId = corpId
+            }
+            return JSON.stringify(param);
+        },
+        responseHandler:function responseHandler(res) {
+            if (res.result==0) {
+                return {
+                    "rows": res.dataList,
+                    "total": res.records
+                };
+
+            } else {
+                bootbox.alert(res.resultNote);
+                return {
+                    "rows": [],
+                    "total": 0
+                };
+            }
+        },
+        columns: [{
+            field: 'corpConsitutionfileUrl',
+            title: '附件地址',
+            align: 'center',
+            valign: 'middle',
+            visible: false
+        },{
+            field: 'uploadType',
+            title: '附件格式',
+            align: 'center',
+            valign: 'middle',
+            visible: false
+        },{
+            field: 'corpConsitutionfileName',
+            title: '附件名称',
+            align: 'center',
+            valign: 'middle',
+
+        }, {
+            field: 'attachType',
+            title: '附件格式',
+            align: 'center',
+            valign: 'middle',
+            visible: false
+        }, {
+            field: 'attachSize',
+            title: '附件大小(KB)',
+            align: 'center',
+            valign: 'middle',
+            visible: false
+        }, {
+            field: 'operation',
+            title: '操作',
+            align: 'center',
+            valign: 'middle',
+            formatter:function(value,row,index){
+                var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="attach" href="javascript:void(0)"></a>';
+                var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#d864fd;padding:0px 5px;" title="预览" data-type="attach" href="javascript:void(0)"></a>';
+                return r+"  "+m;
+            },
+            events: 'operateEvents'
+        }]
+    });
 }
