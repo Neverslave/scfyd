@@ -228,8 +228,7 @@ var custManage = new Object({
 		            }
 		        ]
 		    });
-		}
-	},
+		},
 	 quaInfoTable(): function(data){
 		 $('#quaInfoTable').bootstrapTable('destroy');
 		    $("#quaInfoTable").bootstrapTable({
@@ -307,9 +306,7 @@ var custManage = new Object({
 		            }
 		        ]
 		    });
-		}
-		 
-	 },
+		},
 	 
 	 acceptInfoTable(): function(data){
 		 $('#acceptInfoTable').bootstrapTable('destroy');
@@ -388,9 +385,7 @@ var custManage = new Object({
 		            }
 		        ]
 		    });
-		}
-		 
-	 },
+		},
 	 
 	 noObjectionInfoTable():function(data){
 		   $('#noObjectionInfoTable').bootstrapTable('destroy');
@@ -470,7 +465,6 @@ var custManage = new Object({
 		        ]
 		    });
 		}
-	 }
 
 
 

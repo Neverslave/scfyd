@@ -16,7 +16,7 @@ public class SupplierProjectReqBean extends PageReqBean {
     private String projectInvoice;
     private String projectQua;
     private String projectAccept;
-    private List<?> contractInfoList;
+   // private List<?> contractInfoList;
     private Date systemTime;
 	private Byte status;
 	private Date createTime;
@@ -42,6 +42,42 @@ public class SupplierProjectReqBean extends PageReqBean {
 	private String invoicefileName;
 	private String contractName;
 	private String contractNum;
+	private List<?> contractInfoList;
+	private List<?> invoiceInfoList;
+	private List<?> quaInfoList;
+	private List<?> acceptInfoList;
+	private List<?> noObjectionInfoList;
+
+	public List<?> getContractInfoList() {
+		return contractInfoList;
+	}
+	public void setContractInfoList(List<?> contractInfoList) {
+		this.contractInfoList = contractInfoList;
+	}
+	public List<?> getInvoiceInfoList() {
+		return invoiceInfoList;
+	}
+	public void setInvoiceInfoList(List<?> invoiceInfoList) {
+		this.invoiceInfoList = invoiceInfoList;
+	}
+	public List<?> getQuaInfoList() {
+		return quaInfoList;
+	}
+	public void setQuaInfoList(List<?> quaInfoList) {
+		this.quaInfoList = quaInfoList;
+	}
+	public List<?> getAcceptInfoList() {
+		return acceptInfoList;
+	}
+	public void setAcceptInfoList(List<?> acceptInfoList) {
+		this.acceptInfoList = acceptInfoList;
+	}
+	public List<?> getNoObjectionInfoList() {
+		return noObjectionInfoList;
+	}
+	public void setNoObjectionInfoList(List<?> noObjectionInfoList) {
+		this.noObjectionInfoList = noObjectionInfoList;
+	}
 	public String getLegalID1() {
 		return legalID1;
 	}
@@ -253,12 +289,8 @@ public class SupplierProjectReqBean extends PageReqBean {
 	public void setIsPage(Integer isPage) {
 		this.isPage = isPage;
 	}
-	public List<?> getContractInfoList() {
-		return contractInfoList;
-	}
-	public void setContractInfoList(List<?> contractInfoList) {
-		this.contractInfoList = contractInfoList;
-	}
+
+
 	public String getCorpName() {
 		return corpName;
 	}

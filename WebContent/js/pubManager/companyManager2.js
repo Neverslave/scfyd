@@ -233,7 +233,7 @@ function attachInfoTable(corpId){
         search: false,  //是否启用查询
         showColumns: false,  //显示下拉框勾选要显示的列
         showRefresh: false,  //显示刷新按钮
-        sidePagination: "client", //表示服务端请求
+        sidePagination: "client", //表示前端分页请求
         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
         //设置为limit可以获取limit, offset, search, sort, order
         queryParamsType : "undefined",

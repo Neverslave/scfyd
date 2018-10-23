@@ -1,6 +1,7 @@
 package com.ut.scf.reqbean.supplier;
 
 import java.util.Date;
+import java.util.List;
 
 import com.ut.scf.reqbean.BaseReqBean;
 
@@ -33,8 +34,15 @@ public class SupplierManagerReqBean extends BaseReqBean {
 	private String  userId;
 	private String  businessScope;
 	private String corpConsitutionfileUrl;
+	private List<?> attachInfoList;
 	
 	
+	public  List<?> getAttachInfoList() {
+		return attachInfoList;
+	}
+	public void setAttachInfoList( List<?> attachInfoList) {
+		this.attachInfoList = attachInfoList;
+	}
 	public String getCorpConsitutionfileUrl() {
 		return corpConsitutionfileUrl;
 	}

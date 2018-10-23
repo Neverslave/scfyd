@@ -1,6 +1,7 @@
 package com.ut.scf.reqbean.supplier;
 
 import java.util.Date;
+import java.util.List;
 
 public class SupplierAgreeInfoReqBean {
 	
@@ -29,7 +30,14 @@ public class SupplierAgreeInfoReqBean {
 	private Date createTime;
 	private String taskId;
 	private String corpConsitutionfileUrl;
+	private List<?> attachInfoList;
 
+	public List<?> getAttachInfoList() {
+		return attachInfoList;
+	}
+	public void setAttachInfoList(List<?> attachInfoList) {
+		this.attachInfoList = attachInfoList;
+	}
 	public String getCorpConsitutionfileUrl() {
 		return corpConsitutionfileUrl;
 	}

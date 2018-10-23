@@ -22,7 +22,9 @@ function setForm(){
 				var jsonData =  eval("(" + data.str + ")");
 				console.log(jsonData);
 				CloudUtils.setForm(jsonData,"detailForm");
-				//$("#attachInfoTable").bootstrapTable('append', data.);
+				var data1=jsonData.attachInfoList;
+				console.log(data1);
+				custManage.attachInfoTable(jsonData.attachInfoList);
 				if(jsonData.companyPicturePath1!=null && jsonData.companyPicturePath1!=''){
 					$("#Path1").attr("src",jsonData.companyPicturePath1);
 					$("#cp1a").attr("href",jsonData.companyPicturePath1);
@@ -74,7 +76,7 @@ function setForm(){
 					 $("#lin2").hide();
 				}
                 $(".required").hide();
-                custManage.contractInfoTable(jsonData.contractInfoList);
+                //custManage.contractInfoTable(jsonData.contractInfoList);
        /*         custManage.initShareHolderTable(jsonData.shareInfoList);
                 custManage.attachInfoTable(jsonData.attachInfoList);
               */
@@ -101,7 +103,7 @@ var custManage = new Object({
 		    search: false,  //是否启用查询  
 		    showColumns: false,  //显示下拉框勾选要显示的列  
 		    showRefresh: false,  //显示刷新按钮  
-		    sidePagination: "server", //表示服务端请求  
+		    sidePagination: "client", //表示服务端请求  
 		    //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
 		    //设置为limit可以获取limit, offset, search, sort, order  
 		    queryParamsType : "undefined", 
@@ -159,11 +161,12 @@ var custManage = new Object({
     $('#attachInfoTable').bootstrapTable('destroy');
     $("#attachInfoTable").bootstrapTable({
         method: "post",
-        //url: "../uploadFile/list",
+       // url:"data",
         search: false,  //是否启用查询
         showColumns: false,  //显示下拉框勾选要显示的列
         showRefresh: false,  //显示刷新按钮
         sidePagination: "client", //表示服务端请求
+        data : data,
         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
         //设置为limit可以获取limit, offset, search, sort, order
         queryParamsType : "undefined",
@@ -187,7 +190,7 @@ var custManage = new Object({
             title: '附件地址',
             align: 'center',
             valign: 'middle',
-            visible: false
+            //visible: false
         },{
             field: 'uploadType',
             title: '附件格式',
@@ -220,7 +223,7 @@ var custManage = new Object({
             formatter:function(value,row,index){
                 var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="attach" href="javascript:void(0)"></a>';
                 var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#d864fd;padding:0px 5px;" title="预览" data-type="attach" href="javascript:void(0)"></a>';
-                return r+"  "+m;
+                return m;
             },
             events: 'operateEvents'
         }]
@@ -309,11 +312,46 @@ contractInfoTable: function(data) {
 }
 　　});
 
+var shareIndex =0;
+var shareDetailRow = null;
 window.operateEvents = {
-	    'click .yulan': function (e, value, row, index) {
-	        window.open("../.." + row.corpConsitutionfileUrl);//预览pdf的js方法
-	    }
- };
+    'click .detail': function (e, value, row, index) {
+        detailFun(row);
+        initShareHolderInfoTable(row.corpId);
+        attachInfoTable(row.corpId);
+    },
+    'click .modify': function (e, value, row, index) {
+        if($(e.target).data('type')==="shareInfo"){
+            //修改
+            modShareFun(row);
+            shareDetailRow = row;//吧数据存进全局变量里
+            shareIndex = index;
+        }
+    },
+    'click .remove':function (e, value, row, index) {
+        var attachData = $('#attachInfoTable').bootstrapTable('getData');
+        var contractData = $('#contractInfoTable').bootstrapTable('getData');
+        //$('#shareHolderInfoTable').bootstrapTable('removeByUniqueId', index);
+        if($(e.target).data('type')==="shareInfo"){
+            var values = [];
+            values.push(row.shareHolderId);
+            $('#shareHolderInfoTable').bootstrapTable('remove', {field: 'shareHolderId', values: values});
+        }else if ($(e.target).data('type')==="attach"){
+            attachData.length - 1;
+            var values = [];
+            values.push(row.corpConsitutionfileUrl);
+            $('#attachInfoTable').bootstrapTable('remove', {field: 'corpConsitutionfileUrl', values: values});
+        }else if ($(e.target).data('type')==="contract"){
+            contractData.length - 1;
+            var values = [];
+            values.push(row.contractid);
+            $('#contractInfoTable').bootstrapTable('remove', {field: 'contractid', values: values});
+        }
+    },
+    'click .yulan': function (e, value, row, index) {
+        window.open("../../.." + row.corpConsitutionfileUrl);//预览pdf的js方法
+    }
+};
 function detailFun() {
     $('#detailForm input').attr('readonly', true);
     $('#shareInfoForm input').attr('readonly', true);

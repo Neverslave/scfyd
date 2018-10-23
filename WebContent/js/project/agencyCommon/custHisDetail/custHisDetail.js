@@ -14,9 +14,9 @@ function getVariableByTaskId() {
         callBackFun: function(data) {
             if (data.result == 0) {
                 var jsonData = eval("(" + data.str + ")");
-                changeArea(jsonData.area);
+               // changeArea(jsonData.area);
                 CloudUtils.setForm(jsonData, "detailHisForm");
-               
+                $("#attachInfoTable").bootstrapTable('append', data.attachInfoList);
                 if(jsonData.companyPicturePath1!=null && jsonData.companyPicturePath1!=''){
 					$("#detailHisForm #Path1").attr("src",jsonData.companyPicturePath1);
 					$("#detailHisForm #cp1").attr("href",jsonData.companyPicturePath1);
@@ -60,7 +60,7 @@ function getVariableByTaskId() {
                 $(".required").hide();
                 custManage.initShareHolderTable(jsonData.shareInfoList);
                 custManage.attachInfoTable(jsonData.attachInfoList);
-                custManage.contractInfoTable(jsonData.contractInfoList);
+                //custManage.contractInfoTable(jsonData.contractInfoList);
             } else {
                 bootbox.alert(data.resultNote);
                 return false;
@@ -134,22 +134,20 @@ var custManage = new Object({　　　　
             }]
         });　　　　
     },
-    　　　　attachInfoTable: function(data) {
-    	console.log(data);
-        $('#detailHisForm #attachInfoTableHis').bootstrapTable('destroy');
-        $("#detailHisForm #attachInfoTableHis").bootstrapTable({
+    　　　　attachInfoTable: function (data){
+        $('#attachInfoTable').bootstrapTable('destroy');
+        $("#attachInfoTable").bootstrapTable({
             method: "post",
-            data: data,
-            striped: false, //表格显示条纹  
-            search: false, //是否启用查询  
-            showColumns: false, //显示下拉框勾选要显示的列  
-            showRefresh: false, //显示刷新按钮  
-            sidePagination: "server", //表示服务端请求  
-            //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
-            //设置为limit可以获取limit, offset, search, sort, order  
-            queryParamsType: "undefined",
-            responseHandler: function responseHandler(res) {
-                if (res.result == 0) {
+            //url: "../uploadFile/list",
+            search: false,  //是否启用查询
+            showColumns: false,  //显示下拉框勾选要显示的列
+            showRefresh: false,  //显示刷新按钮
+            sidePagination: "client", //表示服务端请求
+            //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+            //设置为limit可以获取limit, offset, search, sort, order
+            queryParamsType : "undefined",
+            responseHandler:function responseHandler(res) {
+                if (res.result==0) {
                     return {
                         "rows": res.dataList,
                         "total": res.records
@@ -164,45 +162,49 @@ var custManage = new Object({　　　　
                 }
             },
             columns: [{
-                field: 'fileUrl',
+                field: 'corpConsitutionfileUrl',
                 title: '附件地址',
                 align: 'center',
                 valign: 'middle',
                 visible: false
-            }, {
-                field: 'fileName',
+            },{
+                field: 'uploadType',
+                title: '附件格式',
+                align: 'center',
+                valign: 'middle',
+                visible: false
+            },{
+                field: 'corpConsitutionfileName',
                 title: '附件名称',
                 align: 'center',
                 valign: 'middle',
-                formatter: function(value, row, index) {
-                    var s = '<a target="view_window" href="/../..' + row.fileUrl + '" download="' + value + '">' + value + '</a>';
-                    return s;
 
-                }
             }, {
                 field: 'attachType',
                 title: '附件格式',
                 align: 'center',
-                valign: 'middle'
+                valign: 'middle',
+                visible: false
             }, {
                 field: 'attachSize',
                 title: '附件大小(KB)',
                 align: 'center',
-                valign: 'middle'
-            }, 
-            {
-	 	        field: 'operation',
-	 	        title: '操作',
-	 	        align: 'center',
-	            valign: 'middle',
-	 	        formatter:function(value,row,index){
-	 	        	var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#278bdd;padding:0px 5px;" title="预览" data-type="contract" href="javascript:void(0)"></a>';
-	 	            return  m;
-	 	        },
-	 	        events: 'operateEvents'
-	 	    }]
-        });　　　　
-    }　,
+                valign: 'middle',
+                visible: false
+            }, {
+                field: 'operation',
+                title: '操作',
+                align: 'center',
+                valign: 'middle',
+                formatter:function(value,row,index){
+                    var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="attach" href="javascript:void(0)"></a>';
+                    var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#d864fd;padding:0px 5px;" title="预览" data-type="attach" href="javascript:void(0)"></a>';
+                    return r+"  "+m;
+                },
+                events: 'operateEvents'
+            }]
+        });
+    },
     contractInfoTable: function(data) {
         $('#detailHisForm #contractInfoTable').bootstrapTable('destroy');
         $("#detailHisForm #contractInfoTable").bootstrapTable({
@@ -301,22 +303,3 @@ window.operateEvents = {
     }
  };
 
-
-function changeArea(areaVal) {
-	$("#detailHisForm #represent").empty();
-	if (areaVal == '0') {
-		$("#detailHisForm #represent").append("<option value='0'>南京</option>")
-						.append("<option value='1'>上海</option>");
-	} else if (areaVal == '1') {
-		$("#detailHisForm #represent").append("<option value='2'>西安</option>")
-						.append("<option value='3'>成都</option>");
-	} else if (areaVal == '2') {
-		$("#detailHisForm #represent").append("<option value='4'>广州</option>")
-						.append("<option value='5'>武汉</option>")
-						.append("<option value='6'>郑州</option>");
-	} else if (areaVal == '3') {
-		$("#detailHisForm #represent").append("<option value='7'>北京</option>")
-						.append("<option value='8'>沈阳</option>")
-						.append("<option value='9'>济南</option>");
-	}
-}

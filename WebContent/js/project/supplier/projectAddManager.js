@@ -41,14 +41,14 @@ $(function() {
 	    'click .remove':function (e, value, row, index) {
 	    	var attachData = $('#attachInfoTable').bootstrapTable('getData');
 	    	var contractData = $('#contractInfoTable').bootstrapTable('getData');
-	    	var invoiceData =$('invoceInfoTable').bootstrapTable('getData');
-	    	var quaData =$('quaInfoTable').bootstrapTable('getData');
-	    	var acceptData =$('acceptInfoTable').bootstrapTable('getData');
-            var noObjectionData =$('noObjectionInfoTable').bootstrapTable('getData');
+	    	var invoiceData =$('invoiceInfoTable').bootstrapTable('getData');
+	    	var quaData =$('#quaInfoTable').bootstrapTable('getData');
+	    	var acceptData =$('#acceptInfoTable').bootstrapTable('getData');
+            var noObjectionData =$('#noObjectionInfoTable').bootstrapTable('getData');
 
 	    	//$('#shareHolderInfoTable').bootstrapTable('removeByUniqueId', index);
 	    	if($(e.target).data('type')==="shareInfo"){
-	    		var values = [];
+	    		var values = [];sa
 		    	values.push(row.shareHolderId);
 		    	$('#shareHolderInfoTable').bootstrapTable('remove', {field: 'shareHolderId', values: values});
 	    	}else if ($(e.target).data('type')==="attach"){
@@ -255,17 +255,17 @@ $(function() {
 	 var data = CloudUtils.convertStringJson('projectForm');
 	 var jsonData = eval("(" + data + ")");
      var contractData = $('#contractInfoTable').bootstrapTable('getData');
- 	var invoiceData =$('invoceInfoTable').bootstrapTable('getData');
-	var quaData =$('quaInfoTable').bootstrapTable('getData');
-	var acceptData =$('acceptInfoTable').bootstrapTable('getData');
-     var noObjectionData =$('noObjectionInfoTable').bootstrapTable('getData');
+ 	var invoiceData =$('#invoiceInfoTable').bootstrapTable('getData');
+	var quaData =$('#quaInfoTable').bootstrapTable('getData');
+	var acceptData =$('#acceptInfoTable').bootstrapTable('getData');
+     var noObjectionData =$('#noObjectionInfoTable').bootstrapTable('getData');
      jsonData.contractInfoList = contractData;
+
      jsonData.invoiceInfoList =invoiceData;
      jsonData.quaInfoList =quaData;
      jsonData.acceptInfoList =acceptData;
      jsonData.noObjectionInfoList =noObjectionData;
-     jsonData.corpId=store.get('corpId');
-     console.log(data)
+     console.log(JSON.stringify(jsonData))
 	 var options = {
 				url : '../../supplierProject/startProcess',
 				data : JSON.stringify(jsonData),
@@ -752,8 +752,8 @@ function ajaxPICUpload(){
 
         }
     });
-    $('#auth1').fileupload({
-        url:"../file../uploadFile?pathId=3",
+    $('#auth2').fileupload({
+        url:"../../file/uploadFile?pathId=3",
         dataType: 'json',
         // 上传完成后的执行逻辑
         done: function(e, data) {
