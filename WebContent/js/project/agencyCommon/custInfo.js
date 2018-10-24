@@ -22,8 +22,6 @@ function setForm(){
 				var jsonData =  eval("(" + data.str + ")");
 				console.log(jsonData);
 				CloudUtils.setForm(jsonData,"detailForm");
-				var data1=jsonData.attachInfoList;
-				console.log(data1);
 				custManage.attachInfoTable(jsonData.attachInfoList);
 				if(jsonData.companyPicturePath1!=null && jsonData.companyPicturePath1!=''){
 					$("#Path1").attr("src",jsonData.companyPicturePath1);

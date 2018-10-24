@@ -145,6 +145,7 @@ var custManage = new Object({　　　　
             sidePagination: "client", //表示服务端请求
             //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
             //设置为limit可以获取limit, offset, search, sort, order
+            data : data,
             queryParamsType : "undefined",
             responseHandler:function responseHandler(res) {
                 if (res.result==0) {
@@ -299,7 +300,7 @@ function numFormat() {
 }
 window.operateEvents = {
     'click .yulan': function (e, value, row, index) {
-    	window.open("/../.." + row.fileUrl);//预览pdf的js方法
+    	window.open("/../.." + row.corpConsitutionfileUrl);//预览pdf的js方法
     }
  };
 

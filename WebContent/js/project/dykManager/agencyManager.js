@@ -39,8 +39,8 @@ function initTable() {
          showColumns: false,  //显示下拉框勾选要显示的列  
          showRefresh: false,  //显示刷新按钮  
          sidePagination: "server", //表示服务端请求  
-         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
-         //设置为limit可以获取limit, offset, search, sort, order  
+         showExport: true ,                     //是否显示导出
+         exportDataType: "basic" ,              //basic', 'all', 'selected'.
          queryParamsType : "undefined",   
          queryParams: function queryParams(params) {   //设置查询参数  
            $("#sysType").val(4);
@@ -99,83 +99,102 @@ function initTable() {
  	        title: '供应商代码',
  	        align: 'center',
  	        width: 80,
-            valign: 'middle'},
- 	   // }, {
- 	   //      field: 'dzId',
- 	   //      title: '大宗ID',
- 	   //      align: 'center',
-        //     valign: 'middle',
-        //     width: 80,
-        //     formatter:function(value,row,index){
-        //    	 if(value==null||value==""||value==0)
-        //    		 {
-        //    		 return "未申请";
-        //    		 }
-		// 		 return value;
-	    //     }
- 	   // },  {
- 	   //      field: 'lsId',
- 	   //      title: '零售ID',
- 	   //      align: 'center',
-        //     valign: 'middle',
-        //     width: 80,
-        //     formatter:function(value,row,index){
-        //    	 if(value==null||value==""||value==0)
-        //    		 {
-        //    		 return "未申请";
-        //    		 }
-		// 		 return value;
-	    //     }
- 	   // },
+            valign: 'middle'
+            	},
 			 {
 	        field: 'corpType',
 	        title: '企业类型',
 	        align: 'center',
            valign: 'middle',
            visible: false
- 	    },/*{
- 	        field: 'maxCreditAmount',
- 	        title: '大宗最高授信额度',
- 	        align: 'center',
-            valign: 'middle',
-            formatter: function(value,row,index){
- 	            return $.number(value, 2);
- 	        }
- 	    },{
- 	        field: 'maxLscreditAmount',
- 	        title: '零售最高授信额度',
- 	        align: 'center',
-            valign: 'middle',
-            formatter: function(value,row,index){
- 	            return $.number(value, 2);
- 	        }
- 	    },*//*{
- 	        field: 'useAbleCreditAmt',
- 	        title: '大宗可用授信额度',
- 	        align: 'center',
-            valign: 'middle',
-         	width: 130,
-            formatter: function(value,row,index){
- 	            return $.number(value, 2);
- 	        }
- 	    },{
- 	        field: 'useAbleLscreditAmt',
- 	        title: '零售可用授信额度',
- 	        align: 'center',
-            valign: 'middle',
-        	width: 130,
-            formatter: function(value,row,index){
- 	            return $.number(value, 2);
- 	        }*/
+ 	    },
+ 	    
+ 	    {
+ 	       field: 'locationProvince',
+	        title: '所在省份',
+	        align: 'center',
+           valign: 'middle',
+        	visible:false
+ 	    	
+ 	    },
+ 	    {
+ 	       field: 'locationCity',
+	        title: '所在市',
+	        align: 'center',
+	        	width: 200 ,
+	        valign: 'middle',
+        	   visible:false
+ 	    },
+ 	    {
+ 	       field: 'locationArea',
+	        title: '所在地',
+	        align: 'center',
+	        width: 200,
+          valign: 'middle',
+       	   visible:false
+ 	    },
  	     {
  	        field: 'locationAddress',
- 	        title: '公司地址',
+ 	        title: '详细地址',
  	        align: 'center',
  	        width: 200,
             valign: 'middle'
- 	    }, {
- 	        field: 'cellphone',
- 	        title: '联系方式',
+ 	    }, 
+ 	   {
+  	       field: 'registerProvince',
+ 	        title: '注册省份',
+ 	        align: 'center',
+ 	        width: 200,
+           valign: 'middle',
+        	   visible:false
+  	    },
+  	    	{
+  	 	       field: 'registerCity',
+  		        title: '注册市',
+  		        align: 'center',
+  		        width: 200,
+  	          valign: 'middle',
+  	       	   visible:false
+  	 	    },
+  	 	    
+  	 	    	
+  	 	    	{
+  	 	 	       field: 'registerArea',
+  	 		        title: '注册地',
+  	 		        align: 'center',
+  	 		        width: 200,
+  	 	          valign: 'middle',
+  	 	       	   visible:false
+  	 	 	    },
+  	 	 	{
+  	 	 	       field: 'registerAddress',
+  	 		        title: '注册详细地址',
+  	 		        align: 'center',
+  	 		        width: 200,
+  	 	          valign: 'middle',
+  	 	       	   visible:false
+  	 	 	    },
+  	 	 	    
+  	 	 	    {
+  	 	 	       field: 'email',
+  	 	        title: '邮箱',
+  	 	        align: 'center',
+  	 	        width: 200,
+  	           valign: 'middle',
+  	        	   visible:false
+  	  	    },
+  	  	{
+  	 	       field: 'uniformCreditCode',
+  		        title: '营业执照',
+  		        align: 'center',
+  		        width: 200,
+  	          valign: 'middle',
+  	       	   visible:false
+  	 	    },
+  	 
+  	    {
+ 	        field: 'legalPerson',
+ 	        title: '法人',
  	        align: 'center',
  	        width: 120,
             valign: 'middle'
@@ -185,62 +204,26 @@ function initTable() {
  	        align: 'center',
  	        width: 140,
             valign: 'middle'
- 	    }, /*{
- 	        field: 'area',
- 	        title: '所属区域',
+ 	    },
+ 	    {
+   	       field: 'businessScope',
+	        title: '经营范围',
+	        align: 'center',
+	        width: 200,
+          valign: 'middle',
+       	   visible:false
+ 	    },
+ 	    
+ 	    
+ 	   {
+  	       field: 'createTime',
+ 	        title: '创建时间',
  	        align: 'center',
-            valign: 'middle'
- 	    }, {
- 	        field: 'represent',
- 	        title: '所属商代处',
- 	        align: 'center',
-            valign: 'middle'
- 	    }, {
- 	        field: 'firstTwoYearsPickupNum',
- 	        title: '前2年度提车数量',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'firstTwoYearsRetailNum',
- 	        title: '前2年度零售数量',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'firstTwoYearsSaleRank',
- 	        title: '前2年度销售排名',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'thisYearPlanPickupNum',
- 	        title: '本年度计划提车数量',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 0);
- 	        }
- 	    }, {
- 	        field: 'thisYearPlanSales',
- 	        title: '本年度计划销售额',
- 	        align: 'center',
-            valign: 'middle',
-            visible: false,
-            formatter: function(value,row,index){
- 	            return $.number(value, 2);
- 	        }
- 	    },*/ {
+ 	        width: 200,
+           valign: 'middle',
+        	   visible:false
+  	    },
+ 	    {
  	        field: 'note',
  	        title: '备注',
  	        align: 'center',

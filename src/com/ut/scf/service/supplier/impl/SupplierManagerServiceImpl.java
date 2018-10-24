@@ -266,6 +266,8 @@ public class SupplierManagerServiceImpl implements ISupplierManagerService {
 //		添加进业务表中
 		SupplierManagerReqBean reqBean  =new SupplierManagerReqBean();
 		BeanUtil.BeanToBean(reqBean, supplierManagerReqBean);
+		reqBean.setCorpConsitutionDoc(supplierManagerReqBean.getCorpConsitutionfileUrl());
+		reqBean.setAttachInfoList(supplierManagerReqBean.getAttachInfoList());
 		BaseRespBean addSupplierRespBean = updateSupplier(reqBean);
 		String procInstId = processEngine.getHistoryService().createHistoricTaskInstanceQuery().
 				taskId(taskId).singleResult().getProcessInstanceId();

@@ -28,43 +28,43 @@ $(function() {
  var shareIndex =0;
  var shareDetailRow = null;
  window.operateEvents = {
-		'click .detail': function (e, value, row, index) {
-			 detailFun(row);
-			 initShareHolderInfoTable(row.corpId);
-			 attachInfoTable(row.corpId);
-	    },
-	    'click .modify': function (e, value, row, index) {
-	    	if($(e.target).data('type')==="shareInfo"){
-	    		//修改
-	    		modShareFun(row);
-	    		shareDetailRow = row;//吧数据存进全局变量里
-	    		shareIndex = index;
-	    	}
-	    },
-	    'click .remove':function (e, value, row, index) {
-	    	var attachData = $('#attachInfoTable').bootstrapTable('getData');
-	    	var contractData = $('#contractInfoTable').bootstrapTable('getData');
-	    	//$('#shareHolderInfoTable').bootstrapTable('removeByUniqueId', index);
-	    	if($(e.target).data('type')==="shareInfo"){
-	    		var values = [];
-		    	values.push(row.shareHolderId);
-		    	$('#shareHolderInfoTable').bootstrapTable('remove', {field: 'shareHolderId', values: values});
-	    	}else if ($(e.target).data('type')==="attach"){
-	    		attachData.length - 1;
-	    		var values = [];
-		    	values.push(row.fileUrl);
-		    	$('#attachInfoTable').bootstrapTable('remove', {field: 'fileUrl', values: values});
-	    	}else if ($(e.target).data('type')==="contract"){
-	    		contractData.length - 1;
-	    		var values = [];
-		    	values.push(row.contractid);
-		    	$('#contractInfoTable').bootstrapTable('remove', {field: 'contractid', values: values});
-	    	}
-		},
-	    'click .yulan': function (e, value, row, index) {
-	    	window.open("../.." + row.fileUrl);//预览pdf的js方法
-	    }
- };
+		    'click .detail': function (e, value, row, index) {
+		        detailFun(row);
+		        initShareHolderInfoTable(row.corpId);
+		        attachInfoTable(row.corpId);
+		    },
+		    'click .modify': function (e, value, row, index) {
+		        if($(e.target).data('type')==="shareInfo"){
+		            //修改
+		            modShareFun(row);
+		            shareDetailRow = row;//吧数据存进全局变量里
+		            shareIndex = index;
+		        }
+		    },
+		    'click .remove':function (e, value, row, index) {
+		        var attachData = $('#attachInfoTable').bootstrapTable('getData');
+		        var contractData = $('#contractInfoTable').bootstrapTable('getData');
+		        //$('#shareHolderInfoTable').bootstrapTable('removeByUniqueId', index);
+		        if($(e.target).data('type')==="shareInfo"){
+		            var values = [];
+		            values.push(row.shareHolderId);
+		            $('#shareHolderInfoTable').bootstrapTable('remove', {field: 'shareHolderId', values: values});
+		        }else if ($(e.target).data('type')==="attach"){
+		            attachData.length - 1;
+		            var values = [];
+		            values.push(row.corpConsitutionfileUrl);
+		            $('#attachInfoTable').bootstrapTable('remove', {field: 'corpConsitutionfileUrl', values: values});
+		        }else if ($(e.target).data('type')==="contract"){
+		            contractData.length - 1;
+		            var values = [];
+		            values.push(row.contractid);
+		            $('#contractInfoTable').bootstrapTable('remove', {field: 'contractid', values: values});
+		        }
+		    },
+		    'click .yulan': function (e, value, row, index) {
+		        window.open("../.." + row.corpConsitutionfileUrl);//预览pdf的js方法
+		    }
+		};
  
  function subFileNum() {
     var num = Number($("#fileNum").val());
@@ -88,8 +88,11 @@ $(function() {
 				data: JSON.stringify(data),
 				callBackFun : function(data) {
 					if (data.result == 0) {
-						changeArea(data.dataList[0].area);
-						CloudUtils.setForm(data.dataList[0],'detailForm');
+						var jsonData =  eval("(" + data.str + ")");
+						console.log(jsonData);
+						 CloudUtils.setForm(data.dataList[0],'detailForm');
+						//CloudUtils.setForm(jsonData,"detailForm");
+						//initcontractInfoTable(jsonData.attachInfoList);
 						if(data.dataList[0].companyPicturePath1!=null && data.dataList[0].companyPicturePath1!=''){
 							$("#Path1").attr("src",data.dataList[0].companyPicturePath1);
 						}
@@ -168,68 +171,83 @@ $(function() {
 			 $("#shareHolderInfoTable").bootstrapTable('append', data);
 			$("#shareInfoModal").modal("hide");
 	 }
-	 if(type ===2 ){//合同
-//		 $('#contractForm').data('bootstrapValidator').validate();
-//		 if(!$('#contractForm').data('bootstrapValidator').isValid()){  
-//			    //没有通过校验 
-//			 return false;
-//		 }
-			  var data = CloudUtils.convertStringJson('contractForm');
-			  data = eval("(" + data + ")");
-			
-			  data.contractid=CloudUtils.getUUID(32, 63);
-			  data.contractName = data.contractName ==""?0:data.contractName;
-			  data.contractNum = data.contractNum ==""?0:data.contractNum;
-			  data.contractType = data.contractType ==""?0:data.contractType;
-			  data.endDate = data.endDate ==""?0:data.endDate;
-			  data.uploadFileName = data.uploadFileName ==""?0:data.uploadFileName;
+if(type === 7){
+	    	
+
+ 	    var data = CloudUtils.convertStringJson('attatchForm');
+        data = eval("(" + data + ")");
+        console.log(data);
+
+        data.contractid=CloudUtils.getUUID(32, 63);
 //					 先只在页面显示，不录入数据库
-			 $("#contractInfoTable").bootstrapTable('append', data);
-			$("#contractInfoModal").modal("hide");
-	 }
+        $("#attachInfoTable").bootstrapTable('append', data);
+        $("#fjModal").modal("hide");
+}
  }
  
  function subCorpInfo(){
 
-	
-	 //			保存到数据库
-	 var data = CloudUtils.convertStringJson('detailForm');
-	 console.log(data);
-	 var jsonData = eval("(" + data + ")");
-     jsonData.regCap = jsonData.regCap == "" ? 0 : jsonData.regCap;
-     
-     var allTableData = $('#shareHolderInfoTable').bootstrapTable('getData');
+	  //			保存到数据库
+	    var data = CloudUtils.convertStringJson('detailForm');
+	    console.log(data);
+	    var jsonData = eval("(" + data + ")");
+	    jsonData.regCap = jsonData.regCap == "" ? 0 : jsonData.regCap;
+	    jsonData.maxLscreditAmount = jsonData.maxLscreditAmount == "" ? 0 : jsonData.maxLscreditAmount;
+	    jsonData.maxCreditAmount = jsonData.maxCreditAmount == "" ? 0 : jsonData.maxCreditAmount;
+	    var allTableData = $('#shareHolderInfoTable').bootstrapTable('getData');
 
-     var attachData = $('#attachInfoTable').bootstrapTable('getData');
-     var contractData = $('#contractInfoTable').bootstrapTable('getData');
-     jsonData.shareInfoList = allTableData;
-     jsonData.attachInfoList = attachData;
-     jsonData.contractInfoList = contractData;
-//     jsonData = editUniqueCust(jsonData);
+	    var attachData = $('#attachInfoTable').bootstrapTable('getData');
+	    var contractData = $('#contractInfoTable').bootstrapTable('getData');
+	    jsonData.shareInfoList = allTableData;
+	    jsonData.attachInfoList = attachData;
+	    jsonData.contractInfoList = contractData;
+//	     jsonData = editUniqueCust(jsonData);
+	    /*		     if(store.get('roleId') == 'ROLE000016')
+	                 {
+	                     var options = {
+	                             url : '../custInfo/mod',
+	                             data : JSON.stringify(jsonData),
+	                             callBackFun : function(data) {
 
-	 var options = {
-				url : '../supplierInfo/mod',
-				data : JSON.stringify(jsonData),
-				callBackFun : function(data) {
-				
-				    if (data.result == 0) {
-	                    bootbox.alert(data.resultNote, function() {
-	                        window.location.href = '../supplierManager/AgencyManager/agencyManager.html';
-	                    });
-	                } else {
-	                    bootbox.alert(data.resultNote);
-	                    return false;
-	                }
-				},
-				errorCallback : function(data) {
-					bootbox.alert(data.resultNote);
-					return false;
-				}
-			};
-	 CloudUtils.ajax(options);
-	
- 
- }
+	                                 if (data.result == 0) {
+	                                     bootbox.alert(data.resultNote, function() {
+	                                         window.location.href = '../project/dykManager/agencyManager.html';
+	                                     });
+	                                 } else {
+	                                     bootbox.alert(data.resultNote);
+	                                     return false;
+	                                 }
+	                             },
+	                             errorCallback : function(data) {
+	                                 bootbox.alert(data.resultNote);
+	                                 return false;
+	                             }
+	                         };
+	                     CloudUtils.ajax(options);
+	                 }
+	                 else
+	                     {*/
+	    var options = {
+	        url : '../supplierInfo/mod',
+	        data : JSON.stringify(jsonData),
+	        callBackFun : function(data) {
+
+	            if (data.result == 0) {
+	                bootbox.alert(data.resultNote, function() {
+	                    window.location.href = '../supplierManager/companyManager.html';
+	                });
+	            } else {
+	                bootbox.alert(data.resultNote);
+	                return false;
+	            }
+	        },
+	        errorCallback : function(data) {
+	            bootbox.alert(data.resultNote);
+	            return false;
+	        }
+	    };
+	    CloudUtils.ajax(options);
+	}
  
 //初始化股东信息表
  function initShareHolderInfoTable(corpId){
@@ -329,129 +347,92 @@ $(function() {
  
  
 //初始化合同信息表
- function initcontractInfoTable(corpId){
-	 $('#contractInfoTable').bootstrapTable('destroy'); 
-		$("#contractInfoTable").bootstrapTable({  
-	         method: "post", 
-	         url: "../contractinfo/list", 
-	         //striped: true,  //表格显示条纹  
-	         //pagination: true, //启动分页  
-	         //pageSize: 5,  //每页显示的记录数  
-	         //pageNumber:1, //当前第几页  
-	        // pageList: [5, 10, 15, 20, 25],  //记录数可选列表  
-	         search: false,  //是否启用查询  
-	         showColumns: false,  //显示下拉框勾选要显示的列  
-	         showRefresh: false,  //显示刷新按钮  
-	         sidePagination: "server", //表示服务端请求  
-	         //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder  
-	         //设置为limit可以获取limit, offset, search, sort, order  
-	         queryParamsType : "undefined",   
-	         queryParams: function queryParams(params) {   //设置查询参数  
-	            // var data = CloudUtils.convertStringJson('searchForm');
-	            // var jsonData = eval("(" + data + ")");
-	             var param = {    
-		                 pageNumber: params.pageNumber,    
-		                 pageSize: params.pageSize
-		             }; 
-				 if(corpId){
-					 param.corpId = corpId            	 
-	             } 
-	             return JSON.stringify(param);                   
-	           }, 
-	         responseHandler:function responseHandler(res) {
-	        	 if (res.result==0) {
-		        	 return {
-		        		 "rows": res.dataList,
-		        		 "total": res.records
-		        	 };
-
-	        	 } else {
-	        		 bootbox.alert(res.resultNote);
-	        		 return {
-				        	 "rows": [],
-				        	 "total": 0
-				        	 };
-	        	 }
-	         },
-	         columns: [
-	            {
-		 	        field: 'contractid',
-		 	        title: '合同id',
-		 	        align: 'center',
-		            valign: 'middle',
-		            visible:false
-		 	    },{
-		 	        field: 'contractName',
-		 	        title: '合同名称',
-		 	        align: 'center',
-		            valign: 'middle',
-		 	    },{
-		 	        field: 'contractNum',
-		 	        title: '合同编号',
-		 	        align: 'center',
-		 	        valign: 'middle'
-		 	    }, {
-		 	        field: 'contractType',
-		 	        title: '业务类型',
-		 	        align: 'center',
-		             valign: 'middle',
-		 	    }, {
-		 	        field: 'endDate',
-		 	        title: '合同到期日',
-		 	        align: 'center',
-		             valign: 'middle',
-		 	    },{
-		 	        field: 'fileName',
-		 	        title: '合同pdf名称',
-		 	        align: 'center',
-		            valign: 'middle',
-		            visible:false
-		 	    },{
-		 	        field: 'fileUrl',
-		 	        title: '合同地址',
-		 	        align: 'center',
-		            valign: 'middle',
-		            visible:false
-		 	    }, {
-		 	        field: 'operation',
-		 	        title: '操作',
-		 	        align: 'center',
-		            valign: 'middle',
-		 	        formatter:function(value,row,index){
-		 	        	var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="contract" href="javascript:void(0)"></a>';
-		 	        	var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#278bdd;padding:0px 5px;" title="预览" data-type="contract" href="javascript:void(0)"></a>';
-		 	            return  r+"  "+m;
-		 	        },
-		 	        events: 'operateEvents'
-		 	    }
-	 	    ]
-       });  
- }
+ function initcontractInfoTable(data){
  
+ $('#attachInfoTable').bootstrapTable('destroy');
+ $("#attachInfoTable").bootstrapTable({
+     method: "post",
+    // url:"data",
+     search: false,  //是否启用查询
+     showColumns: false,  //显示下拉框勾选要显示的列
+     showRefresh: false,  //显示刷新按钮
+     sidePagination: "client", //表示服务端请求
+     data : data,
+     //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+     //设置为limit可以获取limit, offset, search, sort, order
+     queryParamsType : "undefined",
+     responseHandler:function responseHandler(res) {
+         if (res.result==0) {
+             return {
+                 "rows": res.dataList,
+                 "total": res.records
+             };
+
+         } else {
+             bootbox.alert(res.resultNote);
+             return {
+                 "rows": [],
+                 "total": 0
+             };
+         }
+     },
+     columns: [{
+         field: 'corpConsitutionfileUrl',
+         title: '附件地址',
+         align: 'center',
+         valign: 'middle',
+         //visible: false
+     },{
+         field: 'uploadType',
+         title: '附件格式',
+         align: 'center',
+         valign: 'middle',
+         visible: false
+     },{
+         field: 'corpConsitutionfileName',
+         title: '附件名称',
+         align: 'center',
+         valign: 'middle',
+         visible: false
+
+     }, {
+         field: 'attachType',
+         title: '附件格式',
+         align: 'center',
+         valign: 'middle',
+         visible: false
+     }, {
+         field: 'attachSize',
+         title: '附件大小(KB)',
+         align: 'center',
+         valign: 'middle',
+         visible: false
+     }, {
+         field: 'operation',
+         title: '操作',
+         align: 'center',
+         valign: 'middle',
+         formatter:function(value,row,index){
+             var r = '<a class = "fa fa-trash-o remove" style="color:#278bdd;padding:0px 5px;" title="删除" data-type="attach" href="javascript:void(0)"></a>';
+             var m = '<a class = "glyphicon glyphicon-file yulan" style="color:#d864fd;padding:0px 5px;" title="预览" data-type="attach" href="javascript:void(0)"></a>';
+             return m;
+         },
+         events: 'operateEvents'
+     }]
+ });
+}
  function getFormInfo() {
     var row = store.get('custRow'); //从缓存中获取数据
-    var corpId = store.get('corpId'); //从缓存中获取数据
+    var corpId = row.corpId; //从缓存中获取数据
     console.log("isEdit= "+isEdit);
     console.log(row);
     console.log(corpId);
-    if(row!=null && row.corpId != null){
-    	if(isEdit=="false"){
-    		detailFun();
-    	}
     	initDetailForm(row.corpId);
 		initShareHolderInfoTable(row.corpId);
 		attachInfoTable(row.corpId);
 		initcontractInfoTable(row.corpId);
-		$("#editCorp").hide();
-    }else if(row == null && corpId != null){
-    	detailFun();
-    	initDetailForm(corpId);
-		initShareHolderInfoTable(corpId);
-		attachInfoTable(corpId);
-		initcontractInfoTable(corpId);
-		document.getElementById("cancel").style.display = "none";
-    }
-        
+		//$("#editCorp").hide();
+
    
 
 }

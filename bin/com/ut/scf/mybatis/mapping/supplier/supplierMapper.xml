@@ -13,7 +13,9 @@
 	si.legal_person legalPerson ,si.cellphone cellphone ,si.id_number idNumber,
 	si.business_license_path businessLicensePath, si.corp_consitution_doc corpConsitutionDoc,
 	si.note note ,
-	si.business_scope businessScope
+	si.business_scope businessScope ,
+	si.create_time  createTime ,
+	si.attatch_info_list attachInfoList
 	from supplier_info si
 	<where>
 	si.status =1 and si.sys_type = 4 
@@ -38,6 +40,26 @@
 	a.project_invoice projectInvoice,
 	a.project_qua projectQua,
 	a.project_accept projectAccept,
+	a.legal_id1 legalID1,
+	a.legal_id1 legalID2,
+	a.auth_id1 authID1,
+	a.auth_id1 authID2,
+	a.no_objection_file_url noObjectionfileUrl,
+	a.no_objection_file_Name noObjectionfileName,
+	a.accept_file_url acceptfileUrl,
+	a.accept_file_name acceptfileName,
+	a.qua_file_url quafileUrl,
+	a.qua_file_name quafileName ,
+	a.invoice_file_name invoicefileName,
+	a.invoice_file_url  invoicefileUrl,
+	a.contract_name  contractName,
+	a.contract_num  contractNum,
+	a.contract_info_list contractInfoList,
+	a.invoice_info_list invoiceInfoList,
+	a.qua_info_list  quaInfoList,
+	a.accept_info_list acceptInfoList,
+	a.no_objection_info_list noObjectionInfoList,
+	
 	a.system_time  systemTime,
 	b.corp_name corpName,
 	b.agency_num agencyNum
